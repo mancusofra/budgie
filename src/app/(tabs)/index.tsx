@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
@@ -110,19 +110,27 @@ export default function HomeScreen() {
   const donutThickness = Math.max(14, geometry.donutSize * 0.075);
   const setOpenCategory = useUIStore((s) => s.setOpenCategory);
 
-  // Tap sull'anello = lista con quella categoria aperta; tap al centro = cambia vista
+  // Tap sull'anello = lista con quella categoria aperta; tap al centro = cambia vista.
+  // Coordinate assolute (pageX/Y) confrontate con la posizione del grafico:
+  // locationX/Y sono relative all'elemento toccato (es. il testo al centro).
+  const donutRef = useRef<View>(null);
   const onDonutPress = (e: GestureResponderEvent) => {
-    const r = geometry.donutSize / 2;
-    const dx = e.nativeEvent.locationX - r;
-    const dy = e.nativeEvent.locationY - r;
-    const onRing = Math.hypot(dx, dy) >= r - donutThickness - Spacing.two;
-    const arc = onRing ? arcAtAngle(arcs, clockAngle({ x: 0, y: 0 }, { x: dx, y: dy })) : undefined;
-    if (arc) {
-      setOpenCategory(arc.key);
-      router.navigate('/transactions');
-    } else {
-      setMode(NEXT_MODE[mode]);
-    }
+    const { pageX, pageY } = e.nativeEvent;
+    donutRef.current?.measure((_x, _y, width, height, left, top) => {
+      const dx = pageX - (left + width / 2);
+      const dy = pageY - (top + height / 2);
+      const r = width / 2;
+      const onRing = Math.hypot(dx, dy) >= r - donutThickness - Spacing.two;
+      const arc = onRing
+        ? arcAtAngle(arcs, clockAngle({ x: 0, y: 0 }, { x: dx, y: dy }))
+        : undefined;
+      if (arc) {
+        setOpenCategory(arc.key);
+        router.navigate('/transactions');
+      } else {
+        setMode(NEXT_MODE[mode]);
+      }
+    });
   };
 
   const canShift = period.kind !== 'all';
@@ -198,6 +206,7 @@ export default function HomeScreen() {
           </Svg>
 
           <Pressable
+            ref={donutRef}
             onPress={onDonutPress}
             accessibilityRole="button"
             accessibilityLabel={`${centerLabel} ${money(centerAmount)}`}
