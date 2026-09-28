@@ -1,0 +1,143 @@
+# Piano di sviluppo
+
+Roadmap in fasi incrementali. Ogni fase termina con un'app funzionante e testabile
+su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore part-time.
+
+| Fase | Obiettivo | Stima |
+| --- | --- | --- |
+| 0 | Setup progetto e tooling | 1–2 giorni |
+| 1 | Database e modello dati | 2–3 giorni |
+| 2 | Home + inserimento rapido (cuore dell'app) | 1 settimana |
+| 3 | Lista transazioni, modifica, periodi | 4–5 giorni |
+| 4 | Categorie e conti | 4–5 giorni |
+| 5 | Statistiche e budget | 1 settimana |
+| 6 | Impostazioni, valute, backup/CSV | 4–5 giorni |
+| 7 | Rifinitura, accessibilità, test | 1 settimana |
+| 8 | Build e pubblicazione store | 3–5 giorni |
+| 9 | Post-MVP (opzionale) | — |
+
+---
+
+## Fase 0 — Setup progetto
+
+- [ ] Creare il progetto Expo con template TypeScript + Expo Router
+  ```bash
+  npx create-expo-app@latest . --template default
+  ```
+  Spostare la cartella `app/` in `src/app/` (Expo Router la supporta nativamente).
+- [ ] Rimuovere il codice demo del template
+- [ ] Configurare alias `@/*` → `src/*` in `tsconfig.json`
+- [ ] ESLint (`eslint-config-expo`) + Prettier + `lint-staged` / `husky` pre-commit
+- [ ] Installare le dipendenze core:
+  ```bash
+  npx expo install expo-sqlite react-native-reanimated react-native-gesture-handler \
+    react-native-svg react-native-safe-area-context expo-localization expo-haptics \
+    expo-file-system expo-sharing expo-document-picker
+  npm i drizzle-orm zustand date-fns i18next react-i18next
+  npm i -D drizzle-kit babel-plugin-inline-import jest-expo @testing-library/react-native
+  ```
+- [ ] Configurare `app.json`: nome, `slug`, `bundleIdentifier` (iOS), `package` (Android), icona, splash
+- [ ] Attivare la CI GitHub Actions (lint + typecheck + test) — già predisposta in `.github/workflows/ci.yml`
+- [ ] Configurare EAS: `npx eas-cli init` e `eas build:configure`
+
+**Definition of done:** `npx expo start` apre una schermata vuota con le 4 tab; la CI è verde.
+
+## Fase 1 — Database e modello dati
+
+- [ ] Definire lo schema Drizzle in `src/db/schema.ts` (vedi [`DATA_MODEL.md`](DATA_MODEL.md))
+- [ ] Configurare `drizzle.config.ts` (driver `expo`) e generare la prima migrazione
+- [ ] `src/db/client.ts`: apertura DB + `useMigrations` nel root layout
+- [ ] `src/db/seed.ts`: categorie di default (spesa ed entrata) e un conto "Contanti"
+- [ ] Repository tipizzati: `transactions`, `categories`, `accounts`
+- [ ] Utility denaro in `src/lib/money.ts`: importi salvati come **interi in centesimi** (mai float)
+- [ ] Unit test per repository e utility (SQLite in-memory o mock)
+
+**DoD:** al primo avvio il DB viene creato e popolato; i test dei repository passano.
+
+## Fase 2 — Home e inserimento rapido ⭐
+
+È la feature che definisce l'esperienza "tipo Monefy": deve essere velocissima.
+
+- [ ] Home: grafico a ciambella con le spese per categoria del periodo corrente
+- [ ] Al centro della ciambella: saldo (entrate − spese) del periodo
+- [ ] Icone categoria attorno/sotto al grafico: tap su una categoria → apre direttamente l'inserimento con quella categoria preselezionata
+- [ ] Due grandi pulsanti in basso: **− Spesa** (rosso) e **+ Entrata** (verde)
+- [ ] Schermata/modale di inserimento:
+  - [ ] Tastierino numerico custom (con operazioni `+ − × ÷` come Monefy)
+  - [ ] Selettore categoria a griglia
+  - [ ] Selettore conto, data (default oggi), nota opzionale
+  - [ ] Salvataggio con feedback aptico e animazione
+- [ ] Selettore periodo in alto (swipe sinistra/destra per cambiare giorno/settimana/mese…)
+- [ ] Hook reattivo `useLiveQuery` (Drizzle) per aggiornare la home automaticamente
+
+**DoD:** si inserisce una spesa in ≤ 3 tap e la ciambella si aggiorna in tempo reale.
+
+## Fase 3 — Lista transazioni e periodi
+
+- [ ] Tab "Transazioni": `FlashList` raggruppata per giorno con totale giornaliero
+- [ ] Tap su categoria nella home → lista filtrata per quella categoria
+- [ ] Dettaglio / modifica / eliminazione (swipe-to-delete con undo tramite snackbar)
+- [ ] Ricerca per nota e filtro per conto/categoria
+- [ ] Periodi: giorno, settimana, mese, anno, tutto, intervallo personalizzato
+- [ ] Impostazione "primo giorno della settimana" e "giorno di inizio mese" (per chi riceve lo stipendio il 27)
+
+## Fase 4 — Categorie e conti
+
+- [ ] CRUD categorie: nome, icona (set di icone vettoriali), colore, tipo (spesa/entrata)
+- [ ] Riordino categorie con drag & drop
+- [ ] Archiviazione categoria (non cancellazione se ha transazioni)
+- [ ] CRUD conti: nome, valuta, saldo iniziale, icona
+- [ ] Trasferimenti tra conti (non contano come spesa/entrata)
+- [ ] Filtro globale "tutti i conti" / conto singolo
+
+## Fase 5 — Statistiche e budget
+
+- [ ] Tab "Statistiche": grafico a barre spese per giorno/mese, trend vs periodo precedente
+- [ ] Classifica categorie con percentuale
+- [ ] Budget mensile globale e per categoria con barra di avanzamento
+- [ ] Avviso visivo al superamento dell'80% / 100% del budget
+
+## Fase 6 — Impostazioni, valute, backup
+
+- [ ] Valuta principale, formato numeri secondo locale
+- [ ] Tema: sistema / chiaro / scuro
+- [ ] Lingua: IT / EN (i18next, testi in `src/i18n/locales`)
+- [ ] Esportazione CSV (con `expo-sharing`)
+- [ ] Backup completo (file `.db` o JSON) e ripristino (`expo-document-picker`)
+- [ ] Blocco app con PIN / biometria (`expo-local-authentication`) — opzionale
+
+## Fase 7 — Rifinitura e qualità
+
+- [ ] Accessibilità: label per screen reader, contrasto, dimensioni font dinamiche
+- [ ] Empty state e onboarding di 2–3 schermate
+- [ ] Performance: test con 10.000+ transazioni, indici SQL
+- [ ] Test E2E con Maestro per i flussi principali (aggiungi spesa, modifica, elimina, cambio periodo)
+- [ ] Copertura unit test ≥ 70% su `lib/`, `db/`, `features/`
+- [ ] Sentry (`@sentry/react-native`) per crash reporting
+
+## Fase 8 — Build e pubblicazione
+
+- [ ] Icona e splash definitivi, screenshot per gli store
+- [ ] `eas build --platform all --profile production`
+- [ ] TestFlight (iOS) e Internal testing (Google Play)
+- [ ] Privacy policy (anche se i dati restano sul dispositivo è richiesta)
+- [ ] `eas submit` su App Store e Google Play
+- [ ] OTA update con `expo-updates` per fix rapidi
+
+## Fase 9 — Post-MVP (idee)
+
+- Transazioni ricorrenti (abbonamenti, affitto) con promemoria
+- Sync cloud opzionale tra dispositivi (Supabase o iCloud/Google Drive per i backup)
+- Widget home screen iOS/Android per inserimento rapido
+- Tassi di cambio automatici
+- Allegare foto dello scontrino
+- Tag multipli oltre alla categoria
+
+---
+
+## Convenzioni di lavoro
+
+- **Branch:** `main` protetto; feature branch `feat/<nome>`, `fix/<nome>`
+- **Commit:** [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `chore:`…)
+- **PR:** una per task della checklist, CI verde obbligatoria
+- **Issue:** ogni fase diventa una milestone su GitHub, ogni checkbox un'issue

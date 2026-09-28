@@ -1,0 +1,6 @@
+{
+  "tabs": { "home": "Home", "transactions": "Transazioni", "stats": "Statistiche", "settings": "Impostazioni" },
+  "common": { "save": "Salva", "cancel": "Annulla", "delete": "Elimina", "undo": "Annulla" },
+  "home": { "balance": "Saldo", "expenses": "Spese", "income": "Entrate", "addExpense": "Spesa", "addIncome": "Entrata", "allAccounts": "Tutti i conti" },
+  "transaction": { "note": "Aggiungi nota…", "chooseCategory": "Scegli categoria", "today": "Oggi" }
+}

@@ -1,0 +1,6 @@
+{
+  "tabs": { "home": "Home", "transactions": "Transactions", "stats": "Stats", "settings": "Settings" },
+  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "undo": "Undo" },
+  "home": { "balance": "Balance", "expenses": "Expenses", "income": "Income", "addExpense": "Expense", "addIncome": "Income", "allAccounts": "All accounts" },
+  "transaction": { "note": "Add note…", "chooseCategory": "Choose category", "today": "Today" }
+}
