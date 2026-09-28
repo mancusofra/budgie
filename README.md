@@ -4,7 +4,7 @@ App mobile (iOS + Android) per la gestione delle spese personali, ispirata a **M
 inserimento di una spesa in 2 tap, grafico a ciambella per categoria al centro della home,
 tutto offline-first.
 
-> Stato: **fase di pianificazione** — il codice non è ancora stato generato.
+> Stato: **Fase 0 completata** — scheletro dell'app con le 4 tab.
 > Vedi [`docs/PLAN.md`](docs/PLAN.md) per la roadmap.
 
 ## Funzionalità principali (MVP)
@@ -21,18 +21,18 @@ tutto offline-first.
 
 ## Stack tecnologico
 
-| Ambito | Scelta |
-| --- | --- |
-| Framework | [Expo](https://expo.dev) (React Native) + TypeScript |
-| Navigazione | Expo Router (file-based) |
-| Database locale | `expo-sqlite` + [Drizzle ORM](https://orm.drizzle.team) |
-| Stato UI | Zustand |
-| Grafici | `react-native-svg` + `victory-native` (o `react-native-gifted-charts`) |
-| Animazioni | `react-native-reanimated` + `react-native-gesture-handler` |
-| i18n | `i18next` + `react-i18next` + `expo-localization` |
-| Date | `date-fns` |
-| Test | Jest + React Native Testing Library, Maestro per E2E |
-| Build / release | EAS Build + EAS Submit |
+| Ambito          | Scelta                                                                 |
+| --------------- | ---------------------------------------------------------------------- |
+| Framework       | [Expo](https://expo.dev) (React Native) + TypeScript                   |
+| Navigazione     | Expo Router (file-based)                                               |
+| Database locale | `expo-sqlite` + [Drizzle ORM](https://orm.drizzle.team)                |
+| Stato UI        | Zustand                                                                |
+| Grafici         | `react-native-svg` + `victory-native` (o `react-native-gifted-charts`) |
+| Animazioni      | `react-native-reanimated` + `react-native-gesture-handler`             |
+| i18n            | `i18next` + `react-i18next` + `expo-localization`                      |
+| Date            | `date-fns`                                                             |
+| Test            | Jest + React Native Testing Library, Maestro per E2E                   |
+| Build / release | EAS Build + EAS Submit                                                 |
 
 Dettagli e motivazioni in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -81,11 +81,22 @@ moneta/
 └── .github/workflows/          # CI
 ```
 
-## Avvio (dopo la Fase 0 del piano)
+## Avvio
+
+Requisiti: Node.js 22 (es. `nvm install 22`) e l'app **Expo Go** sul telefono.
 
 ```bash
 npm install
-npx expo start
+npx expo start      # scansiona il QR code con Expo Go
+```
+
+Comandi utili:
+
+```bash
+npm run lint        # ESLint
+npm run typecheck   # TypeScript
+npm test            # Jest
+npx expo-doctor     # verifica dipendenze/config Expo
 ```
 
 ## Documentazione

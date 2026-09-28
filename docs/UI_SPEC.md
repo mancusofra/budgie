@@ -74,13 +74,13 @@ Root Stack
 
 ## Design tokens
 
-| Token | Chiaro | Scuro |
-| --- | --- | --- |
-| `bg` | `#FFFFFF` | `#121212` |
+| Token     | Chiaro    | Scuro     |
+| --------- | --------- | --------- |
+| `bg`      | `#FFFFFF` | `#121212` |
 | `surface` | `#F5F6F8` | `#1E1E1E` |
-| `text` | `#1A1A1A` | `#F2F2F2` |
+| `text`    | `#1A1A1A` | `#F2F2F2` |
 | `expense` | `#E5484D` | `#FF6369` |
-| `income` | `#30A46C` | `#4CC38A` |
+| `income`  | `#30A46C` | `#4CC38A` |
 | `primary` | `#3E63DD` | `#849DFF` |
 
 Spaziatura base 4pt (4, 8, 12, 16, 24, 32). Raggio bordi 12. Font di sistema.

@@ -9,6 +9,7 @@ labels: task
 ### Descrizione
 
 ### Criteri di accettazione
+
 - [ ]
 
 ### Note tecniche

@@ -3,8 +3,8 @@ node_modules/
 dist/
 web-build/
 expo-env.d.ts
-ios/
-android/
+
+
 *.jks
 *.p8
 *.p12
@@ -17,3 +17,10 @@ npm-debug.*
 yarn-error.*
 coverage/
 *.tsbuildinfo
+.kotlin/
+.metro-health-check*
+*.pem
+
+# generated native folders
+/ios
+/android

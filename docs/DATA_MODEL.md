@@ -18,61 +18,66 @@ settings (chiave/valore)
 ## Tabelle
 
 ### `accounts`
-| Colonna | Tipo | Note |
-| --- | --- | --- |
-| id | TEXT PK | |
-| name | TEXT NOT NULL | "Contanti", "Carta"… |
-| currency | TEXT NOT NULL | ISO 4217, es. `EUR` |
-| initial_balance | INTEGER NOT NULL DEFAULT 0 | centesimi |
-| icon | TEXT | nome icona |
-| color | TEXT | hex |
-| sort_order | INTEGER NOT NULL DEFAULT 0 | |
-| archived | INTEGER NOT NULL DEFAULT 0 | boolean |
-| created_at | INTEGER NOT NULL | |
+
+| Colonna         | Tipo                       | Note                 |
+| --------------- | -------------------------- | -------------------- |
+| id              | TEXT PK                    |                      |
+| name            | TEXT NOT NULL              | "Contanti", "Carta"… |
+| currency        | TEXT NOT NULL              | ISO 4217, es. `EUR`  |
+| initial_balance | INTEGER NOT NULL DEFAULT 0 | centesimi            |
+| icon            | TEXT                       | nome icona           |
+| color           | TEXT                       | hex                  |
+| sort_order      | INTEGER NOT NULL DEFAULT 0 |                      |
+| archived        | INTEGER NOT NULL DEFAULT 0 | boolean              |
+| created_at      | INTEGER NOT NULL           |                      |
 
 ### `categories`
-| Colonna | Tipo | Note |
-| --- | --- | --- |
-| id | TEXT PK | |
-| name | TEXT NOT NULL | |
-| type | TEXT NOT NULL | `expense` \| `income` |
-| icon | TEXT NOT NULL | |
-| color | TEXT NOT NULL | hex |
-| sort_order | INTEGER NOT NULL DEFAULT 0 | |
-| archived | INTEGER NOT NULL DEFAULT 0 | |
-| created_at | INTEGER NOT NULL | |
+
+| Colonna    | Tipo                       | Note                  |
+| ---------- | -------------------------- | --------------------- |
+| id         | TEXT PK                    |                       |
+| name       | TEXT NOT NULL              |                       |
+| type       | TEXT NOT NULL              | `expense` \| `income` |
+| icon       | TEXT NOT NULL              |                       |
+| color      | TEXT NOT NULL              | hex                   |
+| sort_order | INTEGER NOT NULL DEFAULT 0 |                       |
+| archived   | INTEGER NOT NULL DEFAULT 0 |                       |
+| created_at | INTEGER NOT NULL           |                       |
 
 ### `transactions`
-| Colonna | Tipo | Note |
-| --- | --- | --- |
-| id | TEXT PK | |
-| type | TEXT NOT NULL | `expense` \| `income` \| `transfer` |
-| amount | INTEGER NOT NULL | sempre positivo, il segno dipende da `type` |
-| account_id | TEXT NOT NULL FK → accounts | conto di origine |
-| to_account_id | TEXT FK → accounts | solo per `transfer` |
-| to_amount | INTEGER | per trasferimenti tra valute diverse |
-| category_id | TEXT FK → categories | NULL per `transfer` |
-| date | INTEGER NOT NULL | data della transazione |
-| note | TEXT | |
-| created_at | INTEGER NOT NULL | |
-| updated_at | INTEGER NOT NULL | |
+
+| Colonna       | Tipo                        | Note                                        |
+| ------------- | --------------------------- | ------------------------------------------- |
+| id            | TEXT PK                     |                                             |
+| type          | TEXT NOT NULL               | `expense` \| `income` \| `transfer`         |
+| amount        | INTEGER NOT NULL            | sempre positivo, il segno dipende da `type` |
+| account_id    | TEXT NOT NULL FK → accounts | conto di origine                            |
+| to_account_id | TEXT FK → accounts          | solo per `transfer`                         |
+| to_amount     | INTEGER                     | per trasferimenti tra valute diverse        |
+| category_id   | TEXT FK → categories        | NULL per `transfer`                         |
+| date          | INTEGER NOT NULL            | data della transazione                      |
+| note          | TEXT                        |                                             |
+| created_at    | INTEGER NOT NULL            |                                             |
+| updated_at    | INTEGER NOT NULL            |                                             |
 
 Indici: `(date)`, `(category_id, date)`, `(account_id, date)`.
 
 ### `budgets`
-| Colonna | Tipo | Note |
-| --- | --- | --- |
-| id | TEXT PK | |
-| category_id | TEXT FK → categories | NULL = budget globale |
-| amount | INTEGER NOT NULL | |
-| period | TEXT NOT NULL | `month` \| `week` \| `year` |
-| created_at | INTEGER NOT NULL | |
+
+| Colonna     | Tipo                 | Note                        |
+| ----------- | -------------------- | --------------------------- |
+| id          | TEXT PK              |                             |
+| category_id | TEXT FK → categories | NULL = budget globale       |
+| amount      | INTEGER NOT NULL     |                             |
+| period      | TEXT NOT NULL        | `month` \| `week` \| `year` |
+| created_at  | INTEGER NOT NULL     |                             |
 
 ### `settings`
-| Colonna | Tipo | Note |
-| --- | --- | --- |
-| key | TEXT PK | `currency`, `theme`, `language`, `week_start`, `month_start_day`… |
-| value | TEXT NOT NULL | JSON serializzato |
+
+| Colonna | Tipo          | Note                                                              |
+| ------- | ------------- | ----------------------------------------------------------------- |
+| key     | TEXT PK       | `currency`, `theme`, `language`, `week_start`, `month_start_day`… |
+| value   | TEXT NOT NULL | JSON serializzato                                                 |
 
 ## Categorie di default (seed)
 
@@ -123,7 +128,9 @@ export const transactions = sqliteTable(
     id: text('id').primaryKey(),
     type: text('type', { enum: ['expense', 'income', 'transfer'] }).notNull(),
     amount: integer('amount').notNull(),
-    accountId: text('account_id').notNull().references(() => accounts.id),
+    accountId: text('account_id')
+      .notNull()
+      .references(() => accounts.id),
     toAccountId: text('to_account_id').references(() => accounts.id),
     toAmount: integer('to_amount'),
     categoryId: text('category_id').references(() => categories.id),

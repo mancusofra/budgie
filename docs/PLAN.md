@@ -3,32 +3,32 @@
 Roadmap in fasi incrementali. Ogni fase termina con un'app funzionante e testabile
 su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore part-time.
 
-| Fase | Obiettivo | Stima |
-| --- | --- | --- |
-| 0 | Setup progetto e tooling | 1–2 giorni |
-| 1 | Database e modello dati | 2–3 giorni |
-| 2 | Home + inserimento rapido (cuore dell'app) | 1 settimana |
-| 3 | Lista transazioni, modifica, periodi | 4–5 giorni |
-| 4 | Categorie e conti | 4–5 giorni |
-| 5 | Statistiche e budget | 1 settimana |
-| 6 | Impostazioni, valute, backup/CSV | 4–5 giorni |
-| 7 | Rifinitura, accessibilità, test | 1 settimana |
-| 8 | Build e pubblicazione store | 3–5 giorni |
-| 9 | Post-MVP (opzionale) | — |
+| Fase | Obiettivo                                  | Stima       |
+| ---- | ------------------------------------------ | ----------- |
+| 0    | Setup progetto e tooling                   | 1–2 giorni  |
+| 1    | Database e modello dati                    | 2–3 giorni  |
+| 2    | Home + inserimento rapido (cuore dell'app) | 1 settimana |
+| 3    | Lista transazioni, modifica, periodi       | 4–5 giorni  |
+| 4    | Categorie e conti                          | 4–5 giorni  |
+| 5    | Statistiche e budget                       | 1 settimana |
+| 6    | Impostazioni, valute, backup/CSV           | 4–5 giorni  |
+| 7    | Rifinitura, accessibilità, test            | 1 settimana |
+| 8    | Build e pubblicazione store                | 3–5 giorni  |
+| 9    | Post-MVP (opzionale)                       | —           |
 
 ---
 
 ## Fase 0 — Setup progetto
 
-- [ ] Creare il progetto Expo con template TypeScript + Expo Router
+- [x] Creare il progetto Expo con template TypeScript + Expo Router
   ```bash
   npx create-expo-app@latest . --template default
   ```
   Spostare la cartella `app/` in `src/app/` (Expo Router la supporta nativamente).
-- [ ] Rimuovere il codice demo del template
-- [ ] Configurare alias `@/*` → `src/*` in `tsconfig.json`
-- [ ] ESLint (`eslint-config-expo`) + Prettier + `lint-staged` / `husky` pre-commit
-- [ ] Installare le dipendenze core:
+- [x] Rimuovere il codice demo del template
+- [x] Configurare alias `@/*` → `src/*` in `tsconfig.json`
+- [x] ESLint (`eslint-config-expo`) + Prettier + `lint-staged` / `husky` pre-commit
+- [x] Installare le dipendenze core:
   ```bash
   npx expo install expo-sqlite react-native-reanimated react-native-gesture-handler \
     react-native-svg react-native-safe-area-context expo-localization expo-haptics \
@@ -36,8 +36,8 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
   npm i drizzle-orm zustand date-fns i18next react-i18next
   npm i -D drizzle-kit babel-plugin-inline-import jest-expo @testing-library/react-native
   ```
-- [ ] Configurare `app.json`: nome, `slug`, `bundleIdentifier` (iOS), `package` (Android), icona, splash
-- [ ] Attivare la CI GitHub Actions (lint + typecheck + test) — già predisposta in `.github/workflows/ci.yml`
+- [x] Configurare `app.json`: nome, `slug`, `bundleIdentifier` (iOS), `package` (Android), icona, splash
+- [x] Attivare la CI GitHub Actions (lint + typecheck + test) — già predisposta in `.github/workflows/ci.yml`
 - [ ] Configurare EAS: `npx eas-cli init` e `eas build:configure`
 
 **Definition of done:** `npx expo start` apre una schermata vuota con le 4 tab; la CI è verde.
