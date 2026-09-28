@@ -1,11 +1,14 @@
 import { donutArcs } from '@/components/charts/donut-chart';
 import {
-  alignRotation,
+  allocateToGaps,
+  arcMidpoints,
   clockAngle,
   connectors,
+  orbitGeometry,
+  placeIcons,
   pointAt,
-  ringGeometry,
-  sortByIconAngle,
+  spreadAngles,
+  turnDistance,
 } from '@/features/transactions/ring-layout';
 
 describe('donutArcs', () => {
@@ -38,30 +41,14 @@ describe('donutArcs', () => {
   });
 });
 
-describe('ringGeometry', () => {
-  const g = ringGeometry({ width: 400, height: 500, cell: 64, gap: 8 });
-
-  it('dispone 16 slot attorno a una ciambella centrata', () => {
-    expect(g.slots).toHaveLength(16);
+describe('orbitGeometry', () => {
+  it('centra orbita e ciambella lasciando spazio alle icone', () => {
+    const g = orbitGeometry({ width: 400, height: 500, iconSize: 48, gap: 8 });
     expect(g.center).toEqual({ x: 200, y: 250 });
-    // larghezza − 2 colonne − 2 spazi, limitata dall'altezza delle colonne (4×64 + 3×8)
-    expect(g.donutSize).toBe(400 - 128 - 16);
-    expect(g.height).toBe(280 + 2 * 72);
-  });
-
-  it('mette le righe sopra/sotto e le colonne ai lati, senza sovrapporsi alla ciambella', () => {
-    const r = g.donutSize / 2;
-    for (const s of g.slots) {
-      expect(Math.hypot(s.x - g.center.x, s.y - g.center.y)).toBeGreaterThan(r + 32);
-    }
-    expect(g.slots.slice(0, 4).every((s) => s.y < g.center.y - r)).toBe(true);
-    expect(g.slots.slice(12).every((s) => s.y > g.center.y + r)).toBe(true);
-    expect(g.slots.slice(4, 8).every((s) => s.x < g.center.x - r)).toBe(true);
-    expect(g.slots.slice(8, 12).every((s) => s.x > g.center.x + r)).toBe(true);
-  });
-
-  it('centra verticalmente sull’altezza minima se lo spazio non basta', () => {
-    expect(ringGeometry({ width: 400, height: 100, cell: 64, gap: 8 }).center.y).toBe(212);
+    expect(g.orbitRadius).toBe(200 - 24 - 4);
+    expect(g.donutSize).toBe((172 - 24 - 8) * 2);
+    // le icone restano dentro la larghezza
+    expect(g.center.x + g.orbitRadius + 24).toBeLessThanOrEqual(400);
   });
 });
 
@@ -79,67 +66,103 @@ describe('angoli', () => {
     expect(Math.hypot(p.x, p.y)).toBeCloseTo(10);
     expect(clockAngle(c, p)).toBeCloseTo(0.3);
   });
+
+  it('turnDistance gestisce il giro completo', () => {
+    expect(turnDistance(0.95, 0.05)).toBeCloseTo(0.1);
+    expect(turnDistance(0.2, 0.7)).toBeCloseTo(0.5);
+  });
 });
 
-describe('sortByIconAngle / connectors', () => {
-  const center = { x: 0, y: 0 };
-  const icons = new Map([
-    ['left', { x: -100, y: 0 }],
-    ['top', { x: 0, y: -100 }],
-    ['right', { x: 100, y: 0 }],
-  ]);
+const minGap = (angles: number[]) =>
+  Math.min(...angles.flatMap((a, i) => angles.slice(i + 1).map((b) => turnDistance(a, b))));
 
-  it('ordina gli spicchi come le icone, in senso orario; quelli senza icona in coda', () => {
-    const sorted = sortByIconAngle(
-      [{ key: 'orphan' }, { key: 'left' }, { key: 'right' }, { key: 'top' }],
-      icons,
-      center,
-    );
-    expect(sorted.map((s) => s.key)).toEqual(['top', 'right', 'left', 'orphan']);
+describe('spreadAngles', () => {
+  it('lascia invariati gli angoli già distanti', () => {
+    const [a, b] = spreadAngles([0.1, 0.5], 0.05);
+    expect(a).toBeCloseTo(0.1);
+    expect(b).toBeCloseTo(0.5);
   });
 
-  it('collega l’icona al punto più vicino del suo spicchio (radiale se ci cade dentro)', () => {
-    const arcs = donutArcs(
-      [
-        { key: 'top', value: 1, color: '#f00' },
-        { key: 'orphan', value: 1, color: '#0f0' },
-      ],
-      0,
-    );
-    // "top" copre [0, 0.5): l'icona a ore 12 cade appena fuori → estremo iniziale (con margine)
-    const [line] = connectors(arcs, icons, center, 50, 20);
-    expect(clockAngle(center, line.to)).toBeCloseTo(0.01);
-    expect(Math.hypot(line.to.x, line.to.y)).toBeCloseTo(50);
-    expect(line.color).toBe('#f00');
+  it('allontana simmetricamente gli angoli troppo vicini, anche a cavallo di ore 12', () => {
+    const [a, b] = spreadAngles([0.99, 0.01], 0.1);
+    expect(turnDistance(a, 0.95)).toBeCloseTo(0);
+    expect(turnDistance(b, 0.05)).toBeCloseTo(0);
+    expect(minGap(spreadAngles([0.3, 0.31, 0.32, 0.33], 0.05))).toBeGreaterThanOrEqual(0.05 - 1e-6);
+  });
+});
 
-    // ruotando di −0.25 lo spicchio copre ore 9 → ore 3 passando da ore 12: linea radiale
-    const [radial] = connectors(arcs, icons, center, 50, 20, 0.75);
-    expect(radial.to.x).toBeCloseTo(0);
-    expect(radial.to.y).toBeCloseTo(-50);
-    expect(radial.from.x).toBeCloseTo(0);
-    expect(radial.from.y).toBeCloseTo(-80);
+describe('allocateToGaps', () => {
+  it('preferisce gli spazi più ampi', () => {
+    expect(allocateToGaps([0.1, 0.9], 5, 0.05)).toEqual([0, 5]);
   });
 
-  it('sceglie una rotazione che mette ogni icona dentro il proprio spicchio', () => {
-    // Caso difficile: spicchio grande (71%) e piccolo con icone vicine tra loro
-    const ringIcons = new Map([
-      ['bills', pointAt(center, 100, 0.78)],
-      ['food', pointAt(center, 100, 0.88)],
+  it('rispetta la capienza di ogni spazio', () => {
+    // con sep 0.05: nello spazio da 0.3 stanno 5 icone, in quello da 0.1 una sola
+    expect(allocateToGaps([0.1, 0.3], 6, 0.05)).toEqual([1, 5]);
+    expect(allocateToGaps([0.04, 0.96], 3, 0.05)).toEqual([0, 3]);
+  });
+});
+
+describe('placeIcons', () => {
+  const ids = [...'abcdefghijklmnop'];
+  const sep = 0.055;
+
+  it('senza spicchi distribuisce le icone uniformemente da ore 12', () => {
+    const placed = placeIcons(['a', 'b', 'c', 'd'], new Map(), sep);
+    expect([...placed.values()]).toEqual([0, 0.25, 0.5, 0.75]);
+  });
+
+  it('mette ogni icona con spicchio sul proprio spicchio e le altre negli spazi, senza sovrapposizioni', () => {
+    const anchors = new Map([
+      ['a', 0.3],
+      ['k', 0.65],
+      ['f', 0.9],
     ]);
-    const segments = sortByIconAngle(
-      [
-        { key: 'food', value: 1250, color: '#0f0' },
-        { key: 'bills', value: 500, color: '#ff0' },
-      ],
-      ringIcons,
-      center,
-    );
-    const arcs = donutArcs(segments);
-    const rotation = alignRotation(arcs, ringIcons, center);
-    for (const line of connectors(arcs, ringIcons, center, 50, 20, rotation)) {
-      const icon = ringIcons.get(line.key)!;
-      // linea radiale: punta verso il centro
-      expect(clockAngle(center, line.to)).toBeCloseTo(clockAngle(center, icon), 5);
-    }
+    const placed = placeIcons(ids, anchors, sep);
+    expect(placed.size).toBe(16);
+    for (const [id, angle] of anchors) expect(placed.get(id)).toBeCloseTo(angle);
+    expect(minGap([...placed.values()])).toBeGreaterThanOrEqual(sep - 1e-6);
+  });
+
+  it('le icone libere mantengono l’ordine delle categorie, in senso orario', () => {
+    const placed = placeIcons(['a', 'b', 'c', 'd', 'e'], new Map([['c', 0.5]]), 0.1);
+    // un solo spazio, da 0.5 a 1.5: le libere lo dividono in parti uguali, in ordine
+    const unwrapped = ['a', 'b', 'd', 'e'].map((id) => {
+      const angle = placed.get(id)!;
+      return angle < 0.5 ? angle + 1 : angle;
+    });
+    [0.7, 0.9, 1.1, 1.3].forEach((expected, i) => expect(unwrapped[i]).toBeCloseTo(expected));
+  });
+});
+
+describe('arcMidpoints / connectors', () => {
+  const center = { x: 0, y: 0 };
+  const arcs = donutArcs(
+    [
+      { key: 'a', value: 1, color: '#f00' },
+      { key: 'b', value: 3, color: '#0f0' },
+    ],
+    0,
+  );
+
+  it('calcola il centro di ogni spicchio', () => {
+    const mid = arcMidpoints(arcs);
+    expect(mid.get('a')).toBeCloseTo(0.125);
+    expect(mid.get('b')).toBeCloseTo(0.625);
+  });
+
+  it('con l’icona sopra lo spicchio la linea è radiale e corta', () => {
+    const icons = new Map([['a', pointAt(center, 100, 0.125)]]);
+    const [line] = connectors(arcs, icons, center, 70, 24);
+    expect(clockAngle(center, line.to)).toBeCloseTo(0.125);
+    expect(Math.hypot(line.to.x, line.to.y)).toBeCloseTo(70);
+    expect(Math.hypot(line.from.x, line.from.y)).toBeCloseTo(76);
+    expect(line.color).toBe('#f00');
+  });
+
+  it('se l’icona è stata spostata, punta al bordo più vicino del suo spicchio', () => {
+    const icons = new Map([['a', pointAt(center, 100, 0.3)]]);
+    const [line] = connectors(arcs, icons, center, 70, 24);
+    expect(clockAngle(center, line.to)).toBeCloseTo(0.24);
   });
 });

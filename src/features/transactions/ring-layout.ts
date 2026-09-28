@@ -1,57 +1,36 @@
 import type { ArcSegment } from '@/components/charts/donut-chart';
 
 /**
- * Geometria della home stile Monefy: icone categoria attorno alla ciambella
- * (riga in alto, colonna sinistra, colonna destra, riga in basso) e linee che
- * collegano ogni icona al proprio spicchio.
+ * Geometria della home: icone categoria disposte in cerchio ("orbita") attorno
+ * alla ciambella. Le categorie con uno spicchio si posizionano accanto al proprio
+ * spicchio, le altre riempiono gli spazi liberi. Gli angoli sono in giri (0–1),
+ * in senso orario da ore 12.
  */
 
 export type Point = { x: number; y: number };
 
-export type RingGeometry = {
+export type OrbitGeometry = {
   center: Point;
+  /** Raggio su cui stanno i centri delle icone. */
+  orbitRadius: number;
   donutSize: number;
-  /** Centri delle icone, nell'ordine: alto (sx→dx), sinistra, destra, basso (sx→dx). */
-  slots: Point[];
-  /** Altezza minima necessaria per contenere tutto. */
-  height: number;
 };
 
-export function ringGeometry({
+export function orbitGeometry({
   width,
   height,
-  cell,
+  iconSize,
   gap,
-  perSide = 4,
 }: {
   width: number;
   height: number;
-  cell: number;
+  iconSize: number;
   gap: number;
-  perSide?: number;
-}): RingGeometry {
-  const columnHeight = perSide * cell + (perSide - 1) * gap;
-  const donutSize = Math.max(0, Math.min(width - 2 * cell - 2 * gap, columnHeight));
-  const needed = columnHeight + 2 * (cell + gap);
-  const center = { x: width / 2, y: Math.max(height, needed) / 2 };
-
-  const rowX = (i: number) => (width / perSide) * (i + 0.5);
-  const columnY = (i: number) => center.y - columnHeight / 2 + cell / 2 + i * (cell + gap);
-  const topY = center.y - columnHeight / 2 - gap - cell / 2;
-  const bottomY = center.y + columnHeight / 2 + gap + cell / 2;
-  const range = [...Array(perSide).keys()];
-
-  return {
-    center,
-    donutSize,
-    height: needed,
-    slots: [
-      ...range.map((i) => ({ x: rowX(i), y: topY })),
-      ...range.map((i) => ({ x: cell / 2, y: columnY(i) })),
-      ...range.map((i) => ({ x: width - cell / 2, y: columnY(i) })),
-      ...range.map((i) => ({ x: rowX(i), y: bottomY })),
-    ],
-  };
+}): OrbitGeometry {
+  const h = height > 0 ? height : width;
+  const orbitRadius = Math.max(0, Math.min(width, h) / 2 - iconSize / 2 - gap / 2);
+  const donutRadius = Math.max(0, orbitRadius - iconSize / 2 - gap);
+  return { center: { x: width / 2, y: h / 2 }, orbitRadius, donutSize: donutRadius * 2 };
 }
 
 /** Angolo in senso orario da ore 12, in [0, 1) giri. */
@@ -60,104 +39,169 @@ export function clockAngle(from: Point, to: Point): number {
   return (turns + 1) % 1;
 }
 
-/** Punto sulla circonferenza di raggio r all'angolo dato (in giri, orario da ore 12). */
+/** Punto sulla circonferenza di raggio r all'angolo dato. */
 export function pointAt(center: Point, r: number, turns: number): Point {
   const a = turns * 2 * Math.PI;
   return { x: center.x + r * Math.sin(a), y: center.y - r * Math.cos(a) };
 }
 
-/**
- * Ordina gli spicchi seguendo la posizione delle rispettive icone attorno al
- * grafico, così ogni spicchio sta vicino alla sua icona e le linee non si incrociano.
- * Gli spicchi senza icona finiscono in coda.
- */
-export function sortByIconAngle<T extends { key: string }>(
-  segments: T[],
-  iconPositions: Map<string, Point>,
-  center: Point,
-): T[] {
-  const angle = (s: T) => {
-    const p = iconPositions.get(s.key);
-    return p ? clockAngle(center, p) : 2;
-  };
-  return [...segments].sort((a, b) => angle(a) - angle(b));
-}
+const mod1 = (a: number) => ((a % 1) + 1) % 1;
 
-/** Distanza angolare (in giri, 0–0.5) tra due angoli. */
-const turnDistance = (a: number, b: number) => {
-  const d = (((a - b) % 1) + 1) % 1;
+/** Distanza angolare (0–0.5) tra due angoli. */
+export const turnDistance = (a: number, b: number) => {
+  const d = mod1(a - b);
   return Math.min(d, 1 - d);
 };
+
+/**
+ * Allontana gli angoli troppo vicini tra loro (distanza minima `minSep`),
+ * spostandoli il meno possibile dalla posizione desiderata.
+ * Restituisce gli angoli nello stesso ordine dell'input.
+ */
+export function spreadAngles(desired: number[], minSep: number): number[] {
+  const n = desired.length;
+  if (n < 2) return desired.map(mod1);
+  const sep = Math.min(minSep, 1 / n);
+
+  const order = desired.map((a, i) => ({ a: mod1(a), i })).sort((x, y) => x.a - y.a);
+  const a = order.map((o) => o.a);
+
+  for (let iter = 0; iter < 500; iter++) {
+    let moved = false;
+    for (let k = 0; k < n; k++) {
+      const next = (k + 1) % n;
+      const gap = next === 0 ? a[0] + 1 - a[k] : a[next] - a[k];
+      if (gap < sep - 1e-9) {
+        const push = (sep - gap) / 2;
+        a[k] -= push;
+        a[next] += push;
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+
+  const result = new Array<number>(n);
+  order.forEach((o, k) => (result[o.i] = mod1(a[k])));
+  return result;
+}
+
+/**
+ * Angolo di ogni icona sull'orbita.
+ * - `ids`: tutte le categorie, nell'ordine in cui mostrarle
+ * - `anchors`: angolo desiderato per le categorie con uno spicchio
+ * - `minSep`: separazione minima tra icone (in giri)
+ */
+export function placeIcons(
+  ids: string[],
+  anchors: Map<string, number>,
+  minSep: number,
+): Map<string, number> {
+  const placed = new Map<string, number>();
+  const anchored = ids.filter((id) => anchors.has(id));
+  const free = ids.filter((id) => !anchors.has(id));
+
+  if (anchored.length === 0) {
+    ids.forEach((id, i) => placed.set(id, i / ids.length));
+    return placed;
+  }
+
+  const spread = spreadAngles(
+    anchored.map((id) => anchors.get(id)!),
+    minSep,
+  );
+  anchored.forEach((id, i) => placed.set(id, spread[i]));
+
+  // Spazi liberi tra icone ancorate consecutive (in senso orario)
+  const sorted = [...spread].sort((x, y) => x - y);
+  const gaps = sorted.map((start, k) => ({
+    start,
+    size: (k + 1 < sorted.length ? sorted[k + 1] : sorted[0] + 1) - start,
+  }));
+
+  const counts = allocateToGaps(
+    gaps.map((g) => g.size),
+    free.length,
+    Math.min(minSep, 1 / ids.length),
+  );
+
+  // Riempie gli spazi in senso orario partendo da quello che contiene ore 12,
+  // così le icone libere mantengono il loro ordine a partire dall'alto
+  const first = Math.max(
+    gaps.findIndex((g) => g.start + g.size >= 1),
+    0,
+  );
+  let next = 0;
+  for (let step = 0; step < gaps.length; step++) {
+    const k = (first + step) % gaps.length;
+    const { start, size } = gaps[k];
+    for (let j = 0; j < counts[k]; j++) {
+      placed.set(free[next++], mod1(start + (size * (j + 1)) / (counts[k] + 1)));
+    }
+  }
+  return placed;
+}
+
+/**
+ * Quante icone mettere in ogni spazio libero. Ogni spazio ne contiene al più
+ * floor(ampiezza / sep) − 1 senza sovrapposizioni: si riempie un'icona alla volta
+ * lo spazio con più margine (ampiezza / (icone + 1) più grande), rispettando la
+ * capienza finché possibile.
+ */
+export function allocateToGaps(sizes: number[], count: number, sep: number): number[] {
+  const counts = sizes.map(() => 0);
+  const capacity = sizes.map((s) => Math.max(0, Math.floor(s / sep + 1e-9) - 1));
+  for (let n = 0; n < count; n++) {
+    let best = -1;
+    let bestSpacing = -1;
+    for (const strict of [true, false]) {
+      sizes.forEach((size, k) => {
+        if (strict && counts[k] >= capacity[k]) return;
+        const spacing = size / (counts[k] + 2);
+        if (spacing > bestSpacing) {
+          bestSpacing = spacing;
+          best = k;
+        }
+      });
+      if (best >= 0) break;
+    }
+    counts[best]++;
+  }
+  return counts;
+}
+
+/** Centro (in giri) di ogni spicchio. */
+export function arcMidpoints(arcs: ArcSegment[]): Map<string, number> {
+  return new Map(arcs.map((a) => [a.key, mod1(a.start + a.length / 2)]));
+}
 
 /** Margine dagli estremi dello spicchio, per non puntare sullo spazio tra spicchi. */
 const edgeInset = (length: number) => Math.min(0.01, length / 4);
 
-/**
- * Angolo dello spicchio (ruotato di `rotation`) più vicino all'angolo dato:
- * l'angolo stesso se cade dentro lo spicchio, altrimenti l'estremo più vicino.
- */
-export function nearestAngleInArc(angle: number, arc: ArcSegment, rotation: number): number {
+/** Angolo dello spicchio più vicino a quello dato (l'angolo stesso se ci cade dentro). */
+export function nearestAngleInArc(angle: number, arc: ArcSegment): number {
   const inset = edgeInset(arc.length);
-  const start = rotation + arc.start + inset;
+  const start = arc.start + inset;
   const length = arc.length - 2 * inset;
-  const offset = (((angle - start) % 1) + 1) % 1;
-  if (offset <= length) return angle;
+  if (mod1(angle - start) <= length) return mod1(angle);
   const end = start + length;
-  return turnDistance(angle, start) < turnDistance(angle, end) ? start % 1 : end % 1;
-}
-
-/**
- * Rotazione della ciambella (in giri) che rende minima la distanza tra ogni
- * icona e il proprio spicchio: idealmente ogni icona "cade" dentro il suo spicchio
- * e la linea di collegamento è radiale. Ricerca esaustiva su 720 passi.
- */
-export function alignRotation(
-  arcs: ArcSegment[],
-  iconPositions: Map<string, Point>,
-  center: Point,
-  steps = 720,
-): number {
-  const targets = arcs.flatMap((arc) => {
-    const icon = iconPositions.get(arc.key);
-    return icon ? [{ arc, angle: clockAngle(center, icon) }] : [];
-  });
-  if (targets.length === 0) return 0;
-
-  let best = 0;
-  let bestCost = Infinity;
-  for (let i = 0; i < steps; i++) {
-    const rotation = i / steps;
-    let cost = 0;
-    for (const { arc, angle } of targets) {
-      cost += turnDistance(angle, nearestAngleInArc(angle, arc, rotation));
-    }
-    if (cost < bestCost - 1e-9) {
-      bestCost = cost;
-      best = rotation;
-    }
-  }
-  return best;
+  return turnDistance(angle, start) < turnDistance(angle, end) ? mod1(start) : mod1(end);
 }
 
 export type Connector = { key: string; color: string; from: Point; to: Point };
 
-/**
- * Linee dal bordo di ogni icona al punto più vicino del suo spicchio, sul bordo
- * esterno. `rotation` è la rotazione della ciambella in giri.
- */
+/** Linee dal bordo di ogni icona al punto più vicino del suo spicchio. */
 export function connectors(
   arcs: ArcSegment[],
   iconPositions: Map<string, Point>,
   center: Point,
   donutRadius: number,
   iconRadius: number,
-  rotation = 0,
 ): Connector[] {
   return arcs.flatMap((arc) => {
     const icon = iconPositions.get(arc.key);
     if (!icon) return [];
-    const angle = nearestAngleInArc(clockAngle(center, icon), arc, rotation);
-    const to = pointAt(center, donutRadius, angle);
+    const to = pointAt(center, donutRadius, nearestAngleInArc(clockAngle(center, icon), arc));
     const dx = to.x - icon.x;
     const dy = to.y - icon.y;
     const dist = Math.hypot(dx, dy);

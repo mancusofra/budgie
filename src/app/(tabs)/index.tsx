@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { LinearTransition } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 
 import { donutArcs, DonutChart } from '@/components/charts/donut-chart';
@@ -21,10 +22,11 @@ import {
   useSelectedPeriod,
 } from '@/features/transactions/hooks';
 import {
-  alignRotation,
+  arcMidpoints,
   connectors,
-  ringGeometry,
-  sortByIconAngle,
+  orbitGeometry,
+  placeIcons,
+  pointAt,
   type Point,
 } from '@/features/transactions/ring-layout';
 import { useTheme } from '@/hooks/use-theme';
@@ -42,7 +44,8 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
 };
 const PERIOD_KINDS: PeriodKind[] = ['day', 'week', 'month', 'year', 'all'];
 const ICON_SIZE = 48;
-const CELL = ICON_SIZE + Spacing.three;
+const ICON_GAP = Spacing.two;
+const iconTransition = LinearTransition.springify().damping(18).stiffness(140);
 
 export default function HomeScreen() {
   const { t } = useTranslation();
@@ -58,53 +61,46 @@ export default function HomeScreen() {
   const [mode, setMode] = useState<CenterMode>('balance');
   const chartType = mode === 'income' ? 'income' : 'expense';
 
-  const expenseCategories = useCategories('expense');
-  const chartCategories = useCategories(chartType);
+  // Attorno alla ciambella ci sono le categorie del tipo mostrato (spese o entrate)
+  const ringCategories = useCategories(chartType);
   const categoryTotals = useCategoryTotals(range, chartType, accountFilter);
   const totals = usePeriodTotals(range, accountFilter);
 
   const [area, setArea] = useState({ width: width - Spacing.three * 2, height: 0 });
   const geometry = useMemo(
-    () => ringGeometry({ width: area.width, height: area.height, cell: CELL, gap: Spacing.two }),
-    [area.width, area.height],
-  );
-  const ringCategories = expenseCategories.slice(0, geometry.slots.length);
-  const iconPositions = useMemo(
-    () => new Map<string, Point>(ringCategories.map((c, i) => [c.id, geometry.slots[i]])),
-    [ringCategories, geometry.slots],
+    () => orbitGeometry({ ...area, iconSize: ICON_SIZE, gap: ICON_GAP }),
+    [area],
   );
 
-  // Le icone attorno sono le categorie di spesa: le linee hanno senso solo per quelle
-  const showConnectors = chartType === 'expense';
+  // Spicchi nell'ordine delle categorie, così le icone mantengono un ordine stabile
   const segments = useMemo(() => {
-    const byId = new Map(chartCategories.map((c) => [c.id, c]));
-    const base = categoryTotals.map((row) => ({
-      key: row.categoryId ?? 'none',
-      value: row.total,
-      color: byId.get(row.categoryId ?? '')?.color ?? theme.textSecondary,
-    }));
-    return showConnectors ? sortByIconAngle(base, iconPositions, geometry.center) : base;
-  }, [
-    chartCategories,
-    categoryTotals,
-    theme.textSecondary,
-    showConnectors,
+    const totalById = new Map(categoryTotals.map((r) => [r.categoryId ?? 'none', r.total]));
+    return ringCategories
+      .filter((c) => totalById.has(c.id))
+      .map((c) => ({ key: c.id, value: totalById.get(c.id)!, color: c.color }));
+  }, [ringCategories, categoryTotals]);
+  const arcs = useMemo(() => donutArcs(segments), [segments]);
+
+  // Ogni icona con uno spicchio si posiziona sopra il centro del proprio spicchio
+  const iconPositions = useMemo(() => {
+    const minSep = (ICON_SIZE + Spacing.one) / (2 * Math.PI * Math.max(geometry.orbitRadius, 1));
+    const angles = placeIcons(
+      ringCategories.map((c) => c.id),
+      arcMidpoints(arcs),
+      minSep,
+    );
+    return new Map<string, Point>(
+      [...angles].map(([id, angle]) => [id, pointAt(geometry.center, geometry.orbitRadius, angle)]),
+    );
+  }, [ringCategories, arcs, geometry]);
+
+  const lines = connectors(
+    arcs,
     iconPositions,
     geometry.center,
-  ]);
-
-  const arcs = donutArcs(segments);
-  const rotation = showConnectors ? alignRotation(arcs, iconPositions, geometry.center) : 0;
-  const lines = showConnectors
-    ? connectors(
-        arcs,
-        iconPositions,
-        geometry.center,
-        geometry.donutSize / 2,
-        ICON_SIZE / 2 + Spacing.one,
-        rotation,
-      )
-    : [];
+    geometry.donutSize / 2,
+    ICON_SIZE / 2 + Spacing.half,
+  );
 
   const canShift = period.kind !== 'all';
   const swipe = Gesture.Race(
@@ -128,21 +124,25 @@ export default function HomeScreen() {
     mode === 'balance' ? 'home.balance' : mode === 'expense' ? 'home.expenses' : 'home.income',
   );
 
-  const renderIcon = (c: Category, i: number) => {
-    const slot = geometry.slots[i];
+  const renderIcon = (c: Category) => {
+    const p = iconPositions.get(c.id);
+    if (!p) return null;
     return (
-      <Pressable
+      <Animated.View
         key={c.id}
-        accessibilityRole="button"
-        accessibilityLabel={t('home.addTo', { category: c.name })}
-        onPress={() => openNew('expense', c)}
-        style={({ pressed }) => [
-          styles.cell,
-          { left: slot.x - CELL / 2, top: slot.y - CELL / 2 },
-          pressed && { opacity: 0.6 },
-        ]}>
-        <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} />
-      </Pressable>
+        layout={iconTransition}
+        style={[styles.cell, { left: p.x - ICON_SIZE / 2, top: p.y - ICON_SIZE / 2 }]}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t(chartType === 'expense' ? 'home.addTo' : 'home.addIncomeTo', {
+            category: c.name,
+          })}
+          onPress={() => openNew(chartType, c)}
+          hitSlop={Spacing.one}
+          style={({ pressed }) => pressed && { opacity: 0.6 }}>
+          <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} />
+        </Pressable>
+      </Animated.View>
     );
   };
 
@@ -181,7 +181,7 @@ export default function HomeScreen() {
                 x2={l.to.x}
                 y2={l.to.y}
                 stroke={l.color}
-                strokeOpacity={0.45}
+                strokeOpacity={0.5}
                 strokeWidth={1.5}
                 strokeLinecap="round"
               />
@@ -197,11 +197,7 @@ export default function HomeScreen() {
               left: geometry.center.x - geometry.donutSize / 2,
               top: geometry.center.y - geometry.donutSize / 2,
             }}>
-            <DonutChart
-              segments={segments}
-              size={geometry.donutSize}
-              trackColor={theme.surface}
-              rotation={rotation}>
+            <DonutChart segments={segments} size={geometry.donutSize} trackColor={theme.surface}>
               <Text color="textSecondary">{centerLabel}</Text>
               <Text
                 variant="subtitle"
@@ -257,13 +253,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   header: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
-  cell: {
-    position: 'absolute',
-    width: CELL,
-    height: CELL,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
   actions: { flexDirection: 'row', gap: Spacing.three, paddingBottom: Spacing.three },
   action: { flex: 1 },
 });

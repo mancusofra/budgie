@@ -5,7 +5,12 @@
     "stats": "Statistiche",
     "settings": "Impostazioni"
   },
-  "common": { "save": "Salva", "cancel": "Annulla", "delete": "Elimina", "undo": "Annulla" },
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "delete": "Elimina",
+    "undo": "Annulla"
+  },
   "period": {
     "day": "Giorno",
     "week": "Settimana",
@@ -22,7 +27,8 @@
     "addExpense": "Spesa",
     "addIncome": "Entrata",
     "allAccounts": "Tutti i conti",
-    "addTo": "Aggiungi spesa: {{category}}"
+    "addTo": "Aggiungi spesa: {{category}}",
+    "addIncomeTo": "Aggiungi entrata: {{category}}"
   },
   "transaction": {
     "newExpense": "Spesa",

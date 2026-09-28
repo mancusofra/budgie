@@ -5,7 +5,12 @@
     "stats": "Stats",
     "settings": "Settings"
   },
-  "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "undo": "Undo" },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "undo": "Undo"
+  },
   "period": {
     "day": "Day",
     "week": "Week",
@@ -22,7 +27,8 @@
     "addExpense": "Expense",
     "addIncome": "Income",
     "allAccounts": "All accounts",
-    "addTo": "Add expense: {{category}}"
+    "addTo": "Add expense: {{category}}",
+    "addIncomeTo": "Add income: {{category}}"
   },
   "transaction": {
     "newExpense": "Expense",
