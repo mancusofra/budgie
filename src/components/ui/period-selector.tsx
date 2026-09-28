@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/theme';
 
+import { Surface } from './surface';
 import { Text } from './text';
 
 type Props = {
@@ -34,9 +35,11 @@ export function PeriodSelector({
       accessibilityLabel={a11y}
       disabled={!onPress}
       onPress={onPress}
-      hitSlop={12}
-      style={({ pressed }) => ({ opacity: !onPress ? 0.25 : pressed ? 0.5 : 1 })}>
-      <MaterialCommunityIcons name={name} size={32} color={theme.text} />
+      hitSlop={8}
+      style={({ pressed }) => ({ opacity: !onPress ? 0.3 : pressed ? 0.6 : 1 })}>
+      <Surface interactive style={styles.arrow}>
+        <MaterialCommunityIcons name={name} size={24} color={theme.text} />
+      </Surface>
     </Pressable>
   );
 
@@ -59,6 +62,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: Spacing.two,
+  },
+  arrow: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   label: { flex: 1, alignItems: 'center' },
 });

@@ -1,8 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
-import { Radius, Spacing } from '@/theme';
+import { withAlpha } from '@/lib/color';
+import { Spacing } from '@/theme';
 
+import { hasGlass, Surface } from './surface';
 import { Text } from './text';
 
 type Props<T extends string> = {
@@ -13,10 +15,10 @@ type Props<T extends string> = {
 
 export function SegmentedControl<T extends string>({ options, value, onChange }: Props<T>) {
   const theme = useTheme();
+  const selectedBg = hasGlass ? withAlpha(theme.text, 0.1) : theme.background;
+
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.surface }]}
-      accessibilityRole="tablist">
+    <Surface style={styles.container}>
       {options.map((o) => {
         const selected = o.value === value;
         return (
@@ -25,27 +27,29 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             onPress={() => onChange(o.value)}
-            style={[styles.option, selected && { backgroundColor: theme.background }]}>
+            style={[styles.option, selected && { backgroundColor: selectedBg }]}>
             <Text
               variant="caption"
+              numberOfLines={1}
               color={selected ? 'text' : 'textSecondary'}
-              style={selected && styles.selected}>
+              style={selected ? styles.selected : styles.label}>
               {o.label}
             </Text>
           </Pressable>
         );
       })}
-    </View>
+    </Surface>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexDirection: 'row', borderRadius: Radius, padding: Spacing.half + 1 },
+  container: { flexDirection: 'row', borderRadius: 999, padding: 3 },
   option: {
     flex: 1,
     alignItems: 'center',
-    paddingVertical: Spacing.one + 2,
-    borderRadius: Radius - 2,
+    paddingVertical: Spacing.one + 3,
+    borderRadius: 999,
   },
-  selected: { fontWeight: '700' },
+  label: { fontWeight: '500' },
+  selected: { fontWeight: '600' },
 });

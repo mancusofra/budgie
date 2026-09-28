@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
 import { Keypad } from '@/components/ui/keypad';
+import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Category } from '@/db/schema';
 import { useAccounts } from '@/features/accounts/hooks';
@@ -127,11 +128,12 @@ export default function NewTransactionScreen() {
       <Pressable
         accessibilityRole="button"
         accessibilityState={{ selected }}
-        onPress={() => setDate(value)}
-        style={[styles.chip, { backgroundColor: selected ? color : theme.surface }]}>
-        <Text variant="caption" color={selected ? 'textOnColor' : 'text'}>
-          {label}
-        </Text>
+        onPress={() => setDate(value)}>
+        <Surface interactive tint={selected ? color : undefined} style={styles.chip}>
+          <Text variant="caption" style={[styles.chipLabel, selected && { color }]}>
+            {label}
+          </Text>
+        </Surface>
       </Pressable>
     );
   };
@@ -146,17 +148,20 @@ export default function NewTransactionScreen() {
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel={t('transaction.close')}>
-          <MaterialCommunityIcons name="close" size={28} color={theme.text} />
+          <Surface interactive style={styles.round}>
+            <MaterialCommunityIcons name="close" size={22} color={theme.text} />
+          </Surface>
         </Pressable>
-        <Text variant="subtitle" style={{ color }}>
+        <Text variant="subtitle">
           {t(type === 'expense' ? 'transaction.newExpense' : 'transaction.newIncome')}
         </Text>
-        <Pressable
-          onPress={cycleAccount}
-          style={[styles.chip, { backgroundColor: theme.surface }]}
-          accessibilityRole="button">
-          <MaterialCommunityIcons name="wallet-outline" size={16} color={theme.text} />
-          <Text variant="caption">{account?.name ?? '—'}</Text>
+        <Pressable onPress={cycleAccount} accessibilityRole="button">
+          <Surface interactive style={styles.chip}>
+            <MaterialCommunityIcons name="wallet-outline" size={16} color={theme.textSecondary} />
+            <Text variant="caption" style={styles.chipLabel}>
+              {account?.name ?? '—'}
+            </Text>
+          </Surface>
         </Pressable>
       </View>
 
@@ -183,7 +188,7 @@ export default function NewTransactionScreen() {
               accessibilityRole="button"
               onPress={() => save(c)}
               style={({ pressed }) => [styles.gridItem, pressed && { opacity: 0.6 }]}>
-              <CategoryIcon icon={c.icon} color={c.color} size={52} />
+              <CategoryIcon icon={c.icon} color={c.color} size={52} filled />
               <Text variant="caption" numberOfLines={1}>
                 {c.name}
               </Text>
@@ -192,14 +197,17 @@ export default function NewTransactionScreen() {
         </ScrollView>
       ) : (
         <View style={styles.form}>
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            placeholder={t('transaction.note')}
-            placeholderTextColor={theme.textSecondary}
-            style={[styles.note, { color: theme.text, backgroundColor: theme.surface }]}
-            maxLength={200}
-          />
+          <Surface style={styles.noteBox}>
+            <MaterialCommunityIcons name="text" size={18} color={theme.textSecondary} />
+            <TextInput
+              value={note}
+              onChangeText={setNote}
+              placeholder={t('transaction.note')}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.note, { color: theme.text }]}
+              maxLength={200}
+            />
+          </Surface>
           <View style={styles.dates}>
             {dateChip(t('transaction.today'), today)}
             {dateChip(t('transaction.yesterday'), yesterday)}
@@ -215,18 +223,19 @@ export default function NewTransactionScreen() {
               <Pressable
                 onPress={pickDate}
                 accessibilityRole="button"
-                accessibilityLabel={t('transaction.pickDate')}
-                style={[styles.chip, { backgroundColor: isCustomDate ? color : theme.surface }]}>
-                <MaterialCommunityIcons
-                  name="calendar"
-                  size={16}
-                  color={isCustomDate ? '#FFFFFF' : theme.text}
-                />
-                {isCustomDate && (
-                  <Text variant="caption" color="textOnColor">
-                    {date.toLocaleDateString(deviceLocale)}
-                  </Text>
-                )}
+                accessibilityLabel={t('transaction.pickDate')}>
+                <Surface interactive tint={isCustomDate ? color : undefined} style={styles.chip}>
+                  <MaterialCommunityIcons
+                    name="calendar-blank-outline"
+                    size={16}
+                    color={isCustomDate ? color : theme.textSecondary}
+                  />
+                  {isCustomDate && (
+                    <Text variant="caption" style={[styles.chipLabel, { color }]}>
+                      {date.toLocaleDateString(deviceLocale)}
+                    </Text>
+                  )}
+                </Surface>
               </Pressable>
             )}
           </View>
@@ -239,7 +248,7 @@ export default function NewTransactionScreen() {
                 onPress={() => setChoosingCategory(true)}
                 style={styles.selected}
                 accessibilityRole="button">
-                <CategoryIcon icon={category.icon} color={category.color} size={40} />
+                <CategoryIcon icon={category.icon} color={category.color} size={40} filled />
                 <Text numberOfLines={1} style={styles.selectedName}>
                   {category.name}
                 </Text>
@@ -247,6 +256,7 @@ export default function NewTransactionScreen() {
               <Button
                 title={t('common.save')}
                 color={type}
+                filled
                 onPress={() => save()}
                 disabled={saving}
                 style={styles.flex}
@@ -254,8 +264,9 @@ export default function NewTransactionScreen() {
             </View>
           ) : (
             <Button
-              title={`${t('transaction.chooseCategory')} →`}
+              title={t('transaction.chooseCategory')}
               color={type}
+              filled
               onPress={() => save()}
             />
           )}
@@ -269,14 +280,16 @@ const styles = StyleSheet.create({
   container: { flex: 1, padding: Spacing.three, gap: Spacing.three },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   display: { alignItems: 'flex-end', minHeight: 96, justifyContent: 'center' },
-  amount: { fontSize: 48, lineHeight: 56, fontWeight: '700' },
+  amount: { fontSize: 52, lineHeight: 60, fontWeight: '600', letterSpacing: -1 },
   form: { flex: 1, justifyContent: 'flex-end', gap: Spacing.three },
-  note: {
+  noteBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
     borderRadius: Radius,
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
-    fontSize: 16,
   },
+  note: { flex: 1, paddingVertical: Spacing.two + 4, fontSize: 16 },
   dates: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   chip: {
     flexDirection: 'row',
@@ -285,6 +298,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.two,
     borderRadius: 999,
+  },
+  chipLabel: { fontWeight: '500' },
+  round: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   grid: { flexDirection: 'row', flexWrap: 'wrap', rowGap: Spacing.three },
   gridItem: {

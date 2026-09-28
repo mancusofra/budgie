@@ -151,6 +151,10 @@ describe('arcMidpoints / connectors', () => {
     expect(mid.get('b')).toBeCloseTo(0.625);
   });
 
+  it('uno spicchio che copre tutto l’anello non sposta la sua icona', () => {
+    expect(arcMidpoints(donutArcs([{ key: 'a', value: 5, color: '#000' }])).size).toBe(0);
+  });
+
   it('con l’icona sopra lo spicchio la linea è radiale e corta', () => {
     const icons = new Map([['a', pointAt(center, 100, 0.125)]]);
     const [line] = connectors(arcs, icons, center, 70, 24);

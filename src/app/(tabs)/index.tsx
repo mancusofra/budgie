@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -43,7 +44,7 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
   income: 'balance',
 };
 const PERIOD_KINDS: PeriodKind[] = ['day', 'week', 'month', 'year', 'all'];
-const ICON_SIZE = 48;
+const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
 const iconTransition = LinearTransition.springify().damping(18).stiffness(140);
 
@@ -80,6 +81,7 @@ export default function HomeScreen() {
       .map((c) => ({ key: c.id, value: totalById.get(c.id)!, color: c.color }));
   }, [ringCategories, categoryTotals]);
   const arcs = useMemo(() => donutArcs(segments), [segments]);
+  const spent = useMemo(() => new Set(segments.map((s) => s.key)), [segments]);
 
   // Ogni icona con uno spicchio si posiziona sopra il centro del proprio spicchio
   const iconPositions = useMemo(() => {
@@ -140,7 +142,7 @@ export default function HomeScreen() {
           onPress={() => openNew(chartType, c)}
           hitSlop={Spacing.one}
           style={({ pressed }) => pressed && { opacity: 0.6 }}>
-          <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} />
+          <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} filled={spent.has(c.id)} />
         </Pressable>
       </Animated.View>
     );
@@ -181,8 +183,8 @@ export default function HomeScreen() {
                 x2={l.to.x}
                 y2={l.to.y}
                 stroke={l.color}
-                strokeOpacity={0.5}
-                strokeWidth={1.5}
+                strokeOpacity={0.35}
+                strokeWidth={1}
                 strokeLinecap="round"
               />
             ))}
@@ -197,33 +199,45 @@ export default function HomeScreen() {
               left: geometry.center.x - geometry.donutSize / 2,
               top: geometry.center.y - geometry.donutSize / 2,
             }}>
-            <DonutChart segments={segments} size={geometry.donutSize} trackColor={theme.surface}>
-              <Text color="textSecondary">{centerLabel}</Text>
+            <DonutChart
+              segments={segments}
+              size={geometry.donutSize}
+              thickness={Math.max(14, geometry.donutSize * 0.075)}
+              trackColor={theme.surface}>
+              <Text variant="overline" color="textSecondary">
+                {centerLabel}
+              </Text>
               <Text
-                variant="subtitle"
                 numberOfLines={1}
                 adjustsFontSizeToFit
-                style={{
-                  color:
-                    mode === 'expense'
-                      ? theme.expense
-                      : mode === 'income' || centerAmount > 0
-                        ? theme.income
-                        : centerAmount < 0
-                          ? theme.expense
+                style={[
+                  styles.centerAmount,
+                  {
+                    color:
+                      mode === 'expense'
+                        ? theme.expense
+                        : mode === 'income'
+                          ? theme.income
                           : theme.text,
-                }}>
+                  },
+                ]}>
                 {money(centerAmount)}
               </Text>
               {mode === 'balance' && (
-                <>
-                  <Text variant="caption" style={{ color: theme.expense }} numberOfLines={1}>
-                    − {money(totals.expense)}
+                <View style={styles.centerTotals}>
+                  <Text variant="caption" color="textSecondary" numberOfLines={1}>
+                    <Text variant="caption" style={{ color: theme.expense }}>
+                      ↓{' '}
+                    </Text>
+                    {money(totals.expense)}
                   </Text>
-                  <Text variant="caption" style={{ color: theme.income }} numberOfLines={1}>
-                    + {money(totals.income)}
+                  <Text variant="caption" color="textSecondary" numberOfLines={1}>
+                    <Text variant="caption" style={{ color: theme.income }}>
+                      ↑{' '}
+                    </Text>
+                    {money(totals.income)}
                   </Text>
-                </>
+                </View>
               )}
             </DonutChart>
           </Pressable>
@@ -234,13 +248,15 @@ export default function HomeScreen() {
 
       <View style={styles.actions}>
         <Button
-          title={`− ${t('home.addExpense')}`}
+          title={t('home.addExpense')}
+          icon={<MaterialCommunityIcons name="minus" size={20} color={theme.expense} />}
           color="expense"
           style={styles.action}
           onPress={() => openNew('expense')}
         />
         <Button
-          title={`+ ${t('home.addIncome')}`}
+          title={t('home.addIncome')}
+          icon={<MaterialCommunityIcons name="plus" size={20} color={theme.income} />}
           color="income"
           style={styles.action}
           onPress={() => openNew('income')}
@@ -254,6 +270,8 @@ const styles = StyleSheet.create({
   header: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
   cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
+  centerAmount: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.5 },
+  centerTotals: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.one },
   actions: { flexDirection: 'row', gap: Spacing.three },
   action: { flex: 1 },
 });

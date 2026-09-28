@@ -170,9 +170,14 @@ export function allocateToGaps(sizes: number[], count: number, sep: number): num
   return counts;
 }
 
-/** Centro (in giri) di ogni spicchio. */
+/**
+ * Centro (in giri) di ogni spicchio. Uno spicchio che copre l'intero anello
+ * non ha una posizione preferita: la sua icona resta dove sarebbe comunque.
+ */
 export function arcMidpoints(arcs: ArcSegment[]): Map<string, number> {
-  return new Map(arcs.map((a) => [a.key, mod1(a.start + a.length / 2)]));
+  return new Map(
+    arcs.filter((a) => a.length < 0.999).map((a) => [a.key, mod1(a.start + a.length / 2)]),
+  );
 }
 
 /** Margine dagli estremi dello spicchio, per non puntare sullo spazio tra spicchi. */
@@ -180,6 +185,7 @@ const edgeInset = (length: number) => Math.min(0.01, length / 4);
 
 /** Angolo dello spicchio più vicino a quello dato (l'angolo stesso se ci cade dentro). */
 export function nearestAngleInArc(angle: number, arc: ArcSegment): number {
+  if (arc.length >= 0.999) return mod1(angle);
   const inset = edgeInset(arc.length);
   const start = arc.start + inset;
   const length = arc.length - 2 * inset;

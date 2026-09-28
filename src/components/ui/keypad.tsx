@@ -6,6 +6,7 @@ import { useTheme } from '@/hooks/use-theme';
 import type { KeypadKey } from '@/lib/expression';
 import { Radius, Spacing } from '@/theme';
 
+import { Surface } from './surface';
 import { Text } from './text';
 
 const ROWS: KeypadKey[][] = [
@@ -42,23 +43,16 @@ export function Keypad({ onKey, labels, decimalSeparator = ',' }: Props) {
                   Haptics.selectionAsync();
                   onKey(key);
                 }}
-                style={({ pressed }) => [
-                  styles.key,
-                  {
-                    backgroundColor: pressed
-                      ? theme.backgroundSelected
-                      : isOp
-                        ? theme.backgroundElement
-                        : theme.surface,
-                  },
-                ]}>
-                {key === 'backspace' ? (
-                  <MaterialCommunityIcons name="backspace-outline" size={26} color={theme.text} />
-                ) : (
-                  <Text style={[styles.label, isOp && { color: theme.primary }]}>
-                    {key === ',' ? decimalSeparator : key}
-                  </Text>
-                )}
+                style={({ pressed }) => [styles.flex, pressed && { opacity: 0.6 }]}>
+                <Surface interactive style={styles.key}>
+                  {key === 'backspace' ? (
+                    <MaterialCommunityIcons name="backspace-outline" size={24} color={theme.text} />
+                  ) : (
+                    <Text style={[styles.label, isOp && { color: theme.primary }]}>
+                      {key === ',' ? decimalSeparator : key}
+                    </Text>
+                  )}
+                </Surface>
               </Pressable>
             );
           })}
@@ -71,12 +65,12 @@ export function Keypad({ onKey, labels, decimalSeparator = ',' }: Props) {
 const styles = StyleSheet.create({
   grid: { gap: Spacing.two },
   row: { flexDirection: 'row', gap: Spacing.two },
+  flex: { flex: 1 },
   key: {
-    flex: 1,
-    height: 56,
+    height: 54,
     borderRadius: Radius,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  label: { fontSize: 26, lineHeight: 32, fontWeight: '500' },
+  label: { fontSize: 24, lineHeight: 30, fontWeight: '400' },
 });

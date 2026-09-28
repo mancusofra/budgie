@@ -1,4 +1,4 @@
-import { SEED_VERSION, seedDatabase } from '@/db/seed';
+import { DEFAULT_CATEGORIES, SEED_VERSION, seedDatabase } from '@/db/seed';
 
 import { createTestDb } from '../../test-utils/db';
 
@@ -38,6 +38,32 @@ describe('seedDatabase', () => {
     const [first] = await repos.categories.list({ type: 'expense' });
     expect(first.name).toBe('Food');
     expect((await repos.accounts.list())[0]).toMatchObject({ name: 'Cash', currency: 'CHF' });
+    close();
+  });
+
+  it('v1 → v2: ricolora solo le categorie con il colore di default originale', async () => {
+    const { db, repos, close } = createTestDb();
+    // Simula un DB creato con il seed v1
+    const food = await repos.categories.create({
+      name: 'Cibo',
+      type: 'expense',
+      icon: 'food-apple',
+      color: '#43A047',
+    });
+    const custom = await repos.categories.create({
+      name: 'Mia',
+      type: 'expense',
+      icon: 'star',
+      color: '#123456',
+    });
+    await repos.settings.set('seedVersion', 1);
+
+    expect(await seedDatabase(db, { language: 'it', currency: 'EUR' })).toBe(true);
+    expect((await repos.categories.getById(food.id))?.color).toBe(DEFAULT_CATEGORIES[0].color);
+    expect((await repos.categories.getById(custom.id))?.color).toBe('#123456');
+    // non reinserisce i dati di default
+    expect(await repos.categories.list()).toHaveLength(2);
+    expect(await repos.settings.get('seedVersion')).toBe(SEED_VERSION);
     close();
   });
 });

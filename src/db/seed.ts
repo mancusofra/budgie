@@ -1,15 +1,22 @@
+import { and, eq, inArray } from 'drizzle-orm';
+
 import { createId } from '@/lib/id';
 
 import { createSettingsRepo } from './repositories/settings';
 import { accounts, categories, type Category, type CategoryType } from './schema';
 import type { AppDatabase } from './types';
 
-/** Incrementare quando si aggiungono nuovi dati di default. */
-export const SEED_VERSION = 1;
+/**
+ * Incrementare quando cambiano i dati di default.
+ * v2: palette categorie più sobria.
+ */
+export const SEED_VERSION = 2;
 
 type Language = 'it' | 'en';
 
 type DefaultCategory = {
+  /** Colori usati dalle versioni precedenti del seed, da aggiornare se invariati. */
+  legacyColors?: string[];
   key: string;
   type: CategoryType;
   icon: string;
@@ -21,150 +28,193 @@ type DefaultCategory = {
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   {
     key: 'food',
+    legacyColors: ['#43A047'],
     type: 'expense',
     icon: 'food-apple',
-    color: '#43A047',
+    color: '#6E9E7B',
     name: { it: 'Cibo', en: 'Food' },
   },
   {
     key: 'home',
+    legacyColors: ['#8D6E63'],
     type: 'expense',
     icon: 'home',
-    color: '#8D6E63',
+    color: '#9C8878',
     name: { it: 'Casa', en: 'House' },
   },
   {
     key: 'transport',
+    legacyColors: ['#1E88E5'],
     type: 'expense',
     icon: 'bus',
-    color: '#1E88E5',
+    color: '#6887AB',
     name: { it: 'Trasporti', en: 'Transport' },
   },
-  { key: 'car', type: 'expense', icon: 'car', color: '#3949AB', name: { it: 'Auto', en: 'Car' } },
+  {
+    key: 'car',
+    legacyColors: ['#3949AB'],
+    type: 'expense',
+    icon: 'car',
+    color: '#626F96',
+    name: { it: 'Auto', en: 'Car' },
+  },
   {
     key: 'bills',
+    legacyColors: ['#FDD835'],
     type: 'expense',
     icon: 'flash',
-    color: '#FDD835',
+    color: '#C4A35E',
     name: { it: 'Bollette', en: 'Bills' },
   },
   {
     key: 'health',
+    legacyColors: ['#E53935'],
     type: 'expense',
     icon: 'hospital-box',
-    color: '#E53935',
+    color: '#BF6B66',
     name: { it: 'Salute', en: 'Health' },
   },
   {
     key: 'entertainment',
+    legacyColors: ['#8E24AA'],
     type: 'expense',
     icon: 'gamepad-variant',
-    color: '#8E24AA',
+    color: '#8B7BAA',
     name: { it: 'Svago', en: 'Entertainment' },
   },
   {
     key: 'restaurants',
+    legacyColors: ['#FB8C00'],
     type: 'expense',
     icon: 'silverware-fork-knife',
-    color: '#FB8C00',
+    color: '#C98B5E',
     name: { it: 'Ristoranti', en: 'Eating out' },
   },
   {
     key: 'clothes',
+    legacyColors: ['#D81B60'],
     type: 'expense',
     icon: 'tshirt-crew',
-    color: '#D81B60',
+    color: '#B07189',
     name: { it: 'Abbigliamento', en: 'Clothes' },
   },
   {
     key: 'gifts',
+    legacyColors: ['#F4511E'],
     type: 'expense',
     icon: 'gift',
-    color: '#F4511E',
+    color: '#C47F68',
     name: { it: 'Regali', en: 'Gifts' },
   },
   {
     key: 'sports',
+    legacyColors: ['#00ACC1'],
     type: 'expense',
     icon: 'basketball',
-    color: '#00ACC1',
+    color: '#5E9AA3',
     name: { it: 'Sport', en: 'Sports' },
   },
   {
     key: 'pets',
+    legacyColors: ['#6D4C41'],
     type: 'expense',
     icon: 'paw',
-    color: '#6D4C41',
+    color: '#8A7766',
     name: { it: 'Animali', en: 'Pets' },
   },
   {
     key: 'toiletry',
+    legacyColors: ['#26A69A'],
     type: 'expense',
     icon: 'toothbrush',
-    color: '#26A69A',
+    color: '#6EA398',
     name: { it: 'Igiene', en: 'Toiletry' },
   },
   {
     key: 'communications',
+    legacyColors: ['#5E35B1'],
     type: 'expense',
     icon: 'cellphone',
-    color: '#5E35B1',
+    color: '#7A7DB0',
     name: { it: 'Comunicazioni', en: 'Communications' },
   },
   {
     key: 'taxi',
+    legacyColors: ['#FFB300'],
     type: 'expense',
     icon: 'taxi',
-    color: '#FFB300',
+    color: '#C9A961',
     name: { it: 'Taxi', en: 'Taxi' },
   },
   {
     key: 'other-expense',
+    legacyColors: ['#757575'],
     type: 'expense',
     icon: 'dots-horizontal',
-    color: '#757575',
+    color: '#8E8E93',
     name: { it: 'Altro', en: 'Other' },
   },
   {
     key: 'salary',
+    legacyColors: ['#2E7D32'],
     type: 'income',
     icon: 'cash',
-    color: '#2E7D32',
+    color: '#5E9A77',
     name: { it: 'Stipendio', en: 'Salary' },
   },
   {
     key: 'savings',
+    legacyColors: ['#00897B'],
     type: 'income',
     icon: 'piggy-bank',
-    color: '#00897B',
+    color: '#4F9690',
     name: { it: 'Risparmi', en: 'Savings' },
   },
   {
     key: 'gifts-income',
+    legacyColors: ['#F4511E'],
     type: 'income',
     icon: 'gift',
-    color: '#F4511E',
+    color: '#C47F68',
     name: { it: 'Regali', en: 'Gifts' },
   },
   {
     key: 'other-income',
+    legacyColors: ['#757575'],
     type: 'income',
     icon: 'dots-horizontal',
-    color: '#757575',
+    color: '#8E8E93',
     name: { it: 'Altro', en: 'Other' },
   },
 ];
 
 export type SeedOptions = { language: string; currency: string };
 
+const CASH_COLOR = '#6E9E7B';
+const LEGACY_CASH_COLORS = ['#43A047'];
+
 /**
  * Popola il DB al primo avvio con categorie, conto "Contanti" e impostazioni di base.
- * Idempotente: non fa nulla se il seed è già stato applicato.
+ * Sui DB già esistenti applica solo gli aggiornamenti delle versioni successive.
+ * Idempotente: non fa nulla se il seed è già alla versione corrente.
  */
 export async function seedDatabase(db: AppDatabase, { language, currency }: SeedOptions) {
   const settingsRepo = createSettingsRepo(db);
-  if (((await settingsRepo.get('seedVersion')) ?? 0) >= SEED_VERSION) return false;
+  const current = (await settingsRepo.get('seedVersion')) ?? 0;
+  if (current >= SEED_VERSION) return false;
 
+  if (current === 0) {
+    insertDefaults(db, language, currency);
+    await settingsRepo.set('currency', currency);
+  } else if (current < 2) {
+    recolorDefaults(db);
+  }
+
+  await settingsRepo.set('seedVersion', SEED_VERSION);
+  return true;
+}
+
+function insertDefaults(db: AppDatabase, language: string, currency: string) {
   const lang: Language = language.startsWith('it') ? 'it' : 'en';
   const now = new Date();
   const sortByType: Record<CategoryType, number> = { expense: 0, income: 0 };
@@ -188,13 +238,26 @@ export async function seedDatabase(db: AppDatabase, { language, currency }: Seed
         name: lang === 'it' ? 'Contanti' : 'Cash',
         currency,
         icon: 'cash',
-        color: '#43A047',
+        color: CASH_COLOR,
         createdAt: now,
       })
       .run();
   });
+}
 
-  await settingsRepo.set('currency', currency);
-  await settingsRepo.set('seedVersion', SEED_VERSION);
-  return true;
+/** v2: nuova palette. Aggiorna solo i colori rimasti quelli di default. */
+function recolorDefaults(db: AppDatabase) {
+  db.transaction((tx) => {
+    for (const c of DEFAULT_CATEGORIES) {
+      if (!c.legacyColors?.length) continue;
+      tx.update(categories)
+        .set({ color: c.color })
+        .where(and(eq(categories.type, c.type), inArray(categories.color, c.legacyColors)))
+        .run();
+    }
+    tx.update(accounts)
+      .set({ color: CASH_COLOR })
+      .where(inArray(accounts.color, LEGACY_CASH_COLORS))
+      .run();
+  });
 }
