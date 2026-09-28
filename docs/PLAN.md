@@ -44,13 +44,13 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 1 — Database e modello dati
 
-- [ ] Definire lo schema Drizzle in `src/db/schema.ts` (vedi [`DATA_MODEL.md`](DATA_MODEL.md))
-- [ ] Configurare `drizzle.config.ts` (driver `expo`) e generare la prima migrazione
-- [ ] `src/db/client.ts`: apertura DB + `useMigrations` nel root layout
-- [ ] `src/db/seed.ts`: categorie di default (spesa ed entrata) e un conto "Contanti"
-- [ ] Repository tipizzati: `transactions`, `categories`, `accounts`
-- [ ] Utility denaro in `src/lib/money.ts`: importi salvati come **interi in centesimi** (mai float)
-- [ ] Unit test per repository e utility (SQLite in-memory o mock)
+- [x] Definire lo schema Drizzle in `src/db/schema.ts` (vedi [`DATA_MODEL.md`](DATA_MODEL.md))
+- [x] Configurare `drizzle.config.ts` (driver `expo`) e generare la prima migrazione
+- [x] `src/db/client.ts`: apertura DB + `useMigrations` nel root layout
+- [x] `src/db/seed.ts`: categorie di default (spesa ed entrata) e un conto "Contanti"
+- [x] Repository tipizzati: `transactions`, `categories`, `accounts`
+- [x] Utility denaro in `src/lib/money.ts`: importi salvati come **interi in centesimi** (mai float)
+- [x] Unit test per repository e utility (SQLite in-memory o mock)
 
 **DoD:** al primo avvio il DB viene creato e popolato; i test dei repository passano.
 
