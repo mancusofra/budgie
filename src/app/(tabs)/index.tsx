@@ -3,8 +3,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Svg, { Line } from 'react-native-svg';
 
-import { DonutChart } from '@/components/charts/donut-chart';
+import { donutArcs, DonutChart } from '@/components/charts/donut-chart';
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
 import { PeriodSelector } from '@/components/ui/period-selector';
@@ -19,7 +20,13 @@ import {
   usePeriodTotals,
   useSelectedPeriod,
 } from '@/features/transactions/hooks';
-import { ringLayout } from '@/features/transactions/ring-layout';
+import {
+  alignRotation,
+  connectors,
+  ringGeometry,
+  sortByIconAngle,
+  type Point,
+} from '@/features/transactions/ring-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
 import type { PeriodKind } from '@/lib/period';
@@ -56,17 +63,48 @@ export default function HomeScreen() {
   const categoryTotals = useCategoryTotals(range, chartType, accountFilter);
   const totals = usePeriodTotals(range, accountFilter);
 
+  const [area, setArea] = useState({ width: width - Spacing.three * 2, height: 0 });
+  const geometry = useMemo(
+    () => ringGeometry({ width: area.width, height: area.height, cell: CELL, gap: Spacing.two }),
+    [area.width, area.height],
+  );
+  const ringCategories = expenseCategories.slice(0, geometry.slots.length);
+  const iconPositions = useMemo(
+    () => new Map<string, Point>(ringCategories.map((c, i) => [c.id, geometry.slots[i]])),
+    [ringCategories, geometry.slots],
+  );
+
+  // Le icone attorno sono le categorie di spesa: le linee hanno senso solo per quelle
+  const showConnectors = chartType === 'expense';
   const segments = useMemo(() => {
     const byId = new Map(chartCategories.map((c) => [c.id, c]));
-    return categoryTotals.map((row) => ({
+    const base = categoryTotals.map((row) => ({
       key: row.categoryId ?? 'none',
       value: row.total,
       color: byId.get(row.categoryId ?? '')?.color ?? theme.textSecondary,
     }));
-  }, [chartCategories, categoryTotals, theme.textSecondary]);
+    return showConnectors ? sortByIconAngle(base, iconPositions, geometry.center) : base;
+  }, [
+    chartCategories,
+    categoryTotals,
+    theme.textSecondary,
+    showConnectors,
+    iconPositions,
+    geometry.center,
+  ]);
 
-  const ring = ringLayout(expenseCategories);
-  const donutSize = Math.min(width - Spacing.three * 2 - CELL * 2 - Spacing.two * 2, CELL * 4);
+  const arcs = donutArcs(segments);
+  const rotation = showConnectors ? alignRotation(arcs, iconPositions, geometry.center) : 0;
+  const lines = showConnectors
+    ? connectors(
+        arcs,
+        iconPositions,
+        geometry.center,
+        geometry.donutSize / 2,
+        ICON_SIZE / 2 + Spacing.one,
+        rotation,
+      )
+    : [];
 
   const canShift = period.kind !== 'all';
   const swipe = Gesture.Race(
@@ -90,17 +128,23 @@ export default function HomeScreen() {
     mode === 'balance' ? 'home.balance' : mode === 'expense' ? 'home.expenses' : 'home.income',
   );
 
-  const renderIcons = (items: Category[]) =>
-    items.map((c) => (
+  const renderIcon = (c: Category, i: number) => {
+    const slot = geometry.slots[i];
+    return (
       <Pressable
         key={c.id}
         accessibilityRole="button"
         accessibilityLabel={t('home.addTo', { category: c.name })}
         onPress={() => openNew('expense', c)}
-        style={({ pressed }) => [styles.cell, pressed && { opacity: 0.6 }]}>
+        style={({ pressed }) => [
+          styles.cell,
+          { left: slot.x - CELL / 2, top: slot.y - CELL / 2 },
+          pressed && { opacity: 0.6 },
+        ]}>
         <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} />
       </Pressable>
-    ));
+    );
+  };
 
   return (
     <Screen>
@@ -121,47 +165,74 @@ export default function HomeScreen() {
       </View>
 
       <GestureDetector gesture={swipe}>
-        <View style={styles.ring} collapsable={false}>
-          <View style={styles.row}>{renderIcons(ring.top)}</View>
-          <View style={styles.middle}>
-            <View style={styles.column}>{renderIcons(ring.left)}</View>
-            <Pressable
-              onPress={() => setMode(NEXT_MODE[mode])}
-              accessibilityRole="button"
-              accessibilityLabel={`${centerLabel} ${money(centerAmount)}`}>
-              <DonutChart segments={segments} size={donutSize} trackColor={theme.surface}>
-                <Text color="textSecondary">{centerLabel}</Text>
-                <Text
-                  variant="subtitle"
-                  numberOfLines={1}
-                  adjustsFontSizeToFit
-                  style={{
-                    color:
-                      mode === 'expense'
-                        ? theme.expense
-                        : mode === 'income' || centerAmount > 0
-                          ? theme.income
-                          : centerAmount < 0
-                            ? theme.expense
-                            : theme.text,
-                  }}>
-                  {money(centerAmount)}
-                </Text>
-                {mode === 'balance' && (
-                  <>
-                    <Text variant="caption" style={{ color: theme.expense }} numberOfLines={1}>
-                      − {money(totals.expense)}
-                    </Text>
-                    <Text variant="caption" style={{ color: theme.income }} numberOfLines={1}>
-                      + {money(totals.income)}
-                    </Text>
-                  </>
-                )}
-              </DonutChart>
-            </Pressable>
-            <View style={styles.column}>{renderIcons(ring.right)}</View>
-          </View>
-          <View style={styles.row}>{renderIcons(ring.bottom)}</View>
+        <View
+          style={styles.ring}
+          collapsable={false}
+          onLayout={(e) => {
+            const { width: w, height: h } = e.nativeEvent.layout;
+            if (w !== area.width || h !== area.height) setArea({ width: w, height: h });
+          }}>
+          <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+            {lines.map((l) => (
+              <Line
+                key={l.key}
+                x1={l.from.x}
+                y1={l.from.y}
+                x2={l.to.x}
+                y2={l.to.y}
+                stroke={l.color}
+                strokeOpacity={0.45}
+                strokeWidth={1.5}
+                strokeLinecap="round"
+              />
+            ))}
+          </Svg>
+
+          <Pressable
+            onPress={() => setMode(NEXT_MODE[mode])}
+            accessibilityRole="button"
+            accessibilityLabel={`${centerLabel} ${money(centerAmount)}`}
+            style={{
+              position: 'absolute',
+              left: geometry.center.x - geometry.donutSize / 2,
+              top: geometry.center.y - geometry.donutSize / 2,
+            }}>
+            <DonutChart
+              segments={segments}
+              size={geometry.donutSize}
+              trackColor={theme.surface}
+              rotation={rotation}>
+              <Text color="textSecondary">{centerLabel}</Text>
+              <Text
+                variant="subtitle"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+                style={{
+                  color:
+                    mode === 'expense'
+                      ? theme.expense
+                      : mode === 'income' || centerAmount > 0
+                        ? theme.income
+                        : centerAmount < 0
+                          ? theme.expense
+                          : theme.text,
+                }}>
+                {money(centerAmount)}
+              </Text>
+              {mode === 'balance' && (
+                <>
+                  <Text variant="caption" style={{ color: theme.expense }} numberOfLines={1}>
+                    − {money(totals.expense)}
+                  </Text>
+                  <Text variant="caption" style={{ color: theme.income }} numberOfLines={1}>
+                    + {money(totals.income)}
+                  </Text>
+                </>
+              )}
+            </DonutChart>
+          </Pressable>
+
+          {ringCategories.map(renderIcon)}
         </View>
       </GestureDetector>
 
@@ -185,11 +256,14 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   header: { gap: Spacing.three },
-  ring: { flex: 1, justifyContent: 'center', gap: Spacing.two },
-  row: { flexDirection: 'row', justifyContent: 'space-around' },
-  middle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  column: { gap: Spacing.two, justifyContent: 'space-between' },
-  cell: { width: CELL, alignItems: 'center', paddingVertical: Spacing.half },
+  ring: { flex: 1, marginVertical: Spacing.two },
+  cell: {
+    position: 'absolute',
+    width: CELL,
+    height: CELL,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   actions: { flexDirection: 'row', gap: Spacing.three, paddingBottom: Spacing.three },
   action: { flex: 1 },
 });

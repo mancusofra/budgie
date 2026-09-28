@@ -30,6 +30,8 @@ type Props = {
   size: number;
   thickness?: number;
   trackColor: string;
+  /** Rotazione in giri (0–1), in senso orario; 0 = primo spicchio da ore 12. */
+  rotation?: number;
   children?: ReactNode;
 };
 
@@ -38,6 +40,7 @@ export function DonutChart({
   size,
   thickness = size * 0.12,
   trackColor,
+  rotation = 0,
   children,
 }: Props) {
   const r = (size - thickness) / 2;
@@ -47,7 +50,7 @@ export function DonutChart({
   return (
     <View style={{ width: size, height: size }}>
       <Svg width={size} height={size}>
-        <G rotation={-90} origin={`${size / 2}, ${size / 2}`}>
+        <G rotation={-90 + rotation * 360} origin={`${size / 2}, ${size / 2}`}>
           <Circle
             cx={size / 2}
             cy={size / 2}
