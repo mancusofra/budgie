@@ -276,3 +276,62 @@ describe('transactionsRepo – lista dettagliata', () => {
     close();
   });
 });
+
+describe('transactionsRepo – statistiche per categoria', () => {
+  it('somma e conta per categoria e tipo, esclude i trasferimenti e rispetta il periodo', async () => {
+    const { repos, cash, card, food, bills, salary, close } = await setup();
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 1000,
+      accountId: cash.id,
+      categoryId: food,
+      date: day(2),
+    });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 500,
+      accountId: card.id,
+      categoryId: food,
+      date: day(3),
+    });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 4000,
+      accountId: card.id,
+      categoryId: bills,
+      date: day(4),
+    });
+    await repos.transactions.create({
+      type: 'income',
+      amount: 9000,
+      accountId: card.id,
+      categoryId: salary,
+      date: day(5),
+    });
+    await repos.transactions.create({
+      type: 'transfer',
+      amount: 100,
+      accountId: card.id,
+      toAccountId: cash.id,
+      date: day(6),
+    });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 7,
+      accountId: cash.id,
+      categoryId: food,
+      date: new Date(2026, 9, 1),
+    });
+
+    const september = { from: new Date(2026, 8, 1), to: new Date(2026, 9, 1) };
+    expect(await repos.transactions.statsByCategory(september)).toEqual([
+      { categoryId: salary, type: 'income', total: 9000, count: 1 },
+      { categoryId: bills, type: 'expense', total: 4000, count: 1 },
+      { categoryId: food, type: 'expense', total: 1500, count: 2 },
+    ]);
+    expect(await repos.transactions.statsByCategory({ ...september, accountId: cash.id })).toEqual([
+      { categoryId: food, type: 'expense', total: 1000, count: 1 },
+    ]);
+    close();
+  });
+});

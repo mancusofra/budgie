@@ -108,9 +108,9 @@ export default function HomeScreen() {
   );
 
   const donutThickness = Math.max(14, geometry.donutSize * 0.075);
-  const setCategoryFilter = useUIStore((s) => s.setCategoryFilter);
+  const setOpenCategory = useUIStore((s) => s.setOpenCategory);
 
-  // Tap sull'anello = lista filtrata per quella categoria; tap al centro = cambia vista
+  // Tap sull'anello = lista con quella categoria aperta; tap al centro = cambia vista
   const onDonutPress = (e: GestureResponderEvent) => {
     const r = geometry.donutSize / 2;
     const dx = e.nativeEvent.locationX - r;
@@ -118,7 +118,7 @@ export default function HomeScreen() {
     const onRing = Math.hypot(dx, dy) >= r - donutThickness - Spacing.two;
     const arc = onRing ? arcAtAngle(arcs, clockAngle({ x: 0, y: 0 }, { x: dx, y: dy })) : undefined;
     if (arc) {
-      setCategoryFilter(arc.key);
+      setOpenCategory(arc.key);
       router.navigate('/transactions');
     } else {
       setMode(NEXT_MODE[mode]);

@@ -105,3 +105,12 @@ export function useTransactionList(filter: DetailedFilter) {
   ]);
   return data ?? [];
 }
+
+/** Totale e numero di movimenti per categoria nel periodo (spese ed entrate). */
+export function useCategoryStats(range: PeriodRange, accountFilter = 'all') {
+  const { data } = useLiveQuery(
+    repos.transactions.statsByCategory({ ...range, accountId: accountParam(accountFilter) }),
+    [range.from?.getTime(), range.to?.getTime(), accountFilter],
+  );
+  return data ?? [];
+}

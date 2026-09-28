@@ -81,8 +81,6 @@
     "emptyFiltered": "No results",
     "deleted": "Transaction deleted",
     "transfer": "Transfer",
-    "allCategories": "All categories",
-    "clearFilter": "Clear filter",
     "editTransferUnsupported": "Editing transfers will come with account management."
   }
 }

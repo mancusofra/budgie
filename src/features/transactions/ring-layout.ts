@@ -180,9 +180,27 @@ export function arcMidpoints(arcs: ArcSegment[]): Map<string, number> {
   );
 }
 
-/** Spicchio che contiene l'angolo dato (in giri), se c'è. */
-export function arcAtAngle(arcs: ArcSegment[], angle: number): ArcSegment | undefined {
-  return arcs.find((a) => mod1(angle - a.start) <= a.length);
+/**
+ * Spicchio che contiene l'angolo dato (in giri); se l'angolo cade nello spazio
+ * tra due spicchi, il più vicino entro `tolerance`.
+ */
+export function arcAtAngle(
+  arcs: ArcSegment[],
+  angle: number,
+  tolerance = 0.02,
+): ArcSegment | undefined {
+  const inside = arcs.find((a) => mod1(angle - a.start) <= a.length);
+  if (inside) return inside;
+  let best: ArcSegment | undefined;
+  let bestDist = tolerance;
+  for (const a of arcs) {
+    const d = Math.min(turnDistance(angle, a.start), turnDistance(angle, a.start + a.length));
+    if (d <= bestDist) {
+      bestDist = d;
+      best = a;
+    }
+  }
+  return best;
 }
 
 /** Margine dagli estremi dello spicchio, per non puntare sullo spazio tra spicchi. */

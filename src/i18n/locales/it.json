@@ -81,8 +81,6 @@
     "emptyFiltered": "Nessun risultato",
     "deleted": "Transazione eliminata",
     "transfer": "Trasferimento",
-    "allCategories": "Tutte le categorie",
-    "clearFilter": "Rimuovi filtro",
     "editTransferUnsupported": "La modifica dei trasferimenti arriverà con la gestione dei conti."
   }
 }

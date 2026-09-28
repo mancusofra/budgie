@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, ne, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 
 import { createId } from '@/lib/id';
@@ -191,6 +191,31 @@ export function createTransactionsRepo(db: AppDatabase) {
           ),
         )
         .groupBy(t.categoryId)
+        .orderBy(desc(total));
+    },
+
+    /**
+     * Totale e numero di movimenti per categoria e tipo (spese ed entrate),
+     * dal totale più alto. I trasferimenti sono esclusi.
+     */
+    statsByCategory(filter: Partial<DateRange> & { accountId?: string } = {}) {
+      const total = sql<number>`sum(${t.amount})`.mapWith(Number);
+      return db
+        .select({
+          categoryId: t.categoryId,
+          type: t.type,
+          total,
+          count: sql<number>`count(*)`.mapWith(Number),
+        })
+        .from(t)
+        .where(
+          and(
+            where({ from: filter.from, to: filter.to }),
+            ne(t.type, 'transfer'),
+            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
+          ),
+        )
+        .groupBy(t.categoryId, t.type)
         .orderBy(desc(total));
     },
 

@@ -150,6 +150,17 @@ describe('arcMidpoints / connectors', () => {
     expect(arcAtAngle(arcs, 0.1)?.key).toBe('a');
     expect(arcAtAngle(arcs, 0.9)?.key).toBe('b');
     expect(arcAtAngle([], 0.5)).toBeUndefined();
+    // nello spazio tra due spicchi vale il più vicino, entro la tolleranza
+    const gapped = donutArcs(
+      [
+        { key: 'a', value: 1, color: '#f00' },
+        { key: 'b', value: 1, color: '#0f0' },
+      ],
+      0.02,
+    );
+    expect(arcAtAngle(gapped, 0.004)?.key).toBe('a');
+    expect(arcAtAngle(gapped, 0.996)?.key).toBe('b');
+    expect(arcAtAngle(gapped, 0.004, 0)).toBeUndefined();
   });
 
   it('calcola il centro di ogni spicchio', () => {

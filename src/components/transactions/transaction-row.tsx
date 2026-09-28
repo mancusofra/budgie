@@ -1,10 +1,9 @@
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet, View } from 'react-native';
-import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/theme';
 
+import { SwipeToDelete } from '../ui/swipe-to-delete';
 import { Text } from '../ui/text';
 import { CategoryIcon } from './category-icon';
 
@@ -37,16 +36,7 @@ export function TransactionRow({
     kind === 'expense' ? theme.expense : kind === 'income' ? theme.income : theme.textSecondary;
 
   return (
-    <ReanimatedSwipeable
-      friction={1.5}
-      rightThreshold={80}
-      overshootRight={false}
-      onSwipeableOpen={onDelete}
-      renderRightActions={() => (
-        <View style={[styles.delete, { backgroundColor: theme.expense }]}>
-          <MaterialCommunityIcons name="delete-outline" size={22} color="#FFFFFF" />
-        </View>
-      )}>
+    <SwipeToDelete onDelete={onDelete}>
       <Pressable
         onPress={onPress}
         accessibilityRole="button"
@@ -69,7 +59,7 @@ export function TransactionRow({
         </View>
         <Text style={[styles.amount, { color: amountColor }]}>{amount}</Text>
       </Pressable>
-    </ReanimatedSwipeable>
+    </SwipeToDelete>
   );
 }
 
@@ -84,9 +74,4 @@ const styles = StyleSheet.create({
   texts: { flex: 1, gap: 1 },
   title: { fontWeight: '500' },
   amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
-  delete: {
-    width: 88,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
 });
