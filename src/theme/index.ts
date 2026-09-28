@@ -2,24 +2,30 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#11181C',
+    text: '#1A1A1A',
     textSecondary: '#60646C',
+    textOnColor: '#FFFFFF',
     background: '#FFFFFF',
+    surface: '#F5F6F8',
     backgroundElement: '#F0F0F3',
     backgroundSelected: '#E0E1E6',
-    tint: '#208AEF',
+    border: '#E0E1E6',
+    primary: '#3E63DD',
     expense: '#E5484D',
     income: '#30A46C',
   },
   dark: {
-    text: '#ECEDEE',
+    text: '#F2F2F2',
     textSecondary: '#B0B4BA',
-    background: '#000000',
+    textOnColor: '#FFFFFF',
+    background: '#121212',
+    surface: '#1E1E1E',
     backgroundElement: '#212225',
     backgroundSelected: '#2E3135',
-    tint: '#4DA3F5',
+    border: '#2E3135',
+    primary: '#849DFF',
     expense: '#FF6369',
-    income: '#3DD68C',
+    income: '#4CC38A',
   },
 } as const;
 
@@ -34,6 +40,8 @@ export const Spacing = {
   five: 32,
   six: 64,
 } as const;
+
+export const Radius = 12;
 
 export const Fonts = Platform.select({
   ios: { sans: 'system-ui', rounded: 'ui-rounded', mono: 'ui-monospace' },

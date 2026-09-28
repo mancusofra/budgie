@@ -16,6 +16,10 @@ export type SettingsMap = {
 
 export type SettingKey = keyof SettingsMap;
 
+export function parseSettings(rows: { key: string; value: string }[]): Partial<SettingsMap> {
+  return Object.fromEntries(rows.map((r) => [r.key, JSON.parse(r.value)]));
+}
+
 export function createSettingsRepo(db: AppDatabase) {
   const s = settings;
 
@@ -34,8 +38,12 @@ export function createSettingsRepo(db: AppDatabase) {
     },
 
     async getAll(): Promise<Partial<SettingsMap>> {
-      const rows = await db.select().from(s);
-      return Object.fromEntries(rows.map((r) => [r.key, JSON.parse(r.value)]));
+      return parseSettings(await db.select().from(s));
+    },
+
+    /** Righe grezze (query builder, per useLiveQuery); convertire con parseSettings. */
+    rows() {
+      return db.select().from(s);
     },
   };
 }

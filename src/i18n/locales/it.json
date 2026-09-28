@@ -6,13 +6,42 @@
     "settings": "Impostazioni"
   },
   "common": { "save": "Salva", "cancel": "Annulla", "delete": "Elimina", "undo": "Annulla" },
+  "period": {
+    "day": "Giorno",
+    "week": "Settimana",
+    "month": "Mese",
+    "year": "Anno",
+    "all": "Sempre",
+    "previous": "Periodo precedente",
+    "next": "Periodo successivo"
+  },
   "home": {
     "balance": "Saldo",
     "expenses": "Spese",
     "income": "Entrate",
     "addExpense": "Spesa",
     "addIncome": "Entrata",
-    "allAccounts": "Tutti i conti"
+    "allAccounts": "Tutti i conti",
+    "addTo": "Aggiungi spesa: {{category}}"
   },
-  "transaction": { "note": "Aggiungi nota…", "chooseCategory": "Scegli categoria", "today": "Oggi" }
+  "transaction": {
+    "newExpense": "Spesa",
+    "newIncome": "Entrata",
+    "note": "Aggiungi nota…",
+    "chooseCategory": "Scegli categoria",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "pickDate": "Scegli data",
+    "close": "Chiudi",
+    "invalidAmount": "Inserisci un importo maggiore di zero",
+    "saveError": "Impossibile salvare la transazione"
+  },
+  "keypad": {
+    "backspace": "Cancella",
+    "plus": "più",
+    "minus": "meno",
+    "times": "per",
+    "divide": "diviso",
+    "comma": "virgola"
+  }
 }

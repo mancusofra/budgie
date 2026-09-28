@@ -6,13 +6,42 @@
     "settings": "Settings"
   },
   "common": { "save": "Save", "cancel": "Cancel", "delete": "Delete", "undo": "Undo" },
+  "period": {
+    "day": "Day",
+    "week": "Week",
+    "month": "Month",
+    "year": "Year",
+    "all": "All time",
+    "previous": "Previous period",
+    "next": "Next period"
+  },
   "home": {
     "balance": "Balance",
     "expenses": "Expenses",
     "income": "Income",
     "addExpense": "Expense",
     "addIncome": "Income",
-    "allAccounts": "All accounts"
+    "allAccounts": "All accounts",
+    "addTo": "Add expense: {{category}}"
   },
-  "transaction": { "note": "Add note…", "chooseCategory": "Choose category", "today": "Today" }
+  "transaction": {
+    "newExpense": "Expense",
+    "newIncome": "Income",
+    "note": "Add note…",
+    "chooseCategory": "Choose category",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "pickDate": "Pick date",
+    "close": "Close",
+    "invalidAmount": "Enter an amount greater than zero",
+    "saveError": "Could not save the transaction"
+  },
+  "keypad": {
+    "backspace": "Delete",
+    "plus": "plus",
+    "minus": "minus",
+    "times": "times",
+    "divide": "divided by",
+    "comma": "comma"
+  }
 }

@@ -6,6 +6,7 @@ import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DatabaseProvider } from '@/db/provider';
+import '@/i18n';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -19,6 +20,7 @@ export default function RootLayout() {
         <DatabaseProvider onReady={hideSplash}>
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
+            <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
           </Stack>
         </DatabaseProvider>
         <StatusBar style="auto" />

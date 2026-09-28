@@ -58,17 +58,17 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 È la feature che definisce l'esperienza "tipo Monefy": deve essere velocissima.
 
-- [ ] Home: grafico a ciambella con le spese per categoria del periodo corrente
-- [ ] Al centro della ciambella: saldo (entrate − spese) del periodo
-- [ ] Icone categoria attorno/sotto al grafico: tap su una categoria → apre direttamente l'inserimento con quella categoria preselezionata
-- [ ] Due grandi pulsanti in basso: **− Spesa** (rosso) e **+ Entrata** (verde)
-- [ ] Schermata/modale di inserimento:
-  - [ ] Tastierino numerico custom (con operazioni `+ − × ÷` come Monefy)
-  - [ ] Selettore categoria a griglia
-  - [ ] Selettore conto, data (default oggi), nota opzionale
-  - [ ] Salvataggio con feedback aptico e animazione
-- [ ] Selettore periodo in alto (swipe sinistra/destra per cambiare giorno/settimana/mese…)
-- [ ] Hook reattivo `useLiveQuery` (Drizzle) per aggiornare la home automaticamente
+- [x] Home: grafico a ciambella con le spese per categoria del periodo corrente
+- [x] Al centro della ciambella: saldo (entrate − spese) del periodo
+- [x] Icone categoria attorno/sotto al grafico: tap su una categoria → apre direttamente l'inserimento con quella categoria preselezionata
+- [x] Due grandi pulsanti in basso: **− Spesa** (rosso) e **+ Entrata** (verde)
+- [x] Schermata/modale di inserimento:
+  - [x] Tastierino numerico custom (con operazioni `+ − × ÷` come Monefy)
+  - [x] Selettore categoria a griglia
+  - [x] Selettore conto, data (default oggi), nota opzionale
+  - [ ] Salvataggio con feedback aptico e animazione (aptico fatto, animazione da fare)
+- [x] Selettore periodo in alto (swipe sinistra/destra per cambiare giorno/settimana/mese…)
+- [x] Hook reattivo `useLiveQuery` (Drizzle) per aggiornare la home automaticamente
 
 **DoD:** si inserisce una spesa in ≤ 3 tap e la ciambella si aggiorna in tempo reale.
 
