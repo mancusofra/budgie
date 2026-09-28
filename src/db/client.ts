@@ -1,14 +1,21 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
-import { openDatabaseSync } from 'expo-sqlite';
+import { openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 
 import { createRepositories } from './repositories';
 import * as schema from './schema';
 
 export const DATABASE_NAME = 'moneta.db';
 
-// enableChangeListener serve a useLiveQuery per aggiornarsi da solo
-export const expoDb = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
-expoDb.execSync('PRAGMA foreign_keys = ON;');
+// In sviluppo il fast refresh può rieseguire questo modulo: riusa la connessione
+// già aperta invece di aprirne una seconda (che troverebbe il DB occupato).
+const globalForDb = globalThis as { __monetaDb?: SQLiteDatabase };
+
+// enableChangeListener serve alle live query per aggiornarsi da sole
+export const expoDb = (globalForDb.__monetaDb ??= (() => {
+  const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
+  db.execSync('PRAGMA foreign_keys = ON;');
+  return db;
+})());
 
 export const db = drizzle(expoDb, { schema });
 export const repos = createRepositories(db);

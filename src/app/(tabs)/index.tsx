@@ -14,6 +14,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 
 import { donutArcs, DonutChart } from '@/components/charts/donut-chart';
+import { AccountBar } from '@/components/transactions/account-bar';
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { PeriodHeader } from '@/components/transactions/period-header';
 import { Button } from '@/components/ui/button';
@@ -66,7 +67,9 @@ export default function HomeScreen() {
   const chartType = mode === 'income' ? 'income' : 'expense';
 
   // Attorno alla ciambella ci sono le categorie del tipo mostrato (spese o entrate)
-  const ringCategories = useCategories(chartType);
+  const allCategories = useCategories(chartType, { includeArchived: true });
+  // Attorno alla ciambella solo le attive; gli spicchi includono anche le archiviate
+  const ringCategories = useMemo(() => allCategories.filter((c) => !c.archived), [allCategories]);
   const categoryTotals = useCategoryTotals(range, chartType, accountFilter);
   const totals = usePeriodTotals(range, accountFilter);
 
@@ -79,10 +82,10 @@ export default function HomeScreen() {
   // Spicchi nell'ordine delle categorie, così le icone mantengono un ordine stabile
   const segments = useMemo(() => {
     const totalById = new Map(categoryTotals.map((r) => [r.categoryId ?? 'none', r.total]));
-    return ringCategories
+    return allCategories
       .filter((c) => totalById.has(c.id))
       .map((c) => ({ key: c.id, value: totalById.get(c.id)!, color: c.color }));
-  }, [ringCategories, categoryTotals]);
+  }, [allCategories, categoryTotals]);
   const arcs = useMemo(() => donutArcs(segments), [segments]);
   const spent = useMemo(() => new Set(segments.map((s) => s.key)), [segments]);
 
@@ -179,7 +182,10 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <PeriodHeader />
+      <View style={styles.top}>
+        <AccountBar />
+        <PeriodHeader />
+      </View>
 
       <GestureDetector gesture={swipe}>
         <View
@@ -283,6 +289,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
+  top: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
   cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
   centerAmount: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.5 },

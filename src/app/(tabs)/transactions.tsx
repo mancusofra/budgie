@@ -28,7 +28,7 @@ import { groupByDay } from '@/lib/group';
 import { formatMoney } from '@/lib/money';
 import type { PeriodRange } from '@/lib/period';
 import { useUIStore } from '@/store/ui';
-import { Radius, Spacing } from '@/theme';
+import { Radius, Spacing, TabularNums } from '@/theme';
 
 export default function TransactionsScreen() {
   const { t } = useTranslation();
@@ -39,7 +39,8 @@ export default function TransactionsScreen() {
   const openCategory = useUIStore((s) => s.openCategory);
   const totals = usePeriodTotals(range, accountFilter);
   const stats = useCategoryStats(range, accountFilter);
-  const categories = useCategories();
+  // Anche le archiviate: i loro movimenti restano nel periodo
+  const categories = useCategories(undefined, { includeArchived: true });
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -78,6 +79,12 @@ export default function TransactionsScreen() {
   const balanceColor =
     balance < 0 ? theme.expense : balance > 0 ? theme.income : theme.textSecondary;
   const searching = searchOpen && search.trim().length > 0;
+  const hasTransfers =
+    useTransactionList({
+      ...range,
+      type: 'transfer',
+      accountId: accountFilter === 'all' ? undefined : accountFilter,
+    }).length > 0;
 
   const section = (
     title: string,
@@ -164,7 +171,8 @@ export default function TransactionsScreen() {
         <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
           {section(t('home.expenses'), totals.expense, groups.expense)}
           {section(t('home.income'), totals.income, groups.income)}
-          {stats.length === 0 && (
+          <TransfersSection range={range} accountFilter={accountFilter} money={money} />
+          {stats.length === 0 && !hasTransfers && (
             <View style={styles.empty}>
               <MaterialCommunityIcons
                 name="receipt-text-outline"
@@ -181,6 +189,51 @@ export default function TransactionsScreen() {
 }
 
 type Row = ReturnType<typeof useTransactionList>[number];
+
+/** Trasferimenti del periodo (non contano come spese o entrate). */
+function TransfersSection({
+  range,
+  accountFilter,
+  money,
+}: {
+  range: PeriodRange;
+  accountFilter: string;
+  money: (minor: number) => string;
+}) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const deleteTransaction = useDeleteTransaction();
+  const rows = useTransactionList({
+    ...range,
+    type: 'transfer',
+    accountId: accountFilter === 'all' ? undefined : accountFilter,
+  });
+  if (rows.length === 0) return null;
+
+  return (
+    <View style={styles.section}>
+      <View style={styles.sectionHeader}>
+        <Text variant="overline" color="textSecondary">
+          {t('transfer.section')}
+        </Text>
+      </View>
+      {rows.map(({ transaction: tx, account, toAccount }) => (
+        <TransactionRow
+          key={tx.id}
+          title={`${account.name} → ${toAccount?.name ?? '—'}`}
+          subtitle={tx.note ?? undefined}
+          amount={money(tx.amount)}
+          kind="transfer"
+          icon="swap-horizontal"
+          color={theme.textSecondary}
+          deleteLabel={t('common.delete')}
+          onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })}
+          onDelete={() => deleteTransaction(tx)}
+        />
+      ))}
+    </View>
+  );
+}
 
 const signed = ({ transaction: tx }: Row) =>
   tx.type === 'expense' ? -tx.amount : tx.type === 'income' ? tx.amount : 0;
@@ -281,7 +334,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   balanceLabel: { fontWeight: '500' },
-  balanceAmount: { fontSize: 20, fontWeight: '700', fontVariant: ['tabular-nums'] },
+  balanceAmount: { fontSize: 20, fontWeight: '700', ...TabularNums },
   round: {
     width: 48,
     height: 48,
@@ -315,6 +368,6 @@ const styles = StyleSheet.create({
     paddingTop: Spacing.three,
     paddingBottom: Spacing.one,
   },
-  tabular: { fontVariant: ['tabular-nums'] },
+  tabular: { ...TabularNums },
   empty: { alignItems: 'center', gap: Spacing.two, paddingTop: Spacing.six },
 });

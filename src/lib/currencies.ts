@@ -1,0 +1,22 @@
+/** Valute proposte nella scelta del conto (ISO 4217). */
+export const COMMON_CURRENCIES = [
+  'EUR',
+  'USD',
+  'GBP',
+  'CHF',
+  'JPY',
+  'CNY',
+  'CAD',
+  'AUD',
+  'SEK',
+  'NOK',
+  'DKK',
+  'PLN',
+  'CZK',
+  'HUF',
+  'RON',
+  'TRY',
+  'BRL',
+  'MXN',
+  'INR',
+] as const;

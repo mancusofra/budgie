@@ -1,3 +1,4 @@
+import { InUseError } from '@/db/repositories';
 import { seedDatabase } from '@/db/seed';
 
 import { createTestDb } from '../../test-utils/db';
@@ -104,6 +105,58 @@ describe('settingsRepo', () => {
     await repos.settings.set('monthStartDay', 27);
     await repos.settings.set('theme', 'light');
     expect(await repos.settings.getAll()).toEqual({ theme: 'light', monthStartDay: 27 });
+    close();
+  });
+});
+
+describe('eliminazione e riordino', () => {
+  it('categoria: elimina solo se non ha transazioni, altrimenti InUseError', async () => {
+    const { db, repos, close } = createTestDb();
+    await seedDatabase(db, { language: 'it', currency: 'EUR' });
+    const [cash] = await repos.accounts.list();
+    const [food, home] = await repos.categories.list({ type: 'expense' });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 100,
+      accountId: cash.id,
+      categoryId: food.id,
+    });
+
+    expect(await repos.categories.transactionCount(food.id)).toBe(1);
+    await expect(repos.categories.remove(food.id)).rejects.toBeInstanceOf(InUseError);
+    await repos.categories.remove(home.id);
+    expect(await repos.categories.getById(home.id)).toBeUndefined();
+    close();
+  });
+
+  it('conto: conta anche i trasferimenti in entrata', async () => {
+    const { db, repos, close } = createTestDb();
+    await seedDatabase(db, { language: 'it', currency: 'EUR' });
+    const [cash] = await repos.accounts.list();
+    const bank = await repos.accounts.create({ name: 'Banca', currency: 'EUR' });
+    const empty = await repos.accounts.create({ name: 'Vuoto', currency: 'EUR' });
+    await repos.transactions.create({
+      type: 'transfer',
+      amount: 100,
+      accountId: cash.id,
+      toAccountId: bank.id,
+    });
+
+    expect(await repos.accounts.transactionCount(bank.id)).toBe(1);
+    await expect(repos.accounts.remove(bank.id)).rejects.toThrow(InUseError);
+    await repos.accounts.remove(empty.id);
+    expect(await repos.accounts.list()).toHaveLength(2);
+    close();
+  });
+
+  it('reorder salva il nuovo ordine', async () => {
+    const { db, repos, close } = createTestDb();
+    await seedDatabase(db, { language: 'it', currency: 'EUR' });
+    const ids = (await repos.categories.list({ type: 'income' })).map((c) => c.id);
+    await repos.categories.reorder([...ids].reverse());
+    expect((await repos.categories.list({ type: 'income' })).map((c) => c.id)).toEqual(
+      [...ids].reverse(),
+    );
     close();
   });
 });

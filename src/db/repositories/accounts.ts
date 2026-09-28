@@ -1,8 +1,9 @@
-import { asc, eq, sql } from 'drizzle-orm';
+import { asc, eq, or, sql } from 'drizzle-orm';
 
 import { createId } from '@/lib/id';
 
 import { accounts, transactions, type Account } from '../schema';
+import { InUseError } from './errors';
 import type { AppDatabase } from '../types';
 
 export type NewAccount = Pick<Account, 'name' | 'currency'> &
@@ -80,6 +81,34 @@ export function createAccountsRepo(db: AppDatabase) {
 
     async setArchived(id: string, archived: boolean): Promise<void> {
       await db.update(a).set({ archived }).where(eq(a.id, id));
+    },
+
+    /** Query builder (per useLiveQuery): 0 o 1 riga. */
+    byId(id: string) {
+      return db.select().from(a).where(eq(a.id, id)).limit(1);
+    },
+
+    /** Numero di transazioni che coinvolgono il conto (anche come destinazione). */
+    async transactionCount(id: string): Promise<number> {
+      const row = await db
+        .select({ n: sql<number>`count(*)`.mapWith(Number) })
+        .from(transactions)
+        .where(or(eq(transactions.accountId, id), eq(transactions.toAccountId, id)))
+        .get();
+      return row?.n ?? 0;
+    },
+
+    /** Elimina un conto senza transazioni; altrimenti InUseError. */
+    async remove(id: string): Promise<void> {
+      const count = await this.transactionCount(id);
+      if (count > 0) throw new InUseError('Il conto', count);
+      await db.delete(a).where(eq(a.id, id));
+    },
+
+    async reorder(ids: string[]): Promise<void> {
+      db.transaction((tx) => {
+        ids.forEach((id, sortOrder) => tx.update(a).set({ sortOrder }).where(eq(a.id, id)).run());
+      });
     },
   };
 }

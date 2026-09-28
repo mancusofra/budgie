@@ -44,6 +44,15 @@ export const Spacing = {
 export const Radius = 12;
 
 /**
+ * Cifre a larghezza fissa per gli importi. Solo iOS: su Android `tabular-nums`
+ * fa misurare male il testo e taglia l'ultimo carattere (es. "$765.0").
+ */
+export const TabularNums = Platform.select({
+  ios: { fontVariant: ['tabular-nums' as const] },
+  default: {},
+});
+
+/**
  * Altezza della tab bar nativa quando fluttua sopra il contenuto (iOS 26,
  * "Liquid Glass"), esclusa l'area sicura. Su Android la barra non si sovrappone.
  */

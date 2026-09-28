@@ -23,6 +23,15 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
+            <Stack.Screen name="transfer/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="account/select"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.5, 0.9],
+                sheetGrabberVisible: true,
+              }}
+            />
             <Stack.Screen
               name="period"
               options={{

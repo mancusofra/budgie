@@ -1,16 +1,18 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
+import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
+import { NavRow, RowSeparator } from '@/components/ui/nav-row';
 import { Screen } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
 import { useTheme } from '@/hooks/use-theme';
-import { Radius, Spacing } from '@/theme';
+import { Radius, Spacing, TabularNums } from '@/theme';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
@@ -59,6 +61,29 @@ export default function SettingsScreen() {
     <Screen>
       <ScrollView contentContainerStyle={styles.content}>
         <Text variant="title">{t('settings.title')}</Text>
+
+        <View style={styles.section}>
+          <Text variant="overline" color="textSecondary">
+            {t('settings.manage')}
+          </Text>
+          <Surface style={styles.listCard}>
+            <NavRow
+              title={t('categories.title')}
+              onPress={() => router.push('/category')}
+              leading={
+                <MaterialCommunityIcons name="shape-outline" size={22} color={theme.primary} />
+              }
+            />
+            <RowSeparator />
+            <NavRow
+              title={t('accounts.title')}
+              onPress={() => router.push('/account')}
+              leading={
+                <MaterialCommunityIcons name="wallet-outline" size={22} color={theme.primary} />
+              }
+            />
+          </Surface>
+        </View>
 
         <View style={styles.section}>
           <Text variant="overline" color="textSecondary">
@@ -117,6 +142,7 @@ const styles = StyleSheet.create({
   content: { gap: Spacing.four, paddingBottom: Spacing.four },
   section: { gap: Spacing.two },
   card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.three },
+  listCard: { borderRadius: Radius + 4, paddingHorizontal: Spacing.three },
   separator: { height: StyleSheet.hairlineWidth },
   row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   flex: { flex: 1 },
@@ -126,6 +152,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 18,
     fontWeight: '600',
-    fontVariant: ['tabular-nums'],
+    ...TabularNums,
   },
 });

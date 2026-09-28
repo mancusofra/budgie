@@ -1,0 +1,165 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import * as Haptics from 'expo-haptics';
+import { useEffect, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { scheduleOnRN } from 'react-native-worklets';
+
+import { useTheme } from '@/hooks/use-theme';
+
+type Positions = Record<string, number>;
+
+type Props<T> = {
+  data: T[];
+  keyExtractor: (item: T) => string;
+  rowHeight: number;
+  renderItem: (item: T) => ReactNode;
+  /** Nuovo ordine delle chiavi a fine trascinamento. */
+  onReorder: (keys: string[]) => void;
+  handleLabel: string;
+};
+
+const toPositions = (keys: string[]): Positions => Object.fromEntries(keys.map((k, i) => [k, i]));
+
+/**
+ * Lista riordinabile trascinando la maniglia a destra di ogni riga.
+ * Righe ad altezza fissa, animate con Reanimated.
+ */
+export function SortableList<T>({
+  data,
+  keyExtractor,
+  rowHeight,
+  renderItem,
+  onReorder,
+  handleLabel,
+}: Props<T>) {
+  const keys = data.map(keyExtractor);
+  const positions = useSharedValue<Positions>(toPositions(keys));
+  const keysSignature = keys.join('|');
+
+  useEffect(() => {
+    positions.set(toPositions(keysSignature ? keysSignature.split('|') : []));
+  }, [keysSignature, positions]);
+
+  const finish = (pos: Positions) => {
+    onReorder(Object.keys(pos).sort((a, b) => pos[a] - pos[b]));
+  };
+
+  return (
+    <View style={{ height: data.length * rowHeight }}>
+      {data.map((item) => {
+        const key = keyExtractor(item);
+        return (
+          <SortableRow
+            key={key}
+            id={key}
+            count={data.length}
+            rowHeight={rowHeight}
+            positions={positions}
+            onDrop={finish}
+            handleLabel={handleLabel}>
+            {renderItem(item)}
+          </SortableRow>
+        );
+      })}
+    </View>
+  );
+}
+
+function SortableRow({
+  id,
+  count,
+  rowHeight,
+  positions,
+  onDrop,
+  handleLabel,
+  children,
+}: {
+  id: string;
+  count: number;
+  rowHeight: number;
+  positions: SharedValue<Positions>;
+  onDrop: (pos: Positions) => void;
+  handleLabel: string;
+  children: ReactNode;
+}) {
+  const theme = useTheme();
+  const activeBackground = theme.surface;
+  const active = useSharedValue(false);
+  const top = useSharedValue(0); // impostato a inizio trascinamento
+  const startTop = useSharedValue(0);
+
+  const style = useAnimatedStyle(() => {
+    const target = (positions.get()[id] ?? 0) * rowHeight;
+    return {
+      top: active.get() ? top.get() : withSpring(target, { damping: 20, stiffness: 220 }),
+      zIndex: active.get() ? 10 : 0,
+      // Trasparente a riposo (lascia vedere la card), pieno mentre è trascinata
+      backgroundColor: active.get() ? activeBackground : 'transparent',
+      shadowOpacity: withSpring(active.get() ? 0.15 : 0),
+      transform: [{ scale: withSpring(active.get() ? 1.02 : 1) }],
+    };
+  });
+
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      active.set(true);
+      startTop.set((positions.get()[id] ?? 0) * rowHeight);
+      top.set(startTop.get());
+      scheduleOnRN(Haptics.selectionAsync);
+    })
+    .onUpdate((e) => {
+      top.set(startTop.get() + e.translationY);
+      const next = Math.min(Math.max(Math.round(top.get() / rowHeight), 0), count - 1);
+      const current = positions.get()[id];
+      if (next !== current) {
+        // Scambia con la riga che occupa la nuova posizione
+        const updated = { ...positions.get() };
+        for (const key in updated) {
+          if (updated[key] === next) updated[key] = current;
+        }
+        updated[id] = next;
+        positions.set(updated);
+      }
+    })
+    .onFinalize(() => {
+      if (!active.get()) return;
+      active.set(false);
+      scheduleOnRN(onDrop, positions.get());
+    });
+
+  return (
+    <Animated.View style={[styles.row, { height: rowHeight, shadowColor: '#000' }, style]}>
+      <View style={styles.content}>{children}</View>
+      <GestureDetector gesture={pan}>
+        <View style={styles.handle} accessibilityLabel={handleLabel} hitSlop={8}>
+          <MaterialCommunityIcons
+            name="drag-horizontal-variant"
+            size={22}
+            color={theme.textSecondary}
+          />
+        </View>
+      </GestureDetector>
+    </Animated.View>
+  );
+}
+
+const styles = StyleSheet.create({
+  row: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+  },
+  content: { flex: 1 },
+  handle: { paddingHorizontal: 12, height: '100%', justifyContent: 'center' },
+});

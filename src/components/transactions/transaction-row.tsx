@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/theme';
+import { Spacing, TabularNums } from '@/theme';
 
 import { SwipeToDelete } from '../ui/swipe-to-delete';
 import { Text } from '../ui/text';
@@ -73,5 +73,5 @@ const styles = StyleSheet.create({
   },
   texts: { flex: 1, gap: 1 },
   title: { fontWeight: '500' },
-  amount: { fontWeight: '600', fontVariant: ['tabular-nums'] },
+  amount: { fontWeight: '600', ...TabularNums },
 });

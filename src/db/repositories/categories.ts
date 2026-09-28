@@ -2,7 +2,8 @@ import { and, asc, eq, sql } from 'drizzle-orm';
 
 import { createId } from '@/lib/id';
 
-import { categories, type Category, type CategoryType } from '../schema';
+import { budgets, categories, transactions, type Category, type CategoryType } from '../schema';
+import { InUseError } from './errors';
 import type { AppDatabase } from '../types';
 
 export type NewCategory = Pick<Category, 'name' | 'type' | 'icon' | 'color'>;
@@ -55,6 +56,38 @@ export function createCategoriesRepo(db: AppDatabase) {
     /** Le categorie con transazioni non si cancellano: si archiviano. */
     async setArchived(id: string, archived: boolean): Promise<void> {
       await db.update(c).set({ archived }).where(eq(c.id, id));
+    },
+
+    /** Query builder (per useLiveQuery): 0 o 1 riga. */
+    byId(id: string) {
+      return db.select().from(c).where(eq(c.id, id)).limit(1);
+    },
+
+    /** Numero di transazioni che usano la categoria. */
+    async transactionCount(id: string): Promise<number> {
+      const row = await db
+        .select({ n: sql<number>`count(*)`.mapWith(Number) })
+        .from(transactions)
+        .where(eq(transactions.categoryId, id))
+        .get();
+      return row?.n ?? 0;
+    },
+
+    /** Elimina una categoria senza transazioni (e i suoi budget); altrimenti InUseError. */
+    async remove(id: string): Promise<void> {
+      const count = await this.transactionCount(id);
+      if (count > 0) throw new InUseError('La categoria', count);
+      db.transaction((tx) => {
+        tx.delete(budgets).where(eq(budgets.categoryId, id)).run();
+        tx.delete(c).where(eq(c.id, id)).run();
+      });
+    },
+
+    /** Salva il nuovo ordine: `ids` nell'ordine desiderato. */
+    async reorder(ids: string[]): Promise<void> {
+      db.transaction((tx) => {
+        ids.forEach((id, sortOrder) => tx.update(c).set({ sortOrder }).where(eq(c.id, id)).run());
+      });
     },
   };
 }

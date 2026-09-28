@@ -17,5 +17,6 @@ export type Repositories = ReturnType<typeof createRepositories>;
 
 export * from './accounts';
 export * from './categories';
+export * from './errors';
 export * from './settings';
 export * from './transactions';

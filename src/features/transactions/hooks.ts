@@ -3,8 +3,9 @@ import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { repos } from '@/db/client';
+import { useLiveQueryOn } from '@/db/live-query';
 import type { DetailedFilter, NewTransaction, TransactionPatch } from '@/db/repositories';
-import type { Transaction } from '@/db/schema';
+import { accounts, categories, transactions, type Transaction } from '@/db/schema';
 import { useSnackbar } from '@/store/snackbar';
 import { useSettings } from '@/features/settings/hooks';
 import { dateLocale } from '@/i18n';
@@ -95,14 +96,18 @@ export function useDeleteTransaction() {
 
 /** Lista con categoria e conti per il periodo e i filtri dati. */
 export function useTransactionList(filter: DetailedFilter) {
-  const { data } = useLiveQuery(repos.transactions.listDetailed(filter), [
-    filter.from?.getTime(),
-    filter.to?.getTime(),
-    filter.accountId,
-    filter.categoryId,
-    filter.type,
-    filter.search,
-  ]);
+  const { data } = useLiveQueryOn(
+    repos.transactions.listDetailed(filter),
+    [transactions, categories, accounts],
+    [
+      filter.from?.getTime(),
+      filter.to?.getTime(),
+      filter.accountId,
+      filter.categoryId,
+      filter.type,
+      filter.search,
+    ],
+  );
   return data ?? [];
 }
 

@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { dateLocale } from '@/i18n';
 import { withAlpha } from '@/lib/color';
 import type { PeriodRange } from '@/lib/period';
-import { Spacing } from '@/theme';
+import { Spacing, TabularNums } from '@/theme';
 
 import { useDeleteTransaction, useTransactionList } from './hooks';
 
@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
   nameText: { fontWeight: '500', flexShrink: 1 },
   badge: { minWidth: 22, paddingHorizontal: 6, borderRadius: 999, alignItems: 'center' },
   badgeText: { fontWeight: '600', fontSize: 12, lineHeight: 18 },
-  total: { fontWeight: '600', fontVariant: ['tabular-nums'] },
+  total: { fontWeight: '600', ...TabularNums },
   item: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -148,5 +148,5 @@ const styles = StyleSheet.create({
   },
   dot: { width: 8, height: 8, borderRadius: 4 },
   itemTexts: { flex: 1 },
-  itemAmount: { fontVariant: ['tabular-nums'] },
+  itemAmount: { ...TabularNums },
 });

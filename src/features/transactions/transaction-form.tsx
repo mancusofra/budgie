@@ -1,14 +1,13 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import DateTimePicker, { DateTimePickerAndroid } from '@react-native-community/datetimepicker';
-import { isSameDay, subDays } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
+import { DateChips } from '@/components/transactions/date-chips';
 import { Button } from '@/components/ui/button';
 import { Keypad } from '@/components/ui/keypad';
 import { Surface } from '@/components/ui/surface';
@@ -109,17 +108,6 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
     setAccountId(accounts[(i + 1) % accounts.length].id);
   };
 
-  const pickDate = () => {
-    if (Platform.OS === 'android') {
-      DateTimePickerAndroid.open({
-        value: date,
-        mode: 'date',
-        maximumDate: new Date(),
-        onChange: (event, selected) => event.type === 'set' && selected && setDate(selected),
-      });
-    }
-  };
-
   const pickCategory = (c: Category) => {
     if (editing) {
       setCategoryId(c.id);
@@ -155,25 +143,6 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
       setSaving(false);
     }
   };
-
-  const today = new Date();
-  const yesterday = subDays(today, 1);
-  const dateChip = (label: string, value: Date) => {
-    const selected = isSameDay(date, value);
-    return (
-      <Pressable
-        accessibilityRole="button"
-        accessibilityState={{ selected }}
-        onPress={() => setDate(value)}>
-        <Surface interactive tint={selected ? color : undefined} style={styles.chip}>
-          <Text variant="caption" style={[styles.chipLabel, selected && { color }]}>
-            {label}
-          </Text>
-        </Surface>
-      </Pressable>
-    );
-  };
-  const isCustomDate = !isSameDay(date, today) && !isSameDay(date, yesterday);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
@@ -259,37 +228,7 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
               maxLength={200}
             />
           </Surface>
-          <View style={styles.dates}>
-            {dateChip(t('transaction.today'), today)}
-            {dateChip(t('transaction.yesterday'), yesterday)}
-            {Platform.OS === 'ios' ? (
-              <DateTimePicker
-                value={date}
-                mode="date"
-                display="compact"
-                maximumDate={today}
-                onChange={(_, d) => d && setDate(d)}
-              />
-            ) : (
-              <Pressable
-                onPress={pickDate}
-                accessibilityRole="button"
-                accessibilityLabel={t('transaction.pickDate')}>
-                <Surface interactive tint={isCustomDate ? color : undefined} style={styles.chip}>
-                  <MaterialCommunityIcons
-                    name="calendar-blank-outline"
-                    size={16}
-                    color={isCustomDate ? color : theme.textSecondary}
-                  />
-                  {isCustomDate && (
-                    <Text variant="caption" style={[styles.chipLabel, { color }]}>
-                      {date.toLocaleDateString(deviceLocale)}
-                    </Text>
-                  )}
-                </Surface>
-              </Pressable>
-            )}
-          </View>
+          <DateChips value={date} onChange={setDate} color={color} />
 
           <Keypad onKey={onKey} labels={keyLabels} decimalSeparator={decimalSeparator} />
 
@@ -342,7 +281,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   note: { flex: 1, paddingVertical: Spacing.two + 4, fontSize: 16 },
-  dates: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',

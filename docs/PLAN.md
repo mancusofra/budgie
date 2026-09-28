@@ -83,12 +83,13 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 4 — Categorie e conti
 
-- [ ] CRUD categorie: nome, icona (set di icone vettoriali), colore, tipo (spesa/entrata)
-- [ ] Riordino categorie con drag & drop
-- [ ] Archiviazione categoria (non cancellazione se ha transazioni)
-- [ ] CRUD conti: nome, valuta, saldo iniziale, icona
-- [ ] Trasferimenti tra conti (non contano come spesa/entrata)
-- [ ] Filtro globale "tutti i conti" / conto singolo
+- [x] CRUD categorie: nome, icona (set di icone vettoriali), colore, tipo (spesa/entrata)
+- [x] Riordino categorie con drag & drop (anche per i conti)
+- [x] Archiviazione categoria (non cancellazione se ha transazioni); eliminazione se non usata
+- [x] CRUD conti: nome, valuta, saldo iniziale, icona, colore; archiviazione/eliminazione
+- [x] Trasferimenti tra conti (non contano come spesa/entrata), con importo accreditato per valute diverse
+- [x] Filtro globale "tutti i conti" / conto singolo
+- [ ] Totali in Home con conti in valute diverse: oggi sommati senza conversione (con la Fase 6 / tassi di cambio)
 
 ## Fase 5 — Statistiche e budget
 

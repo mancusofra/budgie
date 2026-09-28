@@ -7,8 +7,14 @@ import { parseSettings, type SettingsMap } from '@/db/repositories';
 import { resetDatabase } from '@/db/seed';
 
 export function useSettings(): Partial<SettingsMap> {
-  const { data } = useLiveQuery(repos.settings.rows());
-  return useMemo(() => parseSettings(data ?? []), [data]);
+  return useSettingsState().settings;
+}
+
+/** Impostazioni più `loaded`: utile per inizializzare form con i valori salvati. */
+export function useSettingsState() {
+  const { data, updatedAt } = useLiveQuery(repos.settings.rows());
+  const settings = useMemo(() => parseSettings(data ?? []), [data]);
+  return { settings, loaded: !!updatedAt };
 }
 
 export function useCurrency(): string {

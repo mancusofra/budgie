@@ -1,22 +1,18 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Button } from '@/components/ui/button';
-import { Text } from '@/components/ui/text';
 import {
   useDeleteTransaction,
   useTransaction,
   useUpdateTransaction,
 } from '@/features/transactions/hooks';
 import { TransactionForm } from '@/features/transactions/transaction-form';
+import { TransferForm } from '@/features/transactions/transfer-form';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/theme';
 
 export default function EditTransactionScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { t } = useTranslation();
   const theme = useTheme();
   const transaction = useTransaction(id);
   const updateTransaction = useUpdateTransaction();
@@ -31,19 +27,17 @@ export default function EditTransactionScreen() {
 
   if (transaction.type === 'transfer') {
     return (
-      <View style={[styles.center, { backgroundColor: theme.background }]}>
-        <Text color="textSecondary" style={styles.text}>
-          {t('transactions.editTransferUnsupported')}
-        </Text>
-        <Button
-          title={t('common.delete')}
-          color="expense"
-          onPress={async () => {
-            router.back();
-            await deleteTransaction(transaction);
-          }}
-        />
-      </View>
+      <TransferForm
+        initial={{
+          ...transaction,
+          toAccountId: transaction.toAccountId ?? undefined,
+        }}
+        onSubmit={(values) => updateTransaction(transaction.id, values)}
+        onDelete={async () => {
+          router.back();
+          await deleteTransaction(transaction);
+        }}
+      />
     );
   }
 
@@ -59,8 +53,3 @@ export default function EditTransactionScreen() {
     />
   );
 }
-
-const styles = StyleSheet.create({
-  center: { flex: 1, justifyContent: 'center', padding: Spacing.four, gap: Spacing.three },
-  text: { textAlign: 'center' },
-});
