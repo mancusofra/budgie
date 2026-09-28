@@ -43,6 +43,12 @@ export const Spacing = {
 
 export const Radius = 12;
 
+/**
+ * Altezza della tab bar nativa quando fluttua sopra il contenuto (iOS 26,
+ * "Liquid Glass"), esclusa l'area sicura. Su Android la barra non si sovrappone.
+ */
+export const FloatingTabBarHeight = Platform.select({ ios: 50, default: 0 });
+
 export const Fonts = Platform.select({
   ios: { sans: 'system-ui', rounded: 'ui-rounded', mono: 'ui-monospace' },
   default: { sans: 'normal', rounded: 'normal', mono: 'monospace' },

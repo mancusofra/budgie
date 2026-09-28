@@ -254,6 +254,6 @@ const styles = StyleSheet.create({
   header: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
   cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
-  actions: { flexDirection: 'row', gap: Spacing.three, paddingBottom: Spacing.three },
+  actions: { flexDirection: 'row', gap: Spacing.three },
   action: { flex: 1 },
 });
