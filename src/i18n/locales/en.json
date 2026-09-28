@@ -49,5 +49,14 @@
     "times": "times",
     "divide": "divided by",
     "comma": "comma"
+  },
+  "settings": {
+    "title": "Settings",
+    "comingSoon": "Currency, theme, language and backup are coming in Phase 6.",
+    "developer": "Developer",
+    "resetData": "Reset data",
+    "resetConfirmTitle": "Reset all data?",
+    "resetConfirmMessage": "Transactions, categories and accounts will be deleted and the defaults recreated.",
+    "resetDone": "Data reset"
   }
 }

@@ -49,5 +49,14 @@
     "times": "per",
     "divide": "diviso",
     "comma": "virgola"
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "comingSoon": "Valuta, tema, lingua e backup arriveranno nella Fase 6.",
+    "developer": "Sviluppo",
+    "resetData": "Azzera dati",
+    "resetConfirmTitle": "Azzerare tutti i dati?",
+    "resetConfirmMessage": "Transazioni, categorie e conti verranno cancellati e ricreati quelli di default.",
+    "resetDone": "Dati azzerati"
   }
 }

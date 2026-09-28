@@ -1,4 +1,4 @@
-import { DEFAULT_CATEGORIES, SEED_VERSION, seedDatabase } from '@/db/seed';
+import { DEFAULT_CATEGORIES, resetDatabase, SEED_VERSION, seedDatabase } from '@/db/seed';
 
 import { createTestDb } from '../../test-utils/db';
 
@@ -63,6 +63,43 @@ describe('seedDatabase', () => {
     expect((await repos.categories.getById(custom.id))?.color).toBe('#123456');
     // non reinserisce i dati di default
     expect(await repos.categories.list()).toHaveLength(2);
+    expect(await repos.settings.get('seedVersion')).toBe(SEED_VERSION);
+    close();
+  });
+
+  it('due seed in parallelo non duplicano i dati', async () => {
+    const { db, repos, close } = createTestDb();
+    const opts = { language: 'it', currency: 'EUR' };
+    const results = await Promise.all([seedDatabase(db, opts), seedDatabase(db, opts)]);
+    expect(results.sort()).toEqual([false, true]);
+    expect(await repos.categories.list()).toHaveLength(20);
+    expect(await repos.accounts.list()).toHaveLength(1);
+    close();
+  });
+
+  it('resetDatabase cancella tutto e riapplica il seed', async () => {
+    const { db, repos, close } = createTestDb();
+    const opts = { language: 'it', currency: 'EUR' };
+    await seedDatabase(db, opts);
+    const [account] = await repos.accounts.list();
+    const [food] = await repos.categories.list({ type: 'expense' });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 100,
+      accountId: account.id,
+      categoryId: food.id,
+    });
+    await repos.categories.create({
+      name: 'Extra',
+      type: 'expense',
+      icon: 'star',
+      color: '#000000',
+    });
+
+    await resetDatabase(db, opts);
+    expect(await repos.transactions.list()).toHaveLength(0);
+    expect(await repos.categories.list()).toHaveLength(20);
+    expect(await repos.accounts.list()).toHaveLength(1);
     expect(await repos.settings.get('seedVersion')).toBe(SEED_VERSION);
     close();
   });

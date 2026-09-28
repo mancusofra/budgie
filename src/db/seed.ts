@@ -2,8 +2,16 @@ import { and, eq, inArray } from 'drizzle-orm';
 
 import { createId } from '@/lib/id';
 
-import { createSettingsRepo } from './repositories/settings';
-import { accounts, categories, type Category, type CategoryType } from './schema';
+import type { SettingKey } from './repositories/settings';
+import {
+  accounts,
+  budgets,
+  categories,
+  settings,
+  transactions,
+  type Category,
+  type CategoryType,
+} from './schema';
 import type { AppDatabase } from './types';
 
 /**
@@ -196,25 +204,51 @@ const LEGACY_CASH_COLORS = ['#43A047'];
 /**
  * Popola il DB al primo avvio con categorie, conto "Contanti" e impostazioni di base.
  * Sui DB già esistenti applica solo gli aggiornamenti delle versioni successive.
- * Idempotente: non fa nulla se il seed è già alla versione corrente.
+ *
+ * Tutto avviene in un'unica transazione sincrona (lettura della versione compresa):
+ * due chiamate ravvicinate, es. effetti eseguiti due volte in sviluppo, non possono
+ * interlacciarsi e inserire i dati di default due volte.
  */
 export async function seedDatabase(db: AppDatabase, { language, currency }: SeedOptions) {
-  const settingsRepo = createSettingsRepo(db);
-  const current = (await settingsRepo.get('seedVersion')) ?? 0;
-  if (current >= SEED_VERSION) return false;
+  return db.transaction((tx) => {
+    const row = tx.select().from(settings).where(eq(settings.key, 'seedVersion')).get();
+    const current: number = row ? JSON.parse(row.value) : 0;
+    if (current >= SEED_VERSION) return false;
 
-  if (current === 0) {
-    insertDefaults(db, language, currency);
-    await settingsRepo.set('currency', currency);
-  } else if (current < 2) {
-    recolorDefaults(db);
-  }
-
-  await settingsRepo.set('seedVersion', SEED_VERSION);
-  return true;
+    if (current === 0) {
+      insertDefaults(tx, language, currency);
+      setSetting(tx, 'currency', currency);
+    } else if (current < 2) {
+      recolorDefaults(tx);
+    }
+    setSetting(tx, 'seedVersion', SEED_VERSION);
+    return true;
+  });
 }
 
-function insertDefaults(db: AppDatabase, language: string, currency: string) {
+/** Cancella tutti i dati e riapplica il seed (solo per sviluppo). */
+export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
+  db.transaction((tx) => {
+    tx.delete(transactions).run();
+    tx.delete(budgets).run();
+    tx.delete(categories).run();
+    tx.delete(accounts).run();
+    tx.delete(settings).run();
+  });
+  return seedDatabase(db, options);
+}
+
+type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
+
+function setSetting(tx: Tx, key: SettingKey, value: unknown) {
+  const json = JSON.stringify(value);
+  tx.insert(settings)
+    .values({ key, value: json })
+    .onConflictDoUpdate({ target: settings.key, set: { value: json } })
+    .run();
+}
+
+function insertDefaults(tx: Tx, language: string, currency: string) {
   const lang: Language = language.startsWith('it') ? 'it' : 'en';
   const now = new Date();
   const sortByType: Record<CategoryType, number> = { expense: 0, income: 0 };
@@ -230,34 +264,30 @@ function insertDefaults(db: AppDatabase, language: string, currency: string) {
     createdAt: now,
   }));
 
-  db.transaction((tx) => {
-    tx.insert(categories).values(categoryRows).run();
-    tx.insert(accounts)
-      .values({
-        id: createId(),
-        name: lang === 'it' ? 'Contanti' : 'Cash',
-        currency,
-        icon: 'cash',
-        color: CASH_COLOR,
-        createdAt: now,
-      })
-      .run();
-  });
+  tx.insert(categories).values(categoryRows).run();
+  tx.insert(accounts)
+    .values({
+      id: createId(),
+      name: lang === 'it' ? 'Contanti' : 'Cash',
+      currency,
+      icon: 'cash',
+      color: CASH_COLOR,
+      createdAt: now,
+    })
+    .run();
 }
 
 /** v2: nuova palette. Aggiorna solo i colori rimasti quelli di default. */
-function recolorDefaults(db: AppDatabase) {
-  db.transaction((tx) => {
-    for (const c of DEFAULT_CATEGORIES) {
-      if (!c.legacyColors?.length) continue;
-      tx.update(categories)
-        .set({ color: c.color })
-        .where(and(eq(categories.type, c.type), inArray(categories.color, c.legacyColors)))
-        .run();
-    }
-    tx.update(accounts)
-      .set({ color: CASH_COLOR })
-      .where(inArray(accounts.color, LEGACY_CASH_COLORS))
+function recolorDefaults(tx: Tx) {
+  for (const c of DEFAULT_CATEGORIES) {
+    if (!c.legacyColors?.length) continue;
+    tx.update(categories)
+      .set({ color: c.color })
+      .where(and(eq(categories.type, c.type), inArray(categories.color, c.legacyColors)))
       .run();
-  });
+  }
+  tx.update(accounts)
+    .set({ color: CASH_COLOR })
+    .where(inArray(accounts.color, LEGACY_CASH_COLORS))
+    .run();
 }
