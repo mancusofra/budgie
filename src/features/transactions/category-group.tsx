@@ -13,7 +13,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { dateLocale } from '@/i18n';
 import { withAlpha } from '@/lib/color';
 import type { PeriodRange } from '@/lib/period';
-import { Spacing, TabularNums } from '@/theme';
+import { AnimationMs, Spacing, TabularNums } from '@/theme';
 
 import { useDeleteTransaction, useTransactionList } from './hooks';
 
@@ -43,7 +43,7 @@ export function CategoryGroup({
   const amountColor = category.type === 'expense' ? theme.expense : theme.income;
 
   return (
-    <Animated.View layout={LinearTransition.duration(150)}>
+    <Animated.View layout={LinearTransition.duration(AnimationMs)}>
       <Pressable
         onPress={onToggle}
         accessibilityRole="button"
@@ -96,7 +96,7 @@ function CategoryTransactions({
   });
 
   return (
-    <Animated.View entering={FadeIn.duration(120)} exiting={FadeOut.duration(80)}>
+    <Animated.View entering={FadeIn.duration(AnimationMs)} exiting={FadeOut.duration(AnimationMs)}>
       {rows.map(({ transaction: tx }) => (
         <SwipeToDelete key={tx.id} onDelete={() => deleteTransaction(tx)}>
           <Pressable

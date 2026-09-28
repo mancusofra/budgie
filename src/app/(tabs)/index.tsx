@@ -42,7 +42,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
 import { formatMoney } from '@/lib/money';
 import { useUIStore } from '@/store/ui';
-import { Spacing } from '@/theme';
+import { AnimationMs, Spacing } from '@/theme';
 
 type CenterMode = 'balance' | 'expense' | 'income';
 const NEXT_MODE: Record<CenterMode, CenterMode> = {
@@ -53,7 +53,7 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
 const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
 // Spostamento breve e lineare, senza rimbalzo
-const iconTransition = LinearTransition.duration(180);
+const iconTransition = LinearTransition.duration(AnimationMs);
 
 export default function HomeScreen() {
   const { t } = useTranslation();

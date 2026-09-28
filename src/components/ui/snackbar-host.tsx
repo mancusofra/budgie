@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
 import { useSnackbar } from '@/store/snackbar';
-import { FloatingTabBarHeight, Radius, Spacing } from '@/theme';
+import { AnimationMs, FloatingTabBarHeight, Radius, Spacing } from '@/theme';
 
 import { Surface } from './surface';
 import { Text } from './text';
@@ -34,8 +34,8 @@ export function SnackbarHost() {
       ]}>
       <Animated.View
         key={current.id}
-        entering={FadeIn.duration(150)}
-        exiting={FadeOut.duration(120)}>
+        entering={FadeIn.duration(AnimationMs)}
+        exiting={FadeOut.duration(AnimationMs)}>
         <Surface style={[styles.bar, { borderColor: theme.border }]}>
           <Text style={styles.message} numberOfLines={2}>
             {current.message}

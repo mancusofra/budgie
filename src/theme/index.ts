@@ -43,6 +43,9 @@ export const Spacing = {
 
 export const Radius = 12;
 
+/** Durata unica delle animazioni dell'app (ms). */
+export const AnimationMs = 250;
+
 /**
  * Cifre a larghezza fissa per gli importi. Solo iOS: su Android `tabular-nums`
  * fa misurare male il testo e taglia l'ultimo carattere (es. "$765.0").
