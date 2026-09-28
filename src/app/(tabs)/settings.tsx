@@ -1,19 +1,32 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { useTranslation } from 'react-i18next';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { SegmentedControl } from '@/components/ui/segmented-control';
+import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { useResetDatabase } from '@/features/settings/hooks';
+import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
 import { useTheme } from '@/hooks/use-theme';
-import { Spacing } from '@/theme';
+import { Radius, Spacing } from '@/theme';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
+  const settings = useSettings();
+  const setSetting = useSetSetting();
   const resetDatabase = useResetDatabase();
+  const weekStart = settings.weekStart ?? 1;
+  const monthStartDay = settings.monthStartDay ?? 1;
+
+  const changeMonthStart = (delta: number) => {
+    const next = Math.min(Math.max(monthStartDay + delta, 1), 28);
+    if (next === monthStartDay) return;
+    Haptics.selectionAsync();
+    setSetting('monthStartDay', next);
+  };
 
   const confirmReset = () =>
     Alert.alert(t('settings.resetConfirmTitle'), t('settings.resetConfirmMessage'), [
@@ -29,10 +42,55 @@ export default function SettingsScreen() {
       },
     ]);
 
+  const stepButton = (icon: 'minus' | 'plus', delta: number, label: string, disabled: boolean) => (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      disabled={disabled}
+      onPress={() => changeMonthStart(delta)}
+      style={{ opacity: disabled ? 0.35 : 1 }}>
+      <Surface interactive style={styles.step}>
+        <MaterialCommunityIcons name={icon} size={20} color={theme.text} />
+      </Surface>
+    </Pressable>
+  );
+
   return (
     <Screen>
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text variant="title">{t('settings.title')}</Text>
+
+        <View style={styles.section}>
+          <Text variant="overline" color="textSecondary">
+            {t('settings.periods')}
+          </Text>
+          <Surface style={styles.card}>
+            <Text>{t('settings.weekStart')}</Text>
+            <SegmentedControl
+              options={[
+                { value: '1', label: t('settings.monday') },
+                { value: '0', label: t('settings.sunday') },
+              ]}
+              value={String(weekStart)}
+              onChange={(v) => setSetting('weekStart', v === '0' ? 0 : 1)}
+            />
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
+            <View style={styles.row}>
+              <Text style={styles.flex}>{t('settings.monthStart')}</Text>
+              {stepButton('minus', -1, t('settings.decrease'), monthStartDay <= 1)}
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[styles.stepValue, { color: theme.text }]}>
+                {monthStartDay}
+              </Text>
+              {stepButton('plus', 1, t('settings.increase'), monthStartDay >= 28)}
+            </View>
+            <Text variant="caption" color="textSecondary">
+              {t('settings.monthStartHint')}
+            </Text>
+          </Surface>
+        </View>
+
         <Text color="textSecondary">{t('settings.comingSoon')}</Text>
 
         {__DEV__ && (
@@ -50,12 +108,24 @@ export default function SettingsScreen() {
             />
           </View>
         )}
-      </View>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { gap: Spacing.two },
-  section: { marginTop: Spacing.four, gap: Spacing.two },
+  content: { gap: Spacing.four, paddingBottom: Spacing.four },
+  section: { gap: Spacing.two },
+  card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.three },
+  separator: { height: StyleSheet.hairlineWidth },
+  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  flex: { flex: 1 },
+  step: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  stepValue: {
+    minWidth: 32,
+    textAlign: 'center',
+    fontSize: 18,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
+  },
 });

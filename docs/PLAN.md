@@ -74,12 +74,12 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 3 — Lista transazioni e periodi
 
-- [ ] Tab "Transazioni": `FlashList` raggruppata per giorno con totale giornaliero
-- [ ] Tap su categoria nella home → lista filtrata per quella categoria
-- [ ] Dettaglio / modifica / eliminazione (swipe-to-delete con undo tramite snackbar)
-- [ ] Ricerca per nota e filtro per conto/categoria
-- [ ] Periodi: giorno, settimana, mese, anno, tutto, intervallo personalizzato
-- [ ] Impostazione "primo giorno della settimana" e "giorno di inizio mese" (per chi riceve lo stipendio il 27)
+- [x] Tab "Transazioni": lista raggruppata per giorno con totale giornaliero (`SectionList`; `FlashList` se servirà per le prestazioni)
+- [x] Tap su categoria nella home → lista filtrata per quella categoria
+- [x] Dettaglio / modifica / eliminazione (swipe-to-delete con undo tramite snackbar)
+- [x] Ricerca per nota e filtro per categoria (filtro per conto: con la gestione conti, Fase 4)
+- [x] Periodi: giorno, settimana, mese, anno, tutto, intervallo personalizzato
+- [x] Impostazione "primo giorno della settimana" e "giorno di inizio mese" (per chi riceve lo stipendio il 27)
 
 ## Fase 4 — Categorie e conti
 

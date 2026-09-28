@@ -18,7 +18,13 @@
     "year": "Anno",
     "all": "Sempre",
     "previous": "Periodo precedente",
-    "next": "Periodo successivo"
+    "next": "Periodo successivo",
+    "title": "Periodo",
+    "today": "Torna a oggi",
+    "custom": "Intervallo personalizzato",
+    "from": "Dal",
+    "to": "Al",
+    "apply": "Applica"
   },
   "home": {
     "balance": "Saldo",
@@ -40,10 +46,11 @@
     "pickDate": "Scegli data",
     "close": "Chiudi",
     "invalidAmount": "Inserisci un importo maggiore di zero",
-    "saveError": "Impossibile salvare la transazione"
+    "saveError": "Impossibile salvare la transazione",
+    "edit": "Modifica"
   },
   "keypad": {
-    "backspace": "Cancella",
+    "backspace": "Cancella carattere",
     "plus": "più",
     "minus": "meno",
     "times": "per",
@@ -57,6 +64,25 @@
     "resetData": "Azzera dati",
     "resetConfirmTitle": "Azzerare tutti i dati?",
     "resetConfirmMessage": "Transazioni, categorie e conti verranno cancellati e ricreati quelli di default.",
-    "resetDone": "Dati azzerati"
+    "resetDone": "Dati azzerati",
+    "periods": "Periodi",
+    "weekStart": "Primo giorno della settimana",
+    "monday": "Lunedì",
+    "sunday": "Domenica",
+    "monthStart": "Il mese inizia il giorno",
+    "monthStartHint": "Utile se ricevi lo stipendio a fine mese: con 27 il “mese” va dal 27 al 26.",
+    "decrease": "Diminuisci",
+    "increase": "Aumenta"
+  },
+  "transactions": {
+    "title": "Transazioni",
+    "search": "Cerca nelle note e categorie",
+    "empty": "Nessuna transazione in questo periodo",
+    "emptyFiltered": "Nessun risultato",
+    "deleted": "Transazione eliminata",
+    "transfer": "Trasferimento",
+    "allCategories": "Tutte le categorie",
+    "clearFilter": "Rimuovi filtro",
+    "editTransferUnsupported": "La modifica dei trasferimenti arriverà con la gestione dei conti."
   }
 }

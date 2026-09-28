@@ -1,8 +1,15 @@
 import { and, desc, eq, gte, lt, or, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 
 import { createId } from '@/lib/id';
 
-import { transactions, type Transaction, type TransactionType } from '../schema';
+import {
+  accounts,
+  categories,
+  transactions,
+  type Transaction,
+  type TransactionType,
+} from '../schema';
 import type { AppDatabase } from '../types';
 
 /** Intervallo semiaperto [from, to). */
@@ -12,6 +19,11 @@ export type TransactionFilter = Partial<DateRange> & {
   accountId?: string;
   categoryId?: string;
   type?: TransactionType;
+};
+
+export type DetailedFilter = TransactionFilter & {
+  /** Testo cercato nella nota e nel nome della categoria (senza distinzione maiuscole). */
+  search?: string;
 };
 
 export type NewTransaction = {
@@ -112,8 +124,51 @@ export function createTransactionsRepo(db: AppDatabase) {
       await db.delete(t).where(eq(t.id, id));
     },
 
+    /** Reinserisce una transazione cancellata (per "Annulla"), con lo stesso id. */
+    async restore(row: Transaction): Promise<void> {
+      await db.insert(t).values(row).onConflictDoNothing();
+    },
+
     getById(id: string) {
       return db.select().from(t).where(eq(t.id, id)).get();
+    },
+
+    /** Come getById ma come query builder (per useLiveQuery): 0 o 1 riga. */
+    byId(id: string) {
+      return db.select().from(t).where(eq(t.id, id)).limit(1);
+    },
+
+    /**
+     * Transazioni con categoria e conti (per la lista), dalla più recente.
+     * Query builder: usabile con await o useLiveQuery.
+     */
+    listDetailed(filter: DetailedFilter = {}) {
+      const toAccount = alias(accounts, 'to_account');
+      const search = filter.search?.trim().toLowerCase();
+      const pattern = search ? `%${search.replace(/[\\%_]/g, (c) => `\\${c}`)}%` : undefined;
+      return db
+        .select({
+          transaction: t,
+          category: { name: categories.name, icon: categories.icon, color: categories.color },
+          account: { name: accounts.name, currency: accounts.currency },
+          toAccount: { name: toAccount.name },
+        })
+        .from(t)
+        .innerJoin(accounts, eq(t.accountId, accounts.id))
+        .leftJoin(categories, eq(t.categoryId, categories.id))
+        .leftJoin(toAccount, eq(t.toAccountId, toAccount.id))
+        .where(
+          and(
+            where(filter),
+            pattern
+              ? or(
+                  sql`lower(${t.note}) like ${pattern} escape '\\'`,
+                  sql`lower(${categories.name}) like ${pattern} escape '\\'`,
+                )
+              : undefined,
+          ),
+        )
+        .orderBy(desc(t.date), desc(t.createdAt));
     },
 
     /** Transazioni filtrate, dalla più recente. */

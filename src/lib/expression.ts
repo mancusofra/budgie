@@ -78,3 +78,14 @@ export function evaluate(expr: string, currency = 'EUR'): number | null {
   }
   return terms.reduce((sum, t, i) => sum + signs[i] * t, 0);
 }
+
+/** Espressione del tastierino per un importo in unità minori: 1250 → "12,5", 1200 → "12". */
+export function minorToExpression(minor: number, currency = 'EUR'): string {
+  const decimals = currencyDecimals(currency);
+  const abs = Math.abs(Math.round(minor));
+  const int = Math.floor(abs / 10 ** decimals);
+  const frac = String(abs % 10 ** decimals)
+    .padStart(decimals, '0')
+    .replace(/0+$/, '');
+  return `${minor < 0 ? '−' : ''}${int}${frac ? `,${frac}` : ''}`;
+}

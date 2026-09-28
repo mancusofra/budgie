@@ -210,3 +210,69 @@ describe('transactionsRepo', () => {
     close();
   });
 });
+
+describe('transactionsRepo – lista dettagliata', () => {
+  it('unisce categoria e conti, cerca nella nota e nel nome categoria', async () => {
+    const { repos, cash, card, food, bills, close } = await setup();
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 100,
+      accountId: cash.id,
+      categoryId: food,
+      note: 'Pizza con amici',
+      date: day(1),
+    });
+    await repos.transactions.create({
+      type: 'expense',
+      amount: 200,
+      accountId: card.id,
+      categoryId: bills,
+      note: '100% luce',
+      date: day(2),
+    });
+    await repos.transactions.create({
+      type: 'transfer',
+      amount: 50,
+      accountId: cash.id,
+      toAccountId: card.id,
+      date: day(3),
+    });
+
+    const all = await repos.transactions.listDetailed();
+    expect(all).toHaveLength(3);
+    const [transfer, bill, pizza] = all;
+    expect(transfer.category).toBeNull();
+    expect(transfer.toAccount).toEqual({ name: 'Carta' });
+    expect(bill).toMatchObject({
+      category: { name: 'Bollette' },
+      account: { name: 'Carta', currency: 'EUR' },
+    });
+    expect(pizza.transaction.note).toBe('Pizza con amici');
+
+    const names = async (search: string) =>
+      (await repos.transactions.listDetailed({ search })).map((r) => r.transaction.note);
+    expect(await names('PIZZA')).toEqual(['Pizza con amici']);
+    expect(await names('bollet')).toEqual(['100% luce']);
+    // % e _ sono cercati letteralmente, non come caratteri jolly
+    expect(await names('100%')).toEqual(['100% luce']);
+    expect(await names('_')).toEqual([]);
+    close();
+  });
+
+  it('restore reinserisce una transazione cancellata', async () => {
+    const { repos, cash, food, close } = await setup();
+    const tx = await repos.transactions.create({
+      type: 'expense',
+      amount: 300,
+      accountId: cash.id,
+      categoryId: food,
+    });
+    await repos.transactions.remove(tx.id);
+    await repos.transactions.restore(tx);
+    expect(await repos.transactions.getById(tx.id)).toEqual(tx);
+    // idempotente
+    await repos.transactions.restore(tx);
+    expect(await repos.transactions.list()).toHaveLength(1);
+    close();
+  });
+});

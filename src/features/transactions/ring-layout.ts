@@ -180,6 +180,11 @@ export function arcMidpoints(arcs: ArcSegment[]): Map<string, number> {
   );
 }
 
+/** Spicchio che contiene l'angolo dato (in giri), se c'è. */
+export function arcAtAngle(arcs: ArcSegment[], angle: number): ArcSegment | undefined {
+  return arcs.find((a) => mod1(angle - a.start) <= a.length);
+}
+
 /** Margine dagli estremi dello spicchio, per non puntare sullo spazio tra spicchi. */
 const edgeInset = (length: number) => Math.min(0.01, length / 4);
 

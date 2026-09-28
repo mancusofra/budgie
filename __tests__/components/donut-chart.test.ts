@@ -1,6 +1,7 @@
 import { donutArcs } from '@/components/charts/donut-chart';
 import {
   allocateToGaps,
+  arcAtAngle,
   arcMidpoints,
   clockAngle,
   connectors,
@@ -144,6 +145,12 @@ describe('arcMidpoints / connectors', () => {
     ],
     0,
   );
+
+  it('trova lo spicchio sotto un angolo', () => {
+    expect(arcAtAngle(arcs, 0.1)?.key).toBe('a');
+    expect(arcAtAngle(arcs, 0.9)?.key).toBe('b');
+    expect(arcAtAngle([], 0.5)).toBeUndefined();
+  });
 
   it('calcola il centro di ogni spicchio', () => {
     const mid = arcMidpoints(arcs);

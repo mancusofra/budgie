@@ -1,4 +1,10 @@
-import { applyKey, evaluate, hasOperator, type KeypadKey } from '@/lib/expression';
+import {
+  applyKey,
+  evaluate,
+  hasOperator,
+  minorToExpression,
+  type KeypadKey,
+} from '@/lib/expression';
 
 const type = (keys: string, currency = 'EUR') =>
   [...keys].reduce(
@@ -53,5 +59,18 @@ describe('hasOperator', () => {
     expect(hasOperator('12')).toBe(false);
     expect(hasOperator('12+')).toBe(false);
     expect(hasOperator('12+3')).toBe(true);
+  });
+});
+
+describe('minorToExpression', () => {
+  it.each([
+    [1250, 'EUR', '12,5'],
+    [1200, 'EUR', '12'],
+    [1205, 'EUR', '12,05'],
+    [5, 'EUR', '0,05'],
+    [500, 'JPY', '500'],
+  ])('%d %s → %s', (minor, currency, expected) => {
+    expect(minorToExpression(minor, currency)).toBe(expected);
+    expect(evaluate(expected, currency)).toBe(minor);
   });
 });

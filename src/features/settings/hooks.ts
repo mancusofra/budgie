@@ -25,3 +25,10 @@ export function useResetDatabase() {
     });
   }, []);
 }
+
+export function useSetSetting() {
+  return useCallback(
+    <K extends keyof SettingsMap>(key: K, value: SettingsMap[K]) => repos.settings.set(key, value),
+    [],
+  );
+}

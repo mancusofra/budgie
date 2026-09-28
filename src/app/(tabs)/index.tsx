@@ -2,17 +2,22 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type GestureResponderEvent,
+} from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { LinearTransition } from 'react-native-reanimated';
 import Svg, { Line } from 'react-native-svg';
 
 import { donutArcs, DonutChart } from '@/components/charts/donut-chart';
 import { CategoryIcon } from '@/components/transactions/category-icon';
+import { PeriodHeader } from '@/components/transactions/period-header';
 import { Button } from '@/components/ui/button';
-import { PeriodSelector } from '@/components/ui/period-selector';
 import { Screen } from '@/components/ui/screen';
-import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Text } from '@/components/ui/text';
 import type { Category } from '@/db/schema';
 import { useCategories } from '@/features/categories/hooks';
@@ -23,7 +28,9 @@ import {
   useSelectedPeriod,
 } from '@/features/transactions/hooks';
 import {
+  arcAtAngle,
   arcMidpoints,
+  clockAngle,
   connectors,
   orbitGeometry,
   placeIcons,
@@ -32,7 +39,6 @@ import {
 } from '@/features/transactions/ring-layout';
 import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
-import type { PeriodKind } from '@/lib/period';
 import { formatMoney } from '@/lib/money';
 import { useUIStore } from '@/store/ui';
 import { Spacing } from '@/theme';
@@ -43,7 +49,6 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
   expense: 'income',
   income: 'balance',
 };
-const PERIOD_KINDS: PeriodKind[] = ['day', 'week', 'month', 'year', 'all'];
 const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
 const iconTransition = LinearTransition.springify().damping(18).stiffness(140);
@@ -54,11 +59,9 @@ export default function HomeScreen() {
   const { width } = useWindowDimensions();
   const currency = useCurrency();
   const accountFilter = useUIStore((s) => s.accountFilter);
-  const setPeriodKind = useUIStore((s) => s.setPeriodKind);
   const shift = useUIStore((s) => s.shiftPeriod);
-  const resetPeriod = useUIStore((s) => s.resetPeriod);
 
-  const { period, range, label } = useSelectedPeriod();
+  const { period, range } = useSelectedPeriod();
   const [mode, setMode] = useState<CenterMode>('balance');
   const chartType = mode === 'income' ? 'income' : 'expense';
 
@@ -103,6 +106,24 @@ export default function HomeScreen() {
     geometry.donutSize / 2,
     ICON_SIZE / 2 + Spacing.half,
   );
+
+  const donutThickness = Math.max(14, geometry.donutSize * 0.075);
+  const setCategoryFilter = useUIStore((s) => s.setCategoryFilter);
+
+  // Tap sull'anello = lista filtrata per quella categoria; tap al centro = cambia vista
+  const onDonutPress = (e: GestureResponderEvent) => {
+    const r = geometry.donutSize / 2;
+    const dx = e.nativeEvent.locationX - r;
+    const dy = e.nativeEvent.locationY - r;
+    const onRing = Math.hypot(dx, dy) >= r - donutThickness - Spacing.two;
+    const arc = onRing ? arcAtAngle(arcs, clockAngle({ x: 0, y: 0 }, { x: dx, y: dy })) : undefined;
+    if (arc) {
+      setCategoryFilter(arc.key);
+      router.navigate('/transactions');
+    } else {
+      setMode(NEXT_MODE[mode]);
+    }
+  };
 
   const canShift = period.kind !== 'all';
   const swipe = Gesture.Race(
@@ -150,21 +171,7 @@ export default function HomeScreen() {
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <SegmentedControl
-          options={PERIOD_KINDS.map((k) => ({ value: k, label: t(`period.${k}`) }))}
-          value={period.kind}
-          onChange={setPeriodKind}
-        />
-        <PeriodSelector
-          label={label}
-          onPrevious={canShift ? () => shift(-1) : undefined}
-          onNext={canShift ? () => shift(1) : undefined}
-          onPressLabel={resetPeriod}
-          previousLabel={t('period.previous')}
-          nextLabel={t('period.next')}
-        />
-      </View>
+      <PeriodHeader />
 
       <GestureDetector gesture={swipe}>
         <View
@@ -191,7 +198,7 @@ export default function HomeScreen() {
           </Svg>
 
           <Pressable
-            onPress={() => setMode(NEXT_MODE[mode])}
+            onPress={onDonutPress}
             accessibilityRole="button"
             accessibilityLabel={`${centerLabel} ${money(centerAmount)}`}
             style={{
@@ -202,7 +209,7 @@ export default function HomeScreen() {
             <DonutChart
               segments={segments}
               size={geometry.donutSize}
-              thickness={Math.max(14, geometry.donutSize * 0.075)}
+              thickness={donutThickness}
               trackColor={theme.surface}>
               <Text variant="overline" color="textSecondary">
                 {centerLabel}
@@ -267,7 +274,6 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
   cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
   centerAmount: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.5 },

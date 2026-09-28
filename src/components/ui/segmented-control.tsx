@@ -9,7 +9,8 @@ import { Text } from './text';
 
 type Props<T extends string> = {
   options: { value: T; label: string }[];
-  value: T;
+  /** Valore selezionato; se non è tra le opzioni nessuna risulta selezionata. */
+  value: string;
   onChange: (value: T) => void;
 };
 

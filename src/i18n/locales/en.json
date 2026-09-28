@@ -18,7 +18,13 @@
     "year": "Year",
     "all": "All time",
     "previous": "Previous period",
-    "next": "Next period"
+    "next": "Next period",
+    "title": "Period",
+    "today": "Back to today",
+    "custom": "Custom range",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply"
   },
   "home": {
     "balance": "Balance",
@@ -40,10 +46,11 @@
     "pickDate": "Pick date",
     "close": "Close",
     "invalidAmount": "Enter an amount greater than zero",
-    "saveError": "Could not save the transaction"
+    "saveError": "Could not save the transaction",
+    "edit": "Edit"
   },
   "keypad": {
-    "backspace": "Delete",
+    "backspace": "Backspace",
     "plus": "plus",
     "minus": "minus",
     "times": "times",
@@ -57,6 +64,25 @@
     "resetData": "Reset data",
     "resetConfirmTitle": "Reset all data?",
     "resetConfirmMessage": "Transactions, categories and accounts will be deleted and the defaults recreated.",
-    "resetDone": "Data reset"
+    "resetDone": "Data reset",
+    "periods": "Periods",
+    "weekStart": "First day of the week",
+    "monday": "Monday",
+    "sunday": "Sunday",
+    "monthStart": "Month starts on day",
+    "monthStartHint": "Handy if you get paid at the end of the month: with 27 a “month” runs from the 27th to the 26th.",
+    "decrease": "Decrease",
+    "increase": "Increase"
+  },
+  "transactions": {
+    "title": "Transactions",
+    "search": "Search notes and categories",
+    "empty": "No transactions in this period",
+    "emptyFiltered": "No results",
+    "deleted": "Transaction deleted",
+    "transfer": "Transfer",
+    "allCategories": "All categories",
+    "clearFilter": "Clear filter",
+    "editTransferUnsupported": "Editing transfers will come with account management."
   }
 }
