@@ -52,7 +52,8 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
 };
 const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
-const iconTransition = LinearTransition.springify().damping(18).stiffness(140);
+// Spostamento breve e lineare, senza rimbalzo
+const iconTransition = LinearTransition.duration(180);
 
 export default function HomeScreen() {
   const { t } = useTranslation();

@@ -6,7 +6,6 @@ import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSpring,
   type SharedValue,
 } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
@@ -98,12 +97,11 @@ function SortableRow({
   const style = useAnimatedStyle(() => {
     const target = (positions.get()[id] ?? 0) * rowHeight;
     return {
-      top: active.get() ? top.get() : withSpring(target, { damping: 20, stiffness: 220 }),
+      // Nessuna animazione: la riga segue il dito, le altre si spostano subito
+      top: active.get() ? top.get() : target,
       zIndex: active.get() ? 10 : 0,
       // Trasparente a riposo (lascia vedere la card), pieno mentre è trascinata
       backgroundColor: active.get() ? activeBackground : 'transparent',
-      shadowOpacity: withSpring(active.get() ? 0.15 : 0),
-      transform: [{ scale: withSpring(active.get() ? 1.02 : 1) }],
     };
   });
 
@@ -157,8 +155,6 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
   },
   content: { flex: 1 },
   handle: { paddingHorizontal: 12, height: '100%', justifyContent: 'center' },

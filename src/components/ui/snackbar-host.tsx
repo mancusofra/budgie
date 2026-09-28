@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -32,7 +32,10 @@ export function SnackbarHost() {
         styles.wrapper,
         { bottom: insets.bottom + Math.max(FloatingTabBarHeight, 64) + Spacing.three },
       ]}>
-      <Animated.View key={current.id} entering={FadeInDown} exiting={FadeOutDown}>
+      <Animated.View
+        key={current.id}
+        entering={FadeIn.duration(150)}
+        exiting={FadeOut.duration(120)}>
         <Surface style={[styles.bar, { borderColor: theme.border }]}>
           <Text style={styles.message} numberOfLines={2}>
             {current.message}

@@ -43,7 +43,7 @@ export function CategoryGroup({
   const amountColor = category.type === 'expense' ? theme.expense : theme.income;
 
   return (
-    <Animated.View layout={LinearTransition.duration(200)}>
+    <Animated.View layout={LinearTransition.duration(150)}>
       <Pressable
         onPress={onToggle}
         accessibilityRole="button"
@@ -96,7 +96,7 @@ function CategoryTransactions({
   });
 
   return (
-    <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
+    <Animated.View entering={FadeIn.duration(120)} exiting={FadeOut.duration(80)}>
       {rows.map(({ transaction: tx }) => (
         <SwipeToDelete key={tx.id} onDelete={() => deleteTransaction(tx)}>
           <Pressable
