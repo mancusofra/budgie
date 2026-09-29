@@ -4,14 +4,17 @@ import { InputAccessoryView, Keyboard, Platform, Pressable, StyleSheet, View } f
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/theme';
 
+import { Surface } from './surface';
 import { Text } from './text';
 
 /** Da passare come `inputAccessoryViewID` ai TextInput numerici. */
 export const KEYBOARD_DONE_ID = 'keyboard-done';
 
 /**
- * Barra "Fine" sopra la tastiera (solo iOS): il tastierino decimale di iOS
- * non ha un tasto per chiudersi. Su Android c'è già il tasto di conferma.
+ * Pulsante "Fine" sopra la tastiera (solo iOS): il tastierino decimale di iOS
+ * non ha un tasto per chiudersi. Niente barra grigia di sistema: una capsula
+ * di vetro fluttuante, come gli altri controlli dell'app. Su Android la
+ * tastiera ha già il tasto di conferma.
  */
 export function KeyboardDoneAccessory() {
   const { t } = useTranslation();
@@ -19,10 +22,16 @@ export function KeyboardDoneAccessory() {
   if (Platform.OS !== 'ios') return null;
 
   return (
-    <InputAccessoryView nativeID={KEYBOARD_DONE_ID}>
-      <View style={[styles.bar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Pressable onPress={Keyboard.dismiss} hitSlop={12} accessibilityRole="button">
-          <Text style={[styles.done, { color: theme.primary }]}>{t('stats.done')}</Text>
+    <InputAccessoryView nativeID={KEYBOARD_DONE_ID} backgroundColor="transparent">
+      <View style={styles.row} pointerEvents="box-none">
+        <Pressable
+          onPress={Keyboard.dismiss}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('stats.done')}>
+          <Surface interactive tint={theme.primary} style={styles.pill}>
+            <Text style={[styles.label, { color: theme.primary }]}>{t('stats.done')}</Text>
+          </Surface>
         </Pressable>
       </View>
     </InputAccessoryView>
@@ -30,12 +39,17 @@ export function KeyboardDoneAccessory() {
 }
 
 const styles = StyleSheet.create({
-  bar: {
+  row: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingBottom: Spacing.two,
+    backgroundColor: 'transparent',
   },
-  done: { fontWeight: '600', fontSize: 17 },
+  pill: {
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.two + 2,
+    borderRadius: 999,
+  },
+  label: { fontWeight: '600', fontSize: 16 },
 });
