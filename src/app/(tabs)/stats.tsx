@@ -14,7 +14,7 @@ import { PeriodHeader } from '@/components/transactions/period-header';
 import { Button } from '@/components/ui/button';
 import { ReorderableStack } from '@/components/ui/reorderable-stack';
 import { Screen, useTabBarSpace } from '@/components/ui/screen';
-import { Surface } from '@/components/ui/surface';
+import { hasGlass, Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { useCategories } from '@/features/categories/hooks';
 import { useCurrency, useSetSetting, useSettings } from '@/features/settings/hooks';
@@ -320,15 +320,18 @@ export default function StatsScreen() {
         <View
           pointerEvents="box-none"
           style={[styles.doneBar, { bottom: insets.bottom + HiddenTabBarTouchArea + Spacing.two }]}>
-          <Button
-            title={t('stats.done')}
-            filled
-            onPress={() => {
-              Haptics.selectionAsync();
-              setEditing(false);
-            }}
-            style={styles.doneButton}
-          />
+          {/* Tonale: su iOS è Liquid Glass tinto; altrove sotto c'è uno sfondo
+              pieno, altrimenti la tinta trasparente sopra i riquadri non si legge */}
+          <View style={!hasGlass && [styles.doneBackdrop, { backgroundColor: theme.background }]}>
+            <Button
+              title={t('stats.done')}
+              onPress={() => {
+                Haptics.selectionAsync();
+                setEditing(false);
+              }}
+              style={styles.doneButton}
+            />
+          </View>
         </View>
       )}
     </Screen>
@@ -423,6 +426,7 @@ const styles = StyleSheet.create({
   budgetRow: { gap: 2 },
   doneBar: { position: 'absolute', left: Spacing.three, right: Spacing.three },
   doneButton: { alignSelf: 'stretch' },
+  doneBackdrop: { borderRadius: Radius + 4 },
   center: { textAlign: 'center' },
   hiddenCard: { opacity: 0.4 },
   eyeButton: { position: 'absolute', top: Spacing.two, right: Spacing.two },

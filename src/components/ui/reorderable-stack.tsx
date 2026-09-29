@@ -32,17 +32,16 @@ type Props = {
   /** Nuovo ordine delle chiavi a fine trascinamento. */
   onReorder: (keys: string[]) => void;
   /**
-   * true (es. già in modifica): il trascinamento parte appena il dito si muove
-   * in verticale. false: serve prima un tocco lungo, così lo scorrimento
+   * true (es. già in modifica): basta una pressione breve (0,1 s) per
+   * trascinare. false: serve un tocco lungo (0,3 s), così lo scorrimento
    * normale della pagina non sposta i riquadri per sbaglio.
    */
   dragImmediately?: boolean;
 };
 
 const LONG_PRESS_MS = 300;
-/** Movimento verticale (pt) che avvia il trascinamento immediato: meno dello
- * scostamento con cui parte lo scorrimento nativo, così vince il trascinamento. */
-const IMMEDIATE_DRAG_OFFSET = 5;
+/** In modifica basta una pressione brevissima prima di trascinare. */
+const QUICK_PRESS_MS = 100;
 const AUTO_SCROLL_SPEED = 10;
 
 /** Top di un elemento nell'ordine dato, sommando le altezze precedenti. */
@@ -200,14 +199,8 @@ function Row({
     reorder();
   });
 
-  // Callback marcate 'worklet': con la catena condizionale il plugin di
-  // Reanimated non le riconosce da solo e girerebbero sul thread JS
-  const base = Gesture.Pan();
-  const pan = (
-    dragImmediately
-      ? base.activeOffsetY([-IMMEDIATE_DRAG_OFFSET, IMMEDIATE_DRAG_OFFSET])
-      : base.activateAfterLongPress(LONG_PRESS_MS)
-  )
+  const pan = Gesture.Pan()
+    .activateAfterLongPress(dragImmediately ? QUICK_PRESS_MS : LONG_PRESS_MS)
     .onStart(() => {
       'worklet';
       active.set(true);
