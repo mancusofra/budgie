@@ -1,25 +1,30 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { GlassView } from 'expo-glass-effect';
 import { useTranslation } from 'react-i18next';
 import { InputAccessoryView, Keyboard, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
 import { Spacing } from '@/theme';
 
-import { Surface } from './surface';
-import { Text } from './text';
+import { hasGlass } from './surface';
 
 /** Da passare come `inputAccessoryViewID` ai TextInput numerici. */
 export const KEYBOARD_DONE_ID = 'keyboard-done';
 
+const SIZE = 44;
+
 /**
- * Pulsante "Fine" sopra la tastiera (solo iOS): il tastierino decimale di iOS
- * non ha un tasto per chiudersi. Niente barra grigia di sistema: una capsula
- * di vetro fluttuante, come gli altri controlli dell'app. Su Android la
- * tastiera ha già il tasto di conferma.
+ * Conferma sopra la tastiera (solo iOS, dove il tastierino decimale non ha un
+ * tasto per chiudersi): cerchio con la spunta nello stile dei pulsanti di
+ * conferma di iOS 26 (vetro "prominente" tinto). Su Android la tastiera ha
+ * già il tasto di conferma.
  */
 export function KeyboardDoneAccessory() {
   const { t } = useTranslation();
   const theme = useTheme();
   if (Platform.OS !== 'ios') return null;
+
+  const check = <MaterialCommunityIcons name="check" size={24} color="#FFFFFF" />;
 
   return (
     <InputAccessoryView nativeID={KEYBOARD_DONE_ID} backgroundColor="transparent">
@@ -29,9 +34,13 @@ export function KeyboardDoneAccessory() {
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t('stats.done')}>
-          <Surface interactive tint={theme.primary} style={styles.pill}>
-            <Text style={[styles.label, { color: theme.primary }]}>{t('stats.done')}</Text>
-          </Surface>
+          {hasGlass ? (
+            <GlassView isInteractive tintColor={theme.primary} style={styles.circle}>
+              {check}
+            </GlassView>
+          ) : (
+            <View style={[styles.circle, { backgroundColor: theme.primary }]}>{check}</View>
+          )}
         </Pressable>
       </View>
     </InputAccessoryView>
@@ -44,12 +53,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.two,
-    backgroundColor: 'transparent',
   },
-  pill: {
-    paddingHorizontal: Spacing.four,
-    paddingVertical: Spacing.two + 2,
-    borderRadius: 999,
+  circle: {
+    width: SIZE,
+    height: SIZE,
+    borderRadius: SIZE / 2,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  label: { fontWeight: '600', fontSize: 16 },
 });

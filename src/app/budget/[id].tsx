@@ -2,18 +2,27 @@ import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import {
+  Alert,
+  Keyboard,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
-import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Budget } from '@/db/schema';
 import { useCategories } from '@/features/categories/hooks';
 import { useCurrency } from '@/features/settings/hooks';
 import { budgetActions, useBudget } from '@/features/stats/hooks';
+import { useKeyboardHeight } from '@/hooks/use-keyboard-height';
 import { useStackHeader } from '@/hooks/use-stack-header';
 import { useTheme } from '@/hooks/use-theme';
 import { decimalSeparator } from '@/i18n';
@@ -36,6 +45,12 @@ function BudgetForm({ budget }: { budget?: Budget }) {
   const currency = useCurrency();
   const header = useStackHeader(budget ? t('budget.edit') : t('budget.new'));
   const insets = useSafeAreaInsets();
+  const keyboardHeight = useKeyboardHeight();
+  // Su Android l'altezza della tastiera non include la barra di navigazione
+  const keyboardBottom =
+    keyboardHeight > 0
+      ? keyboardHeight + (Platform.OS === 'android' ? insets.bottom : 0)
+      : insets.bottom;
   const categories = useCategories('expense');
   const [categoryId, setCategoryId] = useState<string | null>(budget?.categoryId ?? null);
   const [amountText, setAmountText] = useState(
@@ -44,6 +59,7 @@ function BudgetForm({ budget }: { budget?: Budget }) {
   const [error, setError] = useState<string>();
 
   const save = async () => {
+    Keyboard.dismiss();
     const amount = parseAmount(amountText, currency);
     if (!amount || amount <= 0) {
       setError(t('budget.invalidAmount'));
@@ -115,7 +131,6 @@ function BudgetForm({ budget }: { budget?: Budget }) {
               }}
               keyboardType="decimal-pad"
               returnKeyType="done"
-              inputAccessoryViewID={KEYBOARD_DONE_ID}
               placeholder={`0${decimalSeparator}00`}
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.text, borderColor: theme.border }]}
@@ -149,12 +164,15 @@ function BudgetForm({ budget }: { budget?: Budget }) {
 
         {budget && <Button title={t('budget.delete')} color="expense" onPress={remove} />}
       </ScrollView>
-      <KeyboardDoneAccessory />
-      {/* Salva sempre visibile: l'elenco delle categorie può essere lungo */}
+      {/* Salva sempre visibile (l'elenco delle categorie può essere lungo) e, con la
+          tastiera aperta, appoggiato sopra di essa: un tocco salva e la chiude */}
       <View
         style={[
           styles.footer,
-          { backgroundColor: theme.background, paddingBottom: insets.bottom + Spacing.three },
+          {
+            backgroundColor: theme.background,
+            paddingBottom: keyboardBottom + Spacing.three,
+          },
         ]}>
         <Button title={t('common.save')} filled onPress={save} />
       </View>
