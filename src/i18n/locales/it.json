@@ -185,6 +185,7 @@
     "title": "Statistiche",
     "vsPrevious": "{{value}} rispetto al periodo precedente",
     "samePrevious": "Uguale al periodo precedente",
+    "chartEmpty": "Il grafico comparirà con le prime spese del periodo",
     "chartTitle": "Andamento spese",
     "total": "Totale {{value}}",
     "averageDay": "media {{value}} al giorno",
@@ -249,5 +250,17 @@
     "prompt": "Sblocca Moneta",
     "unlock": "Sblocca",
     "unavailable": "Riconoscimento biometrico non disponibile su questo dispositivo: l'app è stata sbloccata."
+  },
+  "onboarding": {
+    "welcomeTitle": "Benvenuto in Moneta",
+    "welcomeBody": "Registra una spesa in due tocchi: scegli la categoria, digita l'importo, fatto.",
+    "currencyTitle": "La tua valuta",
+    "currencyBody": "È quella del tuo dispositivo: puoi cambiarla ora o in qualsiasi momento dalle Impostazioni.",
+    "privacyTitle": "I tuoi dati restano tuoi",
+    "privacyBody": "Niente account, niente cloud: tutto resta sul telefono. Dalle Impostazioni puoi fare un backup e bloccare l'app con il riconoscimento biometrico.",
+    "skip": "Salta",
+    "next": "Avanti",
+    "start": "Inizia",
+    "page": "Pagina {{page}} di {{total}}"
   }
 }

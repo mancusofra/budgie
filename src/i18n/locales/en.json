@@ -185,6 +185,7 @@
     "title": "Stats",
     "vsPrevious": "{{value}} vs previous period",
     "samePrevious": "Same as previous period",
+    "chartEmpty": "The chart will appear once there are expenses in this period",
     "chartTitle": "Spending over time",
     "total": "Total {{value}}",
     "averageDay": "avg {{value}} per day",
@@ -249,5 +250,17 @@
     "prompt": "Unlock Moneta",
     "unlock": "Unlock",
     "unavailable": "Biometric authentication isn't available on this device: the app has been unlocked."
+  },
+  "onboarding": {
+    "welcomeTitle": "Welcome to Moneta",
+    "welcomeBody": "Log an expense in two taps: pick the category, type the amount, done.",
+    "currencyTitle": "Your currency",
+    "currencyBody": "It's your device's currency: change it now or anytime from Settings.",
+    "privacyTitle": "Your data stays yours",
+    "privacyBody": "No account, no cloud: everything stays on your phone. From Settings you can make a backup and lock the app with biometrics.",
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started",
+    "page": "Page {{page}} of {{total}}"
   }
 }

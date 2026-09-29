@@ -1,4 +1,4 @@
-import { useLiveQuery } from '@/db/live-query';
+import { refreshLiveQueries, useLiveQuery } from '@/db/live-query';
 import { getLocales } from 'expo-localization';
 import { useCallback, useMemo } from 'react';
 
@@ -28,7 +28,7 @@ export function useResetDatabase() {
     return resetDatabase(db, {
       language: locale?.languageCode ?? 'en',
       currency: locale?.currencyCode ?? 'EUR',
-    });
+    }).then(refreshLiveQueries);
   }, []);
 }
 

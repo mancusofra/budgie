@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SnackbarHost } from '@/components/ui/snackbar-host';
 import { DatabaseProvider } from '@/db/provider';
+import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
@@ -26,6 +27,10 @@ export default function RootLayout() {
             <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transfer/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="onboarding"
+              options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
+            />
             <Stack.Screen
               name="currency"
               options={{
@@ -78,6 +83,7 @@ export default function RootLayout() {
           </Stack>
           <SnackbarHost />
           <SettingsSync />
+          <OnboardingGate />
           <AppLock />
         </DatabaseProvider>
         <StatusBar style="auto" />

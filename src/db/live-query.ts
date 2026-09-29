@@ -54,6 +54,17 @@ function subscribe(subscriber: Subscriber) {
   };
 }
 
+/**
+ * Riesegue tutte le live query. Serve dopo un DELETE senza WHERE (azzeramento,
+ * ripristino): SQLite lo esegue con la "truncate optimization", che non notifica.
+ */
+export function refreshLiveQueries() {
+  clearTimeout(timer);
+  timer = undefined;
+  pending.clear();
+  for (const s of subscribers) s.run();
+}
+
 type LiveResult<T> = { data: T; updatedAt: Date | undefined; error: unknown };
 
 function useLive<T>(

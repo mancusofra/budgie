@@ -155,24 +155,33 @@ export default function StatsScreen() {
           <Text style={[styles.chartValue, TabularNums]}>
             {selected ? money(selected.value) : money(chartTotal)}
           </Text>
-          <Text variant="caption" color="textSecondary">
-            {selected
-              ? fullLabel(selected.date)
-              : t(window.bucket === 'day' ? 'stats.averageDay' : 'stats.averageMonth', {
-                  value: money(average),
-                })}
-          </Text>
+          {chartTotal > 0 && (
+            <Text variant="caption" color="textSecondary">
+              {selected
+                ? fullLabel(selected.date)
+                : t(window.bucket === 'day' ? 'stats.averageDay' : 'stats.averageMonth', {
+                    value: money(average),
+                  })}
+            </Text>
+          )}
         </View>
-        <BarChart
-          data={bars}
-          color={theme.expense}
-          selectedKey={selectedKey}
-          onSelect={setSelectedKey}
-          accessibilityLabelFor={(d) => {
-            const p = points.find((x) => x.key === d.key)!;
-            return t('stats.barLabel', { label: fullLabel(p.date), value: money(p.value) });
-          }}
-        />
+        {chartTotal === 0 ? (
+          <View style={styles.chartEmpty}>
+            <MaterialCommunityIcons name="chart-bar" size={32} color={theme.textSecondary} />
+            <Text color="textSecondary">{t('stats.chartEmpty')}</Text>
+          </View>
+        ) : (
+          <BarChart
+            data={bars}
+            color={theme.expense}
+            selectedKey={selectedKey}
+            onSelect={setSelectedKey}
+            accessibilityLabelFor={(d) => {
+              const p = points.find((x) => x.key === d.key)!;
+              return t('stats.barLabel', { label: fullLabel(p.date), value: money(p.value) });
+            }}
+          />
+        )}
       </Surface>
     ),
     categories: (
@@ -449,6 +458,7 @@ function BudgetRow({
 }
 
 const styles = StyleSheet.create({
+  chartEmpty: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
   scroll: { marginHorizontal: -Spacing.three },
   content: { gap: Spacing.three, paddingHorizontal: Spacing.three },
   tiles: { flexDirection: 'row', gap: Spacing.three },

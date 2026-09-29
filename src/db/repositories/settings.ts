@@ -14,8 +14,10 @@ export type SettingsMap = {
   /** Giorno del mese da cui parte il "mese" (1–28). */
   monthStartDay: number;
   seedVersion: number;
-  /** Blocco dell'app con Face ID / impronta all'apertura. */
+  /** Blocco dell'app con riconoscimento biometrico all'apertura. */
   appLock: boolean;
+  /** Presentazione iniziale già vista. */
+  onboardingDone: boolean;
   /** Ordine e sezioni nascoste della schermata Statistiche. */
   statsLayout: StatsLayout;
 };

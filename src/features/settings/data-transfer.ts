@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import { createBackup, parseBackup, restoreBackup, type Backup } from '@/db/backup';
 import { db, repos } from '@/db/client';
+import { refreshLiveQueries } from '@/db/live-query';
 import { decimalSeparator } from '@/i18n';
 
 import { transactionsCsv, transactionsJson } from './csv-export';
@@ -86,7 +87,10 @@ export function useDataTransfer() {
     return parseBackup(await picked.result.text());
   }, []);
 
-  const restore = useCallback((backup: Backup) => restoreBackup(db, backup), []);
+  const restore = useCallback((backup: Backup) => {
+    restoreBackup(db, backup);
+    refreshLiveQueries();
+  }, []);
 
   return { exportData, exportBackup, pickBackup, restore };
 }

@@ -171,7 +171,7 @@ export default function TransactionsScreen() {
           {section(t('home.expenses'), totals.expense, groups.expense)}
           {section(t('home.income'), totals.income, groups.income)}
           <TransfersSection range={range} scope={scope} money={money} />
-          {stats.length === 0 && !hasTransfers && (
+          {groups.expense.length === 0 && groups.income.length === 0 && !hasTransfers && (
             <View style={styles.empty}>
               <MaterialCommunityIcons
                 name="receipt-text-outline"
