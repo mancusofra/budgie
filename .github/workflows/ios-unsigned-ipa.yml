@@ -1,0 +1,62 @@
+# Compila un .ipa iOS NON firmato (da firmare e installare con un Apple ID
+# gratuito tramite un tool di sideload). Nessun Mac né account Apple Developer.
+#
+# Avvio: pubblicare un tag "ios-build-*" sul commit da compilare, es.
+#   git tag ios-build-1 && git push origin ios-build-1
+# (oppure "Run workflow" dalla pagina Actions, quando il file è su main).
+# Il .ipa si scarica dagli artifact dell'esecuzione.
+name: iOS IPA (non firmato)
+
+on:
+  push:
+    tags: ['ios-build-*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Genera il progetto nativo iOS (ios/ non è nel repository)
+      - run: npx expo prebuild --platform ios --clean
+
+      - name: Compila (Release, senza firma)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -workspace ios/Moneta.xcworkspace \
+            -scheme Moneta \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build | tail -n 200
+
+      - name: Impacchetta il .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/Build/Products/Release-iphoneos/Moneta.app Payload/
+          zip -qry Moneta-unsigned.ipa Payload
+          ls -lh Moneta-unsigned.ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Moneta-unsigned-ipa
+          path: Moneta-unsigned.ipa
+          retention-days: 14
