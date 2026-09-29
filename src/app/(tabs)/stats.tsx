@@ -1,8 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import * as Haptics from 'expo-haptics';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { useAnimatedRef, useScrollOffset } from 'react-native-reanimated';
@@ -58,6 +58,8 @@ export default function StatsScreen() {
   const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
   const editing = useUIStore((s) => s.editingLayout);
   const setEditing = useUIStore((s) => s.setEditingLayout);
+  // Lasciando la schermata la modifica si chiude sempre (la tab bar deve tornare)
+  useFocusEffect(useCallback(() => () => setEditing(false), [setEditing]));
   const [dragging, setDragging] = useState(false);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollY = useScrollOffset(scrollRef);
@@ -237,7 +239,13 @@ export default function StatsScreen() {
     const isHidden = layout.hidden.includes(id);
     return (
       <View>
-        <View style={editing && isHidden ? styles.hiddenCard : undefined}>{node}</View>
+        {/* In modifica il contenuto non risponde ai tocchi (niente navigazione):
+            restano solo il trascinamento, gestito dal contenitore, e l'occhio */}
+        <View
+          pointerEvents={editing ? 'none' : 'auto'}
+          style={editing && isHidden ? styles.hiddenCard : undefined}>
+          {node}
+        </View>
         {editing && (
           <Pressable
             onPress={() => {
