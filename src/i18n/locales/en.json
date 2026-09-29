@@ -262,5 +262,40 @@
     "next": "Next",
     "start": "Get started",
     "page": "Page {{page}} of {{total}}"
+  },
+  "recurring": {
+    "title": "Recurring",
+    "new": "New recurring",
+    "edit": "Edit recurring",
+    "repeat": "Repeat",
+    "never": "Don't repeat",
+    "every": {
+      "day_one": "Every day",
+      "day_other": "Every {{count}} days",
+      "week_one": "Every week",
+      "week_other": "Every {{count}} weeks",
+      "month_one": "Every month",
+      "month_other": "Every {{count}} months",
+      "year_one": "Every year",
+      "year_other": "Every {{count}} years"
+    },
+    "next": "Next: {{date}}",
+    "ended": "Ended",
+    "paused": "Paused",
+    "empty": "No recurring transactions",
+    "emptyHint": "For rent, subscriptions or salary: tap \"Repeat\" when adding an expense or income. It will be logged automatically every time it's due.",
+    "frequency": "Frequency",
+    "nextDate": "Next",
+    "endDate": "Ends on",
+    "noEnd": "No end",
+    "pause": "Paused",
+    "pauseHint": "While paused nothing is logged; when resumed it continues from the next date without catching up.",
+    "delete": "Delete recurring",
+    "deleteConfirm": "Delete this recurring transaction?",
+    "deleteMessage": "Transactions already logged are kept.",
+    "futureHint": "Changes apply to upcoming occurrences.",
+    "partOf": "Part of a recurring transaction",
+    "manage": "Manage",
+    "created": "Recurring created · {{label}}"
   }
 }

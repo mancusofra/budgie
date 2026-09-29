@@ -1,3 +1,4 @@
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
@@ -17,6 +18,8 @@ type Props = {
   deleteLabel: string;
   onPress: () => void;
   onDelete: () => void;
+  /** Generata da una ricorrenza: piccola icona accanto al titolo. */
+  recurringLabel?: string;
 };
 
 /** Riga della lista transazioni: swipe a sinistra per eliminare, tap per modificare. */
@@ -30,6 +33,7 @@ export function TransactionRow({
   deleteLabel,
   onPress,
   onDelete,
+  recurringLabel,
 }: Props) {
   const theme = useTheme();
   const amountColor =
@@ -48,9 +52,19 @@ export function TransactionRow({
         ]}>
         <CategoryIcon icon={icon} color={color} size={40} />
         <View style={styles.texts}>
-          <Text numberOfLines={1} style={styles.title}>
-            {title}
-          </Text>
+          <View style={styles.titleRow}>
+            <Text numberOfLines={1} style={styles.title}>
+              {title}
+            </Text>
+            {recurringLabel && (
+              <MaterialCommunityIcons
+                name="repeat"
+                size={14}
+                color={theme.textSecondary}
+                accessibilityLabel={recurringLabel}
+              />
+            )}
+          </View>
           {subtitle ? (
             <Text variant="caption" color="textSecondary" numberOfLines={1}>
               {subtitle}
@@ -72,6 +86,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   texts: { flex: 1, gap: 1 },
-  title: { fontWeight: '500' },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
+  title: { fontWeight: '500', flexShrink: 1 },
   amount: { fontWeight: '600', ...TabularNums },
 });

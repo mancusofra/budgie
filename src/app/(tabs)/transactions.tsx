@@ -309,6 +309,7 @@ function SearchResults({
             deleteLabel={t('common.delete')}
             onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })}
             onDelete={() => deleteTransaction(tx)}
+            recurringLabel={tx.recurringId ? t('recurring.partOf') : undefined}
           />
         );
       }}

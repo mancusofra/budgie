@@ -262,5 +262,40 @@
     "next": "Avanti",
     "start": "Inizia",
     "page": "Pagina {{page}} di {{total}}"
+  },
+  "recurring": {
+    "title": "Ricorrenti",
+    "new": "Nuova ricorrenza",
+    "edit": "Modifica ricorrenza",
+    "repeat": "Ripeti",
+    "never": "Non ripetere",
+    "every": {
+      "day_one": "Ogni giorno",
+      "day_other": "Ogni {{count}} giorni",
+      "week_one": "Ogni settimana",
+      "week_other": "Ogni {{count}} settimane",
+      "month_one": "Ogni mese",
+      "month_other": "Ogni {{count}} mesi",
+      "year_one": "Ogni anno",
+      "year_other": "Ogni {{count}} anni"
+    },
+    "next": "Prossima: {{date}}",
+    "ended": "Terminata",
+    "paused": "In pausa",
+    "empty": "Nessuna ricorrenza",
+    "emptyHint": "Per affitto, abbonamenti o stipendio: quando inserisci una spesa o un'entrata tocca \"Ripeti\". Verrà registrata da sola a ogni scadenza.",
+    "frequency": "Frequenza",
+    "nextDate": "Prossima",
+    "endDate": "Termina il",
+    "noEnd": "Senza fine",
+    "pause": "In pausa",
+    "pauseHint": "In pausa non registra nulla; alla ripresa riparte dalla prossima data senza recuperare quelle saltate.",
+    "delete": "Elimina ricorrenza",
+    "deleteConfirm": "Eliminare la ricorrenza?",
+    "deleteMessage": "Le transazioni già registrate restano.",
+    "futureHint": "Le modifiche valgono per le prossime occorrenze.",
+    "partOf": "Fa parte di una ricorrenza",
+    "manage": "Gestisci",
+    "created": "Ricorrenza creata · {{label}}"
   }
 }

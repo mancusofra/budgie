@@ -46,7 +46,7 @@ export class InvalidTransactionError extends Error {
   name = 'InvalidTransactionError';
 }
 
-function validate(tx: NewTransaction) {
+export function validateTransaction(tx: NewTransaction) {
   if (!Number.isInteger(tx.amount) || tx.amount <= 0) {
     throw new InvalidTransactionError("L'importo deve essere un intero positivo in centesimi");
   }
@@ -104,7 +104,7 @@ export function createTransactionsRepo(db: AppDatabase) {
 
   return {
     async create(input: NewTransaction): Promise<Transaction> {
-      validate(input);
+      validateTransaction(input);
       const now = new Date();
       const row: Transaction = {
         id: createId(),
@@ -116,6 +116,7 @@ export function createTransactionsRepo(db: AppDatabase) {
         toAmount: input.toAmount ?? null,
         date: input.date ?? now,
         note: input.note?.trim() || null,
+        recurringId: null,
         createdAt: now,
         updatedAt: now,
       };
@@ -134,7 +135,7 @@ export function createTransactionsRepo(db: AppDatabase) {
         next.toAccountId = null;
         next.toAmount = null;
       }
-      validate(next);
+      validateTransaction(next);
 
       await db.update(t).set(next).where(eq(t.id, id));
       return next;

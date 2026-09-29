@@ -118,7 +118,17 @@ function CategoryTransactions({
             ]}>
             <View style={[styles.dot, { backgroundColor: category.color }]} />
             <View style={styles.itemTexts}>
-              <Text style={styles.itemAmount}>{money(tx.amount)}</Text>
+              <View style={styles.amountRow}>
+                <Text style={styles.itemAmount}>{money(tx.amount)}</Text>
+                {tx.recurringId && (
+                  <MaterialCommunityIcons
+                    name="repeat"
+                    size={14}
+                    color={theme.textSecondary}
+                    accessibilityLabel={t('recurring.partOf')}
+                  />
+                )}
+              </View>
               {tx.note ? (
                 <Text variant="caption" color="textSecondary" numberOfLines={1}>
                   {tx.note}
@@ -169,6 +179,7 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
   itemTexts: { flex: 1 },
   itemAmount: { ...TabularNums },
+  amountRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   more: {
     paddingVertical: Spacing.three,
     paddingLeft: Spacing.three + 20 + Spacing.two + 2 + 14,

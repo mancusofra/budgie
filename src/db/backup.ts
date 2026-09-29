@@ -1,13 +1,23 @@
-import { accounts, budgetMonths, budgets, categories, settings, transactions } from './schema';
+import {
+  accounts,
+  budgetMonths,
+  budgets,
+  categories,
+  recurring,
+  settings,
+  transactions,
+} from './schema';
 import type { AppDatabase } from './types';
 
 export const BACKUP_FORMAT = 'moneta-backup';
-export const BACKUP_VERSION = 1;
+/** 2: aggiunte le ricorrenze (i backup 1 si ripristinano senza). */
+export const BACKUP_VERSION = 2;
 
 /** Tabelle nell'ordine di inserimento (rispetta le chiavi esterne). */
 const TABLES = {
   accounts,
   categories,
+  recurring,
   transactions,
   budgets,
   budgetMonths,
@@ -29,7 +39,7 @@ export class InvalidBackupError extends Error {
 }
 
 /** Colonne timestamp: nel file sono millisecondi, nel DB oggetti Date. */
-const DATE_KEYS = new Set(['createdAt', 'updatedAt', 'date']);
+const DATE_KEYS = new Set(['createdAt', 'updatedAt', 'date', 'startDate', 'endDate']);
 
 const toPlain = (row: Row): Row =>
   Object.fromEntries(Object.entries(row).map(([k, v]) => [k, v instanceof Date ? v.getTime() : v]));
@@ -65,6 +75,8 @@ export function parseBackup(json: string): Backup {
   if (typeof b.version !== 'number' || b.version > BACKUP_VERSION) {
     throw new InvalidBackupError('Backup creato da una versione più recente dell’app');
   }
+  // Sezioni introdotte dopo la versione 1: assenti nei backup più vecchi
+  if (b.data && b.version < 2) b.data.recurring ??= [];
   for (const name of Object.keys(TABLES) as TableName[]) {
     if (!Array.isArray(b.data?.[name])) throw new InvalidBackupError(`Sezione mancante: ${name}`);
   }

@@ -40,6 +40,15 @@ import {
   useTransactionList,
   useUpdateTransaction,
 } from '@/features/transactions/hooks';
+import { useTranslation } from 'react-i18next';
+
+import {
+  recurringActions,
+  REPEAT_OPTIONS,
+  repeatLabel,
+  useRecurring,
+  useRecurringList,
+} from '@/features/recurring/hooks';
 import { budgetMonthKey } from '@/lib/budget';
 import { periodRange, type Period } from '@/lib/period';
 import { useSnackbar } from '@/store/snackbar';
@@ -271,6 +280,48 @@ describe('statistiche e budget', () => {
     const { result: one } = await render(() => useBudget(food.id));
     expect(one.current?.amount).toBe(2000);
     await settle(() => budgetActions.remove({ month: monthKey, categoryId: foodId }));
+  });
+});
+
+describe('ricorrenze', () => {
+  it('crea, elenca, registra e modifica', async () => {
+    const { result } = await render(() => ({
+      list: useRecurringList(),
+      none: useRecurring(undefined),
+    }));
+    expect(result.current.list).toHaveLength(0);
+    expect(result.current.none).toBeNull();
+
+    let id = '';
+    await settle(async () => {
+      id = (
+        await recurringActions.create({
+          type: 'expense',
+          amount: 1000,
+          accountId: cashId,
+          categoryId: billsId,
+          frequency: 'month',
+          startDate: new Date(2026, 0, 10),
+        })
+      ).id;
+      expect(recurringActions.materialize(new Date(2026, 2, 10, 12))).toBe(3);
+    });
+    expect(result.current.list).toHaveLength(1);
+    expect(result.current.list[0].category?.name).toBe('Bollette');
+
+    const { result: one } = await render(() => useRecurring(id));
+    expect(one.current?.count).toBe(3);
+    await settle(() => recurringActions.update(id, { paused: true }));
+    expect(one.current?.paused).toBe(true);
+    await settle(() => recurringActions.remove(id));
+    expect(result.current.list).toHaveLength(0);
+  });
+
+  it('etichette delle frequenze', async () => {
+    const { result } = await render(() => useTranslation().t);
+    expect(REPEAT_OPTIONS.map((o) => repeatLabel(result.current, o.frequency, o.interval))).toEqual(
+      ['Every week', 'Every 2 weeks', 'Every month', 'Every year'],
+    );
   });
 });
 

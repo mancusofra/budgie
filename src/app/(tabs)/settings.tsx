@@ -13,6 +13,7 @@ import { Text } from '@/components/ui/text';
 import type { Backup } from '@/db/backup';
 import { db } from '@/db/client';
 import { generateDemoTransactions } from '@/db/demo';
+import { useRecurringList } from '@/features/recurring/hooks';
 import { authenticate } from '@/features/settings/app-lock';
 import { useDataTransfer } from '@/features/settings/data-transfer';
 import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
@@ -75,6 +76,7 @@ export default function SettingsScreen() {
       ],
     );
   };
+  const recurringCount = useRecurringList().length;
   const tabBarSpace = useTabBarSpace();
   const weekStart = settings.weekStart ?? 1;
   const languageLabel = {
@@ -129,6 +131,13 @@ export default function SettingsScreen() {
               leading={
                 <MaterialCommunityIcons name="wallet-outline" size={22} color={theme.primary} />
               }
+            />
+            <RowSeparator />
+            <NavRow
+              title={t('recurring.title')}
+              value={recurringCount ? String(recurringCount) : undefined}
+              onPress={() => router.push('/recurring')}
+              leading={<MaterialCommunityIcons name="repeat" size={22} color={theme.primary} />}
             />
           </Surface>
         </View>

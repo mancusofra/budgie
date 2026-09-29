@@ -8,6 +8,7 @@ import {
   budgetMonths,
   budgets,
   categories,
+  recurring,
   settings,
   transactions,
   type Category,
@@ -231,6 +232,7 @@ export async function seedDatabase(db: AppDatabase, { language, currency }: Seed
 export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
   db.transaction((tx) => {
     tx.delete(transactions).run();
+    tx.delete(recurring).run();
     tx.delete(budgets).run();
     tx.delete(budgetMonths).run();
     tx.delete(categories).run();

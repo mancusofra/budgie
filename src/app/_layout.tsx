@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SnackbarHost } from '@/components/ui/snackbar-host';
 import { DatabaseProvider } from '@/db/provider';
 import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
+import { RecurringSync } from '@/features/recurring/recurring-sync';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
@@ -83,6 +84,7 @@ export default function RootLayout() {
           </Stack>
           <SnackbarHost />
           <SettingsSync />
+          <RecurringSync />
           <OnboardingGate />
           <AppLock />
         </DatabaseProvider>

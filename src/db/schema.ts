@@ -23,6 +23,34 @@ export const categories = sqliteTable('categories', {
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 });
 
+/**
+ * Movimento che si ripete (affitto, abbonamenti, stipendio). L'occorrenza n
+ * cade in startDate + n × interval × frequency: calcolata sempre dall'inizio,
+ * così un "ogni mese dal 31" torna al 31 dopo febbraio.
+ */
+export const recurring = sqliteTable('recurring', {
+  id: text('id').primaryKey(),
+  type: text('type', { enum: ['expense', 'income', 'transfer'] }).notNull(),
+  amount: integer('amount').notNull(),
+  accountId: text('account_id')
+    .notNull()
+    .references(() => accounts.id),
+  categoryId: text('category_id').references(() => categories.id),
+  toAccountId: text('to_account_id').references(() => accounts.id),
+  toAmount: integer('to_amount'),
+  note: text('note'),
+  frequency: text('frequency', { enum: ['day', 'week', 'month', 'year'] }).notNull(),
+  interval: integer('interval').notNull().default(1),
+  startDate: integer('start_date', { mode: 'timestamp_ms' }).notNull(),
+  /** Ultimo giorno utile (incluso); NULL = senza fine. */
+  endDate: integer('end_date', { mode: 'timestamp_ms' }),
+  /** Occorrenze già registrate come transazioni. */
+  count: integer('count').notNull().default(0),
+  paused: integer('paused', { mode: 'boolean' }).notNull().default(false),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
+});
+
 export const transactions = sqliteTable(
   'transactions',
   {
@@ -39,6 +67,8 @@ export const transactions = sqliteTable(
     categoryId: text('category_id').references(() => categories.id),
     date: integer('date', { mode: 'timestamp_ms' }).notNull(),
     note: text('note'),
+    /** Ricorrenza che l'ha generata (resta anche se la ricorrenza viene eliminata: NULL). */
+    recurringId: text('recurring_id').references(() => recurring.id, { onDelete: 'set null' }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
   },
@@ -84,5 +114,7 @@ export type Account = typeof accounts.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Transaction = typeof transactions.$inferSelect;
 export type Budget = typeof budgets.$inferSelect;
+export type Recurring = typeof recurring.$inferSelect;
+export type Frequency = Recurring['frequency'];
 export type CategoryType = Category['type'];
 export type TransactionType = Transaction['type'];

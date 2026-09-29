@@ -45,7 +45,9 @@ export default function EditTransactionScreen() {
     <TransactionForm
       type={transaction.type}
       initial={transaction}
-      onSubmit={(values) => updateTransaction(transaction.id, values)}
+      recurringId={transaction.recurringId}
+      // In modifica "Ripeti" non c'è: repeat è sempre null
+      onSubmit={({ repeat: _, ...values }) => updateTransaction(transaction.id, values)}
       onDelete={async () => {
         router.back();
         await deleteTransaction(transaction);

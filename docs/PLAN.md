@@ -127,7 +127,7 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 9 — Post-MVP (idee)
 
-- Transazioni ricorrenti (abbonamenti, affitto) con promemoria
+- [x] Transazioni ricorrenti (abbonamenti, affitto, stipendio): anticipate prima del QA; promemoria con notifica ancora da fare
 - Sync cloud opzionale tra dispositivi (Supabase o iCloud/Google Drive per i backup)
 - Widget home screen iOS/Android per inserimento rapido
 - Tassi di cambio automatici

@@ -12,9 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Keypad } from '@/components/ui/keypad';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import type { Category } from '@/db/schema';
+import type { Category, Frequency } from '@/db/schema';
 import { useAccounts } from '@/features/accounts/hooks';
 import { useCategories } from '@/features/categories/hooks';
+import { REPEAT_OPTIONS, repeatLabel } from '@/features/recurring/hooks';
 import { useCurrency } from '@/features/settings/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { decimalSeparator, deviceLocale } from '@/i18n';
@@ -29,12 +30,16 @@ import { formatMoney } from '@/lib/money';
 import { useUIStore } from '@/store/ui';
 import { Radius, Spacing } from '@/theme';
 
+export type Repeat = { frequency: Frequency; interval: number };
+
 export type TransactionFormValues = {
   amount: number;
   accountId: string;
   categoryId: string;
   date: Date;
   note: string;
+  /** Solo in inserimento: crea una ricorrenza che parte da `date`. */
+  repeat: Repeat | null;
 };
 
 type Props = {
@@ -49,6 +54,8 @@ type Props = {
   onSubmit: (values: TransactionFormValues) => Promise<unknown>;
   /** Presente in modifica: mostra il pulsante elimina. */
   onDelete?: () => void;
+  /** In modifica, se la transazione è stata generata da una ricorrenza. */
+  recurringId?: string | null;
 };
 
 /**
@@ -56,7 +63,7 @@ type Props = {
  * conto e categoria. In inserimento il tap su una categoria della griglia salva
  * subito; in modifica la seleziona soltanto.
  */
-export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
+export function TransactionForm({ type, initial, onSubmit, onDelete, recurringId }: Props) {
   const editing = !!onDelete;
   const { t } = useTranslation();
   const theme = useTheme();
@@ -72,6 +79,7 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
   const [date, setDate] = useState(() => initial?.date ?? new Date());
   const [accountId, setAccountId] = useState(initial?.accountId);
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? undefined);
+  const [repeat, setRepeat] = useState<Repeat | null>(null);
   const [choosingCategory, setChoosingCategory] = useState(false);
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
@@ -96,6 +104,15 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
     }),
     [t],
   );
+
+  // Tocco dopo tocco: non ripetere → opzioni → di nuovo non ripetere
+  const cycleRepeat = () => {
+    Haptics.selectionAsync();
+    const i = REPEAT_OPTIONS.findIndex(
+      (o) => o.frequency === repeat?.frequency && o.interval === repeat?.interval,
+    );
+    setRepeat(i + 1 < REPEAT_OPTIONS.length ? REPEAT_OPTIONS[i + 1] : null);
+  };
 
   const onKey = (key: KeypadKey) => {
     setError(undefined);
@@ -134,7 +151,7 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
 
     setSaving(true);
     try {
-      await onSubmit({ amount, accountId: account.id, categoryId: target.id, date, note });
+      await onSubmit({ amount, accountId: account.id, categoryId: target.id, date, note, repeat });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (e) {
@@ -217,17 +234,61 @@ export function TransactionForm({ type, initial, onSubmit, onDelete }: Props) {
         </ScrollView>
       ) : (
         <View style={styles.form}>
-          <Surface style={styles.noteBox}>
-            <MaterialCommunityIcons name="text" size={18} color={theme.textSecondary} />
-            <TextInput
-              value={note}
-              onChangeText={setNote}
-              placeholder={t('transaction.note')}
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.note, { color: theme.text }]}
-              maxLength={200}
-            />
-          </Surface>
+          <View style={styles.noteRow}>
+            <Surface style={[styles.noteBox, styles.flex]}>
+              <MaterialCommunityIcons name="text" size={18} color={theme.textSecondary} />
+              <TextInput
+                value={note}
+                onChangeText={setNote}
+                placeholder={t('transaction.note')}
+                placeholderTextColor={theme.textSecondary}
+                style={[styles.note, { color: theme.text }]}
+                maxLength={200}
+              />
+            </Surface>
+            {!editing && (
+              <Pressable
+                onPress={cycleRepeat}
+                accessibilityRole="button"
+                accessibilityLabel={t('recurring.repeat')}
+                accessibilityValue={{
+                  text: repeat
+                    ? repeatLabel(t, repeat.frequency, repeat.interval)
+                    : t('recurring.never'),
+                }}>
+                <Surface interactive tint={repeat ? color : undefined} style={styles.repeat}>
+                  <MaterialCommunityIcons
+                    name={repeat ? 'repeat' : 'repeat-off'}
+                    size={18}
+                    color={repeat ? color : theme.textSecondary}
+                  />
+                  <Text
+                    variant="caption"
+                    style={[styles.chipLabel, { color: repeat ? color : theme.textSecondary }]}>
+                    {repeat
+                      ? repeatLabel(t, repeat.frequency, repeat.interval)
+                      : t('recurring.repeat')}
+                  </Text>
+                </Surface>
+              </Pressable>
+            )}
+          </View>
+          {editing && recurringId && (
+            <Pressable
+              onPress={() =>
+                router.push({ pathname: '/recurring/[id]', params: { id: recurringId } })
+              }
+              accessibilityRole="link"
+              style={({ pressed }) => [styles.recurringInfo, pressed && { opacity: 0.6 }]}>
+              <MaterialCommunityIcons name="repeat" size={16} color={theme.textSecondary} />
+              <Text variant="caption" color="textSecondary">
+                {t('recurring.partOf')}
+              </Text>
+              <Text variant="caption" style={[styles.chipLabel, { color: theme.primary }]}>
+                {t('recurring.manage')}
+              </Text>
+            </Pressable>
+          )}
           <DateChips value={date} onChange={setDate} color={color} />
 
           <Keypad onKey={onKey} labels={keyLabels} decimalSeparator={decimalSeparator} />
@@ -281,6 +342,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.three,
   },
   note: { flex: 1, paddingVertical: Spacing.two + 4, fontSize: 16 },
+  noteRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  repeat: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two + 4,
+    borderRadius: Radius,
+  },
+  recurringInfo: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one },
   chip: {
     flexDirection: 'row',
     alignItems: 'center',
