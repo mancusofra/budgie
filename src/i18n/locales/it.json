@@ -59,7 +59,6 @@
   },
   "settings": {
     "title": "Impostazioni",
-    "comingSoon": "Valuta, tema, lingua e backup arriveranno nella Fase 6.",
     "developer": "Sviluppo",
     "resetData": "Azzera dati",
     "resetConfirmTitle": "Azzerare tutti i dati?",
@@ -81,7 +80,21 @@
     "themeLight": "Chiaro",
     "themeDark": "Scuro",
     "language": "Lingua",
-    "languageSystem": "Automatica"
+    "languageSystem": "Automatica",
+    "data": "Dati",
+    "exportCsv": "Esporta transazioni (CSV)",
+    "exportBackup": "Crea backup",
+    "restoreBackup": "Ripristina da backup",
+    "dataHint": "Il backup contiene tutti i dati: salvalo in File, iCloud o Drive. Il ripristino sostituisce i dati attuali.",
+    "restoreConfirmTitle": "Ripristinare questo backup?",
+    "restore": "Ripristina",
+    "restoreDone": "Backup ripristinato",
+    "restoreError": "Impossibile leggere il backup",
+    "exportError": "Esportazione non riuscita",
+    "restoreConfirmMessage_one": "Backup del {{date}}: 1 transazione. Tutti i dati attuali verranno sostituiti.",
+    "restoreConfirmMessage_other": "Backup del {{date}}: {{count}} transazioni. Tutti i dati attuali verranno sostituiti.",
+    "appLock": "Blocco con Face ID / impronta",
+    "appLockUnavailable": "Face ID o impronta non disponibili. In Expo Go su iPhone Face ID non è supportato: provalo con la build dell'app."
   },
   "transactions": {
     "title": "Transazioni",
@@ -205,5 +218,20 @@
     "changeMessage_other": "Hai {{count}} conti in {{old}}. Vuoi usare {{code}} anche per quei conti? Gli importi restano uguali, cambia solo la valuta.",
     "onlyMain": "Solo principale",
     "alsoAccounts": "Anche i conti"
+  },
+  "csv": {
+    "date": "Data",
+    "type": "Tipo",
+    "category": "Categoria",
+    "account": "Conto",
+    "toAccount": "Conto destinazione",
+    "amount": "Importo",
+    "currency": "Valuta",
+    "note": "Nota"
+  },
+  "lock": {
+    "prompt": "Sblocca Moneta",
+    "unlock": "Sblocca",
+    "unavailable": "Face ID o impronta non disponibili su questo dispositivo: l'app è stata sbloccata."
   }
 }

@@ -59,7 +59,6 @@
   },
   "settings": {
     "title": "Settings",
-    "comingSoon": "Currency, theme, language and backup are coming in Phase 6.",
     "developer": "Developer",
     "resetData": "Reset data",
     "resetConfirmTitle": "Reset all data?",
@@ -81,7 +80,21 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "language": "Language",
-    "languageSystem": "Automatic"
+    "languageSystem": "Automatic",
+    "data": "Data",
+    "exportCsv": "Export transactions (CSV)",
+    "exportBackup": "Create backup",
+    "restoreBackup": "Restore from backup",
+    "dataHint": "The backup contains all your data: save it to Files, iCloud or Drive. Restoring replaces the current data.",
+    "restoreConfirmTitle": "Restore this backup?",
+    "restore": "Restore",
+    "restoreDone": "Backup restored",
+    "restoreError": "Couldn't read the backup",
+    "exportError": "Export failed",
+    "restoreConfirmMessage_one": "Backup from {{date}}: 1 transaction. All current data will be replaced.",
+    "restoreConfirmMessage_other": "Backup from {{date}}: {{count}} transactions. All current data will be replaced.",
+    "appLock": "Lock with Face ID / fingerprint",
+    "appLockUnavailable": "Face ID or fingerprint aren't available. Face ID isn't supported in Expo Go on iPhone: try it with the app build."
   },
   "transactions": {
     "title": "Transactions",
@@ -205,5 +218,20 @@
     "changeMessage_other": "You have {{count}} accounts in {{old}}. Use {{code}} for them too? Amounts stay the same, only the currency changes.",
     "onlyMain": "Main only",
     "alsoAccounts": "Accounts too"
+  },
+  "csv": {
+    "date": "Date",
+    "type": "Type",
+    "category": "Category",
+    "account": "Account",
+    "toAccount": "To account",
+    "amount": "Amount",
+    "currency": "Currency",
+    "note": "Note"
+  },
+  "lock": {
+    "prompt": "Unlock Moneta",
+    "unlock": "Unlock",
+    "unavailable": "Face ID or fingerprint aren't available on this device: the app has been unlocked."
   }
 }

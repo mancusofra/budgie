@@ -89,7 +89,7 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 - [x] CRUD conti: nome, valuta, saldo iniziale, icona, colore; archiviazione/eliminazione
 - [x] Trasferimenti tra conti (non contano come spesa/entrata), con importo accreditato per valute diverse
 - [x] Filtro globale "tutti i conti" / conto singolo
-- [ ] Totali in Home con conti in valute diverse: oggi sommati senza conversione (con la Fase 6 / tassi di cambio)
+- [x] Totali con conti in valute diverse: "Tutti i conti" somma solo quelli nella valuta principale (conversione con tassi di cambio: Fase 9)
 
 ## Fase 5 — Statistiche e budget
 
@@ -100,12 +100,12 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 6 — Impostazioni, valute, backup
 
-- [ ] Valuta principale, formato numeri secondo locale
-- [ ] Tema: sistema / chiaro / scuro
-- [ ] Lingua: IT / EN (i18next, testi in `src/i18n/locales`)
-- [ ] Esportazione CSV (con `expo-sharing`)
-- [ ] Backup completo (file `.db` o JSON) e ripristino (`expo-document-picker`)
-- [ ] Blocco app con PIN / biometria (`expo-local-authentication`) — opzionale
+- [x] Valuta principale, formato numeri secondo locale (con "Tutti i conti" solo i conti nella valuta principale)
+- [x] Tema: sistema / chiaro / scuro
+- [x] Lingua: automatica / IT / EN (i18next, testi in `src/i18n/locales`)
+- [x] Esportazione CSV (con `expo-sharing`; `;` e virgola decimale per l'italiano)
+- [x] Backup completo (JSON) e ripristino (`File.pickFileAsync` di expo-file-system)
+- [x] Blocco app con Face ID / impronta (`expo-local-authentication`) — Face ID non provabile in Expo Go su iOS
 
 ## Fase 7 — Rifinitura e qualità
 

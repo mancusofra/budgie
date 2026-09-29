@@ -39,7 +39,13 @@
       "expo-sqlite",
       "expo-localization",
       "expo-sharing",
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Consenti a $(PRODUCT_NAME) di usare Face ID per sbloccare l'app."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

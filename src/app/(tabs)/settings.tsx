@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { NavRow, RowSeparator } from '@/components/ui/nav-row';
@@ -10,7 +10,11 @@ import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
+import type { Backup } from '@/db/backup';
+import { authenticate } from '@/features/settings/app-lock';
+import { useDataTransfer } from '@/features/settings/data-transfer';
 import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
+import { deviceLocale } from '@/i18n';
 import { useTheme } from '@/hooks/use-theme';
 import { Radius, Spacing, TabularNums } from '@/theme';
 
@@ -20,6 +24,55 @@ export default function SettingsScreen() {
   const settings = useSettings();
   const setSetting = useSetSetting();
   const resetDatabase = useResetDatabase();
+  const { exportCsv, exportBackup, pickBackup, restore } = useDataTransfer();
+
+  const run = async (action: () => Promise<unknown>, errorMessage: string) => {
+    try {
+      await action();
+    } catch (e) {
+      console.error(e);
+      Alert.alert(errorMessage);
+    }
+  };
+
+  // Attivare o disattivare il blocco richiede la conferma biometrica
+  const toggleLock = async (value: boolean) => {
+    const result = await authenticate(t('lock.prompt'), t('common.cancel'));
+    if (result === 'ok') return setSetting('appLock', value);
+    if (result === 'unavailable')
+      Alert.alert(t('settings.appLock'), t('settings.appLockUnavailable'));
+  };
+
+  const askRestore = async () => {
+    let backup: Backup | null;
+    try {
+      backup = await pickBackup();
+    } catch (e) {
+      Alert.alert(t('settings.restoreError'), e instanceof Error ? e.message : undefined);
+      return;
+    }
+    if (!backup) return;
+    const chosen = backup;
+    Alert.alert(
+      t('settings.restoreConfirmTitle'),
+      t('settings.restoreConfirmMessage', {
+        date: new Date(chosen.exportedAt).toLocaleString(deviceLocale),
+        count: chosen.data.transactions.length,
+      }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('settings.restore'),
+          style: 'destructive',
+          onPress: () => {
+            restore(chosen);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            Alert.alert(t('settings.restoreDone'));
+          },
+        },
+      ],
+    );
+  };
   const tabBarSpace = useTabBarSpace();
   const weekStart = settings.weekStart ?? 1;
   const monthStartDay = settings.monthStartDay ?? 1;
@@ -98,7 +151,7 @@ export default function SettingsScreen() {
               value={settings.currency ?? 'EUR'}
               onPress={() => router.push('/currency')}
               leading={
-                <MaterialCommunityIcons name="currency-eur" size={22} color={theme.primary} />
+                <MaterialCommunityIcons name="cash-multiple" size={22} color={theme.primary} />
               }
             />
             <View style={[styles.separator, { backgroundColor: theme.border }]} />
@@ -123,6 +176,15 @@ export default function SettingsScreen() {
               value={settings.language ?? 'system'}
               onChange={(v) => setSetting('language', v)}
             />
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
+            <View style={styles.row}>
+              <Text style={styles.flex}>{t('settings.appLock')}</Text>
+              <Switch
+                value={settings.appLock === true}
+                onValueChange={toggleLock}
+                accessibilityLabel={t('settings.appLock')}
+              />
+            </View>
           </Surface>
         </View>
         <View style={styles.section}>
@@ -156,7 +218,51 @@ export default function SettingsScreen() {
           </Surface>
         </View>
 
-        <Text color="textSecondary">{t('settings.comingSoon')}</Text>
+        <View style={styles.section}>
+          <Text variant="overline" color="textSecondary">
+            {t('settings.data')}
+          </Text>
+          <Surface style={styles.listCard}>
+            <NavRow
+              title={t('settings.exportCsv')}
+              onPress={() => run(exportCsv, t('settings.exportError'))}
+              leading={
+                <MaterialCommunityIcons
+                  name="file-delimited-outline"
+                  size={22}
+                  color={theme.primary}
+                />
+              }
+            />
+            <RowSeparator />
+            <NavRow
+              title={t('settings.exportBackup')}
+              onPress={() => run(exportBackup, t('settings.exportError'))}
+              leading={
+                <MaterialCommunityIcons
+                  name="cloud-upload-outline"
+                  size={22}
+                  color={theme.primary}
+                />
+              }
+            />
+            <RowSeparator />
+            <NavRow
+              title={t('settings.restoreBackup')}
+              onPress={askRestore}
+              leading={
+                <MaterialCommunityIcons
+                  name="cloud-download-outline"
+                  size={22}
+                  color={theme.primary}
+                />
+              }
+            />
+          </Surface>
+          <Text variant="caption" color="textSecondary">
+            {t('settings.dataHint')}
+          </Text>
+        </View>
 
         {__DEV__ && (
           <View style={styles.section}>

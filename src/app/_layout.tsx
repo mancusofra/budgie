@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SnackbarHost } from '@/components/ui/snackbar-host';
 import { DatabaseProvider } from '@/db/provider';
+import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
 
@@ -53,6 +54,7 @@ export default function RootLayout() {
           </Stack>
           <SnackbarHost />
           <SettingsSync />
+          <AppLock />
         </DatabaseProvider>
         <StatusBar style="auto" />
       </ThemeProvider>
