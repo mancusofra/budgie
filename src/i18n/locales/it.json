@@ -70,8 +70,6 @@
     "sunday": "Domenica",
     "monthStart": "Il mese inizia il giorno",
     "monthStartHint": "Utile se ricevi lo stipendio a fine mese: con 27 il “mese” va dal 27 al 26.",
-    "decrease": "Diminuisci",
-    "increase": "Aumenta",
     "manage": "Gestione",
     "preferences": "Preferenze",
     "mainCurrency": "Valuta principale",
@@ -82,7 +80,7 @@
     "language": "Lingua",
     "languageSystem": "Automatica",
     "data": "Dati",
-    "exportCsv": "Esporta transazioni (CSV)",
+    "exportData": "Esporta transazioni",
     "exportBackup": "Crea backup",
     "restoreBackup": "Ripristina da backup",
     "dataHint": "Il backup contiene tutti i dati: salvalo in File, iCloud o Drive. Il ripristino sostituisce i dati attuali.",
@@ -93,8 +91,24 @@
     "exportError": "Esportazione non riuscita",
     "restoreConfirmMessage_one": "Backup del {{date}}: 1 transazione. Tutti i dati attuali verranno sostituiti.",
     "restoreConfirmMessage_other": "Backup del {{date}}: {{count}} transazioni. Tutti i dati attuali verranno sostituiti.",
-    "appLock": "Blocco con Face ID / impronta",
-    "appLockUnavailable": "Face ID o impronta non disponibili. In Expo Go su iPhone Face ID non è supportato: provalo con la build dell'app."
+    "appLock": "Blocco biometrico",
+    "appLockUnavailable": "Riconoscimento biometrico non disponibile o non configurato su questo dispositivo. In Expo Go su iPhone Face ID non è supportato: provalo con la build dell'app."
+  },
+  "language": {
+    "systemHint": "Come il dispositivo"
+  },
+  "export": {
+    "title": "Esporta transazioni",
+    "format": "Formato",
+    "csvHint": "Per Excel, Numbers o Fogli Google.",
+    "jsonHint": "Per altre app o elaborazioni: importi decimali e chiavi in inglese.",
+    "range": "Intervallo",
+    "all": "Tutto",
+    "month": "Mese",
+    "year": "Anno",
+    "custom": "Date",
+    "submit": "Esporta",
+    "empty": "Nessuna transazione nell'intervallo scelto"
   },
   "transactions": {
     "title": "Transazioni",
@@ -232,6 +246,6 @@
   "lock": {
     "prompt": "Sblocca Moneta",
     "unlock": "Sblocca",
-    "unavailable": "Face ID o impronta non disponibili su questo dispositivo: l'app è stata sbloccata."
+    "unavailable": "Riconoscimento biometrico non disponibile su questo dispositivo: l'app è stata sbloccata."
   }
 }

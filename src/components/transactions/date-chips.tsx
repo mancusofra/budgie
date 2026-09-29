@@ -52,7 +52,7 @@ export function DateChips({
           mode="date"
           display="compact"
           maximumDate={today}
-          onChange={(_, d) => d && onChange(d)}
+          onValueChange={(_, d) => onChange(d)}
         />
       ) : (
         <Pressable
@@ -63,7 +63,7 @@ export function DateChips({
               value,
               mode: 'date',
               maximumDate: new Date(),
-              onChange: (e, d) => e.type === 'set' && d && onChange(d),
+              onValueChange: (_, d) => onChange(d),
             })
           }>
           <Surface interactive tint={isCustom ? color : undefined} style={styles.chip}>

@@ -47,3 +47,25 @@ export function transactionsCsv(
   ]);
   return toCsv([labels.headers, ...lines], separator);
 }
+
+/**
+ * JSON delle transazioni (per altre app o fogli di calcolo): chiavi fisse in
+ * inglese, importo decimale con segno come nel CSV, data 'YYYY-MM-DD'.
+ */
+export function transactionsJson(rows: CsvTransaction[]): string {
+  const items = rows.map(({ transaction: tx, category, account, toAccount }) => {
+    const decimals = currencyDecimals(account.currency);
+    const amount = tx.amount / 10 ** decimals;
+    return {
+      date: format(tx.date, 'yyyy-MM-dd'),
+      type: tx.type,
+      category: category?.name ?? null,
+      account: account.name,
+      toAccount: toAccount?.name ?? null,
+      amount: tx.type === 'expense' ? -amount : amount,
+      currency: account.currency,
+      note: tx.note,
+    };
+  });
+  return JSON.stringify(items, null, 2);
+}

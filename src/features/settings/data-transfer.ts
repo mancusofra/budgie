@@ -8,7 +8,10 @@ import { createBackup, parseBackup, restoreBackup, type Backup } from '@/db/back
 import { db, repos } from '@/db/client';
 import { decimalSeparator } from '@/i18n';
 
-import { transactionsCsv } from './csv-export';
+import { transactionsCsv, transactionsJson } from './csv-export';
+
+export type ExportFormat = 'csv' | 'json';
+export type ExportOptions = { format: ExportFormat; from?: Date; to?: Date };
 
 /** Scrive un file temporaneo e apre il foglio di condivisione di sistema. */
 async function shareFile(name: string, content: string, mimeType: string, UTI: string) {
@@ -25,32 +28,42 @@ const today = () => format(new Date(), 'yyyy-MM-dd');
 export function useDataTransfer() {
   const { t } = useTranslation();
 
-  const exportCsv = useCallback(async () => {
-    const rows = await repos.transactions.listDetailed();
-    const csv = transactionsCsv(
-      rows,
-      {
-        headers: [
-          t('csv.date'),
-          t('csv.type'),
-          t('csv.category'),
-          t('csv.account'),
-          t('csv.toAccount'),
-          t('csv.amount'),
-          t('csv.currency'),
-          t('csv.note'),
-        ],
-        types: {
-          expense: t('transaction.newExpense'),
-          income: t('transaction.newIncome'),
-          transfer: t('transactions.transfer'),
+  /** Esporta le transazioni dell'intervallo [from, to) nel formato scelto; restituisce quante. */
+  const exportData = useCallback(
+    async ({ format: kind, from, to }: ExportOptions) => {
+      const rows = await repos.transactions.listDetailed({ from, to });
+      if (rows.length === 0) return 0;
+      const name = `moneta-${today()}.${kind}`;
+      if (kind === 'json') {
+        await shareFile(name, transactionsJson(rows), 'application/json', 'public.json');
+        return rows.length;
+      }
+      const csv = transactionsCsv(
+        rows,
+        {
+          headers: [
+            t('csv.date'),
+            t('csv.type'),
+            t('csv.category'),
+            t('csv.account'),
+            t('csv.toAccount'),
+            t('csv.amount'),
+            t('csv.currency'),
+            t('csv.note'),
+          ],
+          types: {
+            expense: t('transaction.newExpense'),
+            income: t('transaction.newIncome'),
+            transfer: t('transactions.transfer'),
+          },
         },
-      },
-      decimalSeparator,
-    );
-    await shareFile(`moneta-${today()}.csv`, csv, 'text/csv', 'public.comma-separated-values-text');
-    return rows.length;
-  }, [t]);
+        decimalSeparator,
+      );
+      await shareFile(name, csv, 'text/csv', 'public.comma-separated-values-text');
+      return rows.length;
+    },
+    [t],
+  );
 
   const exportBackup = useCallback(async () => {
     const backup = await createBackup(db);
@@ -75,5 +88,5 @@ export function useDataTransfer() {
 
   const restore = useCallback((backup: Backup) => restoreBackup(db, backup), []);
 
-  return { exportCsv, exportBackup, pickBackup, restore };
+  return { exportData, exportBackup, pickBackup, restore };
 }

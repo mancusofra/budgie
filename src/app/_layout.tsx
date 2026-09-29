@@ -35,6 +35,30 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="language"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.4],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
+              name="month-start"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.5],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
+              name="export"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.65, 0.9],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
               name="account/select"
               options={{
                 presentation: 'formSheet',

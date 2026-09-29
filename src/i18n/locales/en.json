@@ -70,8 +70,6 @@
     "sunday": "Sunday",
     "monthStart": "Month starts on day",
     "monthStartHint": "Handy if you get paid at the end of the month: with 27 a “month” runs from the 27th to the 26th.",
-    "decrease": "Decrease",
-    "increase": "Increase",
     "manage": "Manage",
     "preferences": "Preferences",
     "mainCurrency": "Main currency",
@@ -82,7 +80,7 @@
     "language": "Language",
     "languageSystem": "Automatic",
     "data": "Data",
-    "exportCsv": "Export transactions (CSV)",
+    "exportData": "Export transactions",
     "exportBackup": "Create backup",
     "restoreBackup": "Restore from backup",
     "dataHint": "The backup contains all your data: save it to Files, iCloud or Drive. Restoring replaces the current data.",
@@ -93,8 +91,24 @@
     "exportError": "Export failed",
     "restoreConfirmMessage_one": "Backup from {{date}}: 1 transaction. All current data will be replaced.",
     "restoreConfirmMessage_other": "Backup from {{date}}: {{count}} transactions. All current data will be replaced.",
-    "appLock": "Lock with Face ID / fingerprint",
-    "appLockUnavailable": "Face ID or fingerprint aren't available. Face ID isn't supported in Expo Go on iPhone: try it with the app build."
+    "appLock": "Biometric lock",
+    "appLockUnavailable": "Biometric authentication isn't available or set up on this device. Face ID isn't supported in Expo Go on iPhone: try it with the app build."
+  },
+  "language": {
+    "systemHint": "Same as the device"
+  },
+  "export": {
+    "title": "Export transactions",
+    "format": "Format",
+    "csvHint": "For Excel, Numbers or Google Sheets.",
+    "jsonHint": "For other apps or scripts: decimal amounts and English keys.",
+    "range": "Range",
+    "all": "All",
+    "month": "Month",
+    "year": "Year",
+    "custom": "Dates",
+    "submit": "Export",
+    "empty": "No transactions in the chosen range"
   },
   "transactions": {
     "title": "Transactions",
@@ -232,6 +246,6 @@
   "lock": {
     "prompt": "Unlock Moneta",
     "unlock": "Unlock",
-    "unavailable": "Face ID or fingerprint aren't available on this device: the app has been unlocked."
+    "unavailable": "Biometric authentication isn't available on this device: the app has been unlocked."
   }
 }

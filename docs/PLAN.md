@@ -103,9 +103,9 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 - [x] Valuta principale, formato numeri secondo locale (con "Tutti i conti" solo i conti nella valuta principale)
 - [x] Tema: sistema / chiaro / scuro
 - [x] Lingua: automatica / IT / EN (i18next, testi in `src/i18n/locales`)
-- [x] Esportazione CSV (con `expo-sharing`; `;` e virgola decimale per l'italiano)
+- [x] Esportazione CSV o JSON con intervallo di date (con `expo-sharing`; `;` e virgola decimale per l'italiano)
 - [x] Backup completo (JSON) e ripristino (`File.pickFileAsync` di expo-file-system)
-- [x] Blocco app con Face ID / impronta (`expo-local-authentication`) — Face ID non provabile in Expo Go su iOS
+- [x] Blocco app con riconoscimento biometrico (`expo-local-authentication`) — Face ID non provabile in Expo Go su iOS
 
 ## Fase 7 — Rifinitura e qualità
 

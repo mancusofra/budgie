@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { NavRow, RowSeparator } from '@/components/ui/nav-row';
@@ -16,7 +16,7 @@ import { useDataTransfer } from '@/features/settings/data-transfer';
 import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
 import { deviceLocale } from '@/i18n';
 import { useTheme } from '@/hooks/use-theme';
-import { Radius, Spacing, TabularNums } from '@/theme';
+import { Radius, Spacing } from '@/theme';
 
 export default function SettingsScreen() {
   const { t } = useTranslation();
@@ -24,7 +24,7 @@ export default function SettingsScreen() {
   const settings = useSettings();
   const setSetting = useSetSetting();
   const resetDatabase = useResetDatabase();
-  const { exportCsv, exportBackup, pickBackup, restore } = useDataTransfer();
+  const { exportBackup, pickBackup, restore } = useDataTransfer();
 
   const run = async (action: () => Promise<unknown>, errorMessage: string) => {
     try {
@@ -75,14 +75,11 @@ export default function SettingsScreen() {
   };
   const tabBarSpace = useTabBarSpace();
   const weekStart = settings.weekStart ?? 1;
-  const monthStartDay = settings.monthStartDay ?? 1;
-
-  const changeMonthStart = (delta: number) => {
-    const next = Math.min(Math.max(monthStartDay + delta, 1), 28);
-    if (next === monthStartDay) return;
-    Haptics.selectionAsync();
-    setSetting('monthStartDay', next);
-  };
+  const languageLabel = {
+    system: t('settings.languageSystem'),
+    it: 'Italiano',
+    en: 'English',
+  }[settings.language ?? 'system'];
 
   const confirmReset = () =>
     Alert.alert(t('settings.resetConfirmTitle'), t('settings.resetConfirmMessage'), [
@@ -97,19 +94,6 @@ export default function SettingsScreen() {
         },
       },
     ]);
-
-  const stepButton = (icon: 'minus' | 'plus', delta: number, label: string, disabled: boolean) => (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      disabled={disabled}
-      onPress={() => changeMonthStart(delta)}
-      style={{ opacity: disabled ? 0.35 : 1 }}>
-      <Surface interactive style={styles.step}>
-        <MaterialCommunityIcons name={icon} size={20} color={theme.text} />
-      </Surface>
-    </Pressable>
-  );
 
   return (
     <Screen scrolls>
@@ -145,7 +129,7 @@ export default function SettingsScreen() {
           <Text variant="overline" color="textSecondary">
             {t('settings.preferences')}
           </Text>
-          <Surface style={styles.card}>
+          <Surface style={styles.listCard}>
             <NavRow
               title={t('settings.mainCurrency')}
               value={settings.currency ?? 'EUR'}
@@ -154,31 +138,30 @@ export default function SettingsScreen() {
                 <MaterialCommunityIcons name="cash-multiple" size={22} color={theme.primary} />
               }
             />
-            <View style={[styles.separator, { backgroundColor: theme.border }]} />
-            <Text>{t('settings.theme')}</Text>
-            <SegmentedControl
-              options={[
-                { value: 'system', label: t('settings.themeSystem') },
-                { value: 'light', label: t('settings.themeLight') },
-                { value: 'dark', label: t('settings.themeDark') },
-              ]}
-              value={settings.theme ?? 'system'}
-              onChange={(v) => setSetting('theme', v)}
+            <RowSeparator />
+            <NavRow
+              title={t('settings.language')}
+              value={languageLabel}
+              onPress={() => router.push('/language')}
+              leading={<MaterialCommunityIcons name="translate" size={22} color={theme.primary} />}
             />
-            <View style={[styles.separator, { backgroundColor: theme.border }]} />
-            <Text>{t('settings.language')}</Text>
-            <SegmentedControl
-              options={[
-                { value: 'system', label: t('settings.languageSystem') },
-                { value: 'it', label: 'Italiano' },
-                { value: 'en', label: 'English' },
-              ]}
-              value={settings.language ?? 'system'}
-              onChange={(v) => setSetting('language', v)}
-            />
-            <View style={[styles.separator, { backgroundColor: theme.border }]} />
+            <RowSeparator />
+            <View style={styles.block}>
+              <Text style={styles.label}>{t('settings.theme')}</Text>
+              <SegmentedControl
+                options={[
+                  { value: 'system', label: t('settings.themeSystem') },
+                  { value: 'light', label: t('settings.themeLight') },
+                  { value: 'dark', label: t('settings.themeDark') },
+                ]}
+                value={settings.theme ?? 'system'}
+                onChange={(v) => setSetting('theme', v)}
+              />
+            </View>
+            <RowSeparator />
             <View style={styles.row}>
-              <Text style={styles.flex}>{t('settings.appLock')}</Text>
+              <MaterialCommunityIcons name="fingerprint" size={22} color={theme.primary} />
+              <Text style={[styles.label, styles.flex]}>{t('settings.appLock')}</Text>
               <Switch
                 value={settings.appLock === true}
                 onValueChange={toggleLock}
@@ -187,35 +170,36 @@ export default function SettingsScreen() {
             </View>
           </Surface>
         </View>
+
         <View style={styles.section}>
           <Text variant="overline" color="textSecondary">
             {t('settings.periods')}
           </Text>
-          <Surface style={styles.card}>
-            <Text>{t('settings.weekStart')}</Text>
-            <SegmentedControl
-              options={[
-                { value: '1', label: t('settings.monday') },
-                { value: '0', label: t('settings.sunday') },
-              ]}
-              value={String(weekStart)}
-              onChange={(v) => setSetting('weekStart', v === '0' ? 0 : 1)}
-            />
-            <View style={[styles.separator, { backgroundColor: theme.border }]} />
-            <View style={styles.row}>
-              <Text style={styles.flex}>{t('settings.monthStart')}</Text>
-              {stepButton('minus', -1, t('settings.decrease'), monthStartDay <= 1)}
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[styles.stepValue, { color: theme.text }]}>
-                {monthStartDay}
-              </Text>
-              {stepButton('plus', 1, t('settings.increase'), monthStartDay >= 28)}
+          <Surface style={styles.listCard}>
+            <View style={styles.block}>
+              <Text style={styles.label}>{t('settings.weekStart')}</Text>
+              <SegmentedControl
+                options={[
+                  { value: '1', label: t('settings.monday') },
+                  { value: '0', label: t('settings.sunday') },
+                ]}
+                value={String(weekStart)}
+                onChange={(v) => setSetting('weekStart', v === '0' ? 0 : 1)}
+              />
             </View>
-            <Text variant="caption" color="textSecondary">
-              {t('settings.monthStartHint')}
-            </Text>
+            <RowSeparator />
+            <NavRow
+              title={t('settings.monthStart')}
+              value={String(settings.monthStartDay ?? 1)}
+              onPress={() => router.push('/month-start')}
+              leading={
+                <MaterialCommunityIcons name="calendar-start" size={22} color={theme.primary} />
+              }
+            />
           </Surface>
+          <Text variant="caption" color="textSecondary">
+            {t('settings.monthStartHint')}
+          </Text>
         </View>
 
         <View style={styles.section}>
@@ -224,11 +208,11 @@ export default function SettingsScreen() {
           </Text>
           <Surface style={styles.listCard}>
             <NavRow
-              title={t('settings.exportCsv')}
-              onPress={() => run(exportCsv, t('settings.exportError'))}
+              title={t('settings.exportData')}
+              onPress={() => router.push('/export')}
               leading={
                 <MaterialCommunityIcons
-                  name="file-delimited-outline"
+                  name="file-export-outline"
                   size={22}
                   color={theme.primary}
                 />
@@ -287,17 +271,15 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   content: { gap: Spacing.four },
   section: { gap: Spacing.two },
-  card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.three },
   listCard: { borderRadius: Radius + 4, paddingHorizontal: Spacing.three },
-  separator: { height: StyleSheet.hairlineWidth },
-  row: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  flex: { flex: 1 },
-  step: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
-  stepValue: {
-    minWidth: 32,
-    textAlign: 'center',
-    fontSize: 18,
-    fontWeight: '600',
-    ...TabularNums,
+  // Stesse misure di NavRow, per allineare righe e blocchi nella stessa card
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    paddingVertical: Spacing.three - 6,
   },
+  block: { gap: Spacing.two, paddingVertical: Spacing.three },
+  label: { fontWeight: '500' },
+  flex: { flex: 1 },
 });

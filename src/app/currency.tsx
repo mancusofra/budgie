@@ -87,7 +87,9 @@ export default function CurrencySheet() {
             <MaterialCommunityIcons
               name="check"
               size={20}
-              color={selected ? theme.primary : 'transparent'}
+              color={theme.primary}
+              // Nascosta ma presente, per l'allineamento (color 'transparent' su Android non vale)
+              style={{ opacity: selected ? 1 : 0 }}
             />
           </Pressable>
         );
