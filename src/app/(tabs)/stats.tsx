@@ -302,6 +302,7 @@ export default function StatsScreen() {
             setEditing(true);
           }}
           onDragEnd={() => setDragging(false)}
+          dragImmediately={editing}
           onReorder={(keys) =>
             saveLayout(normalizeStatsLayout({ ...layout, order: keys as StatsSection[] }))
           }

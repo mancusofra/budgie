@@ -31,9 +31,18 @@ type Props = {
   onDragEnd?: () => void;
   /** Nuovo ordine delle chiavi a fine trascinamento. */
   onReorder: (keys: string[]) => void;
+  /**
+   * true (es. già in modifica): il trascinamento parte appena il dito si muove
+   * in verticale. false: serve prima un tocco lungo, così lo scorrimento
+   * normale della pagina non sposta i riquadri per sbaglio.
+   */
+  dragImmediately?: boolean;
 };
 
 const LONG_PRESS_MS = 300;
+/** Movimento verticale (pt) che avvia il trascinamento immediato: meno dello
+ * scostamento con cui parte lo scorrimento nativo, così vince il trascinamento. */
+const IMMEDIATE_DRAG_OFFSET = 5;
 const AUTO_SCROLL_SPEED = 10;
 
 /** Top di un elemento nell'ordine dato, sommando le altezze precedenti. */
@@ -60,6 +69,7 @@ export function ReorderableStack({
   onDragStart,
   onDragEnd,
   onReorder,
+  dragImmediately = false,
 }: Props) {
   const keys = items.map((i) => i.key);
   const signature = keys.join('|');
@@ -108,7 +118,8 @@ export function ReorderableStack({
           onMeasure={onMeasure}
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
-          onReorder={onReorder}>
+          onReorder={onReorder}
+          dragImmediately={dragImmediately}>
           {item.node}
         </Row>
       ))}
@@ -128,6 +139,7 @@ function Row({
   onDragStart,
   onDragEnd,
   onReorder,
+  dragImmediately,
   children,
 }: {
   id: string;
@@ -141,6 +153,7 @@ function Row({
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onReorder: (keys: string[]) => void;
+  dragImmediately: boolean;
   children: ReactNode;
 }) {
   const active = useSharedValue(false);
@@ -187,9 +200,16 @@ function Row({
     reorder();
   });
 
-  const pan = Gesture.Pan()
-    .activateAfterLongPress(LONG_PRESS_MS)
+  // Callback marcate 'worklet': con la catena condizionale il plugin di
+  // Reanimated non le riconosce da solo e girerebbero sul thread JS
+  const base = Gesture.Pan();
+  const pan = (
+    dragImmediately
+      ? base.activeOffsetY([-IMMEDIATE_DRAG_OFFSET, IMMEDIATE_DRAG_OFFSET])
+      : base.activateAfterLongPress(LONG_PRESS_MS)
+  )
     .onStart(() => {
+      'worklet';
       active.set(true);
       startTop.set(topOf(id, order.get(), heights.get(), gap));
       startScroll.set(scrollY.get());
@@ -198,11 +218,13 @@ function Row({
       if (onDragStart) scheduleOnRN(onDragStart);
     })
     .onUpdate((e) => {
+      'worklet';
       dragY.set(e.translationY);
       autoDir.set(e.absoluteY < edges.top ? -1 : e.absoluteY > edges.bottom ? 1 : 0);
       reorder();
     })
     .onFinalize(() => {
+      'worklet';
       if (!active.get()) return;
       active.set(false);
       autoDir.set(0);
