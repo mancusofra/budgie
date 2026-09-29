@@ -1,6 +1,7 @@
-import { and, desc, eq, gte, lt, ne, or, sql } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, lt, ne, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 
+import type { AccountScope } from '@/lib/account-scope';
 import { createId } from '@/lib/id';
 
 import {
@@ -15,11 +16,11 @@ import type { AppDatabase } from '../types';
 /** Intervallo semiaperto [from, to). */
 export type DateRange = { from: Date; to: Date };
 
-export type TransactionFilter = Partial<DateRange> & {
-  accountId?: string;
-  categoryId?: string;
-  type?: TransactionType;
-};
+export type TransactionFilter = Partial<DateRange> &
+  AccountScope & {
+    categoryId?: string;
+    type?: TransactionType;
+  };
 
 export type DetailedFilter = TransactionFilter & {
   /** Testo cercato nella nota e nel nome della categoria (senza distinzione maiuscole). */
@@ -66,6 +67,25 @@ function validate(tx: NewTransaction) {
   }
 }
 
+/**
+ * Condizione sui conti. Con `includeIncoming` conta anche il conto di
+ * destinazione dei trasferimenti (per la lista); per totali e statistiche no.
+ */
+function accountCondition(scope: AccountScope, includeIncoming: boolean) {
+  const t = transactions;
+  if (scope.accountId) {
+    return includeIncoming
+      ? or(eq(t.accountId, scope.accountId), eq(t.toAccountId, scope.accountId))
+      : eq(t.accountId, scope.accountId);
+  }
+  if (scope.accountIds) {
+    return includeIncoming
+      ? or(inArray(t.accountId, scope.accountIds), inArray(t.toAccountId, scope.accountIds))
+      : inArray(t.accountId, scope.accountIds);
+  }
+  return undefined;
+}
+
 function where(filter: TransactionFilter) {
   const t = transactions;
   return and(
@@ -73,9 +93,7 @@ function where(filter: TransactionFilter) {
     filter.to && lt(t.date, filter.to),
     filter.type && eq(t.type, filter.type),
     filter.categoryId ? eq(t.categoryId, filter.categoryId) : undefined,
-    filter.accountId
-      ? or(eq(t.accountId, filter.accountId), eq(t.toAccountId, filter.accountId))
-      : undefined,
+    accountCondition(filter, true),
   );
 }
 
@@ -178,7 +196,7 @@ export function createTransactionsRepo(db: AppDatabase) {
 
     /** Totale per categoria nel periodo (per la ciambella), dal più alto. */
     sumByCategory(
-      filter: Partial<DateRange> & { type?: 'expense' | 'income'; accountId?: string } = {},
+      filter: Partial<DateRange> & AccountScope & { type?: 'expense' | 'income' } = {},
     ) {
       const total = sql<number>`sum(${t.amount})`.mapWith(Number);
       return db
@@ -186,8 +204,8 @@ export function createTransactionsRepo(db: AppDatabase) {
         .from(t)
         .where(
           and(
-            where({ ...filter, accountId: undefined, type: filter.type ?? 'expense' }),
-            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
+            where({ from: filter.from, to: filter.to, type: filter.type ?? 'expense' }),
+            accountCondition(filter, false),
           ),
         )
         .groupBy(t.categoryId)
@@ -198,7 +216,7 @@ export function createTransactionsRepo(db: AppDatabase) {
      * Totale e numero di movimenti per categoria e tipo (spese ed entrate),
      * dal totale più alto. I trasferimenti sono esclusi.
      */
-    statsByCategory(filter: Partial<DateRange> & { accountId?: string } = {}) {
+    statsByCategory(filter: Partial<DateRange> & AccountScope = {}) {
       const total = sql<number>`sum(${t.amount})`.mapWith(Number);
       return db
         .select({
@@ -212,7 +230,7 @@ export function createTransactionsRepo(db: AppDatabase) {
           and(
             where({ from: filter.from, to: filter.to }),
             ne(t.type, 'transfer'),
-            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
+            accountCondition(filter, false),
           ),
         )
         .groupBy(t.categoryId, t.type)
@@ -224,7 +242,7 @@ export function createTransactionsRepo(db: AppDatabase) {
      * grafico a barre. Solo i bucket con movimenti: quelli vuoti li aggiunge il chiamante.
      */
     seriesByBucket(
-      filter: Partial<DateRange> & { accountId?: string; type?: 'expense' | 'income' },
+      filter: Partial<DateRange> & AccountScope & { type?: 'expense' | 'income' },
       bucket: 'day' | 'month',
     ) {
       const format = bucket === 'day' ? '%Y-%m-%d' : '%Y-%m';
@@ -235,7 +253,7 @@ export function createTransactionsRepo(db: AppDatabase) {
         .where(
           and(
             where({ from: filter.from, to: filter.to, type: filter.type ?? 'expense' }),
-            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
+            accountCondition(filter, false),
           ),
         )
         .groupBy(key)
@@ -243,17 +261,15 @@ export function createTransactionsRepo(db: AppDatabase) {
     },
 
     /** Data della prima transazione (per il periodo "Sempre"), se esiste. */
-    firstDate(accountId?: string) {
+    firstDate(scope: AccountScope = {}) {
       return db
         .select({ first: sql<number | null>`min(${t.date})` })
         .from(t)
-        .where(
-          accountId ? or(eq(t.accountId, accountId), eq(t.toAccountId, accountId)) : undefined,
-        );
+        .where(accountCondition(scope, true));
     },
 
     /** Entrate e spese totali nel periodo. I trasferimenti non contano. */
-    totals(filter: Partial<DateRange> & { accountId?: string } = {}) {
+    totals(filter: Partial<DateRange> & AccountScope = {}) {
       return db
         .select({
           income:
@@ -266,12 +282,7 @@ export function createTransactionsRepo(db: AppDatabase) {
             ),
         })
         .from(t)
-        .where(
-          and(
-            where({ from: filter.from, to: filter.to }),
-            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
-          ),
-        );
+        .where(and(where({ from: filter.from, to: filter.to }), accountCondition(filter, false)));
     },
   };
 }

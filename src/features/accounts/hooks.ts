@@ -1,9 +1,13 @@
 import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
+import { useMemo } from 'react';
 
 import { repos } from '@/db/client';
 import { useLiveQueryOn } from '@/db/live-query';
 import { accounts, transactions } from '@/db/schema';
 import type { Account } from '@/db/schema';
+import { useCurrency } from '@/features/settings/hooks';
+import { resolveAccountScope, type AccountScope, type ResolvedScope } from '@/lib/account-scope';
+import { useUIStore } from '@/store/ui';
 
 export function useAccounts(): Account[] {
   const { data } = useLiveQuery(repos.accounts.list());
@@ -37,3 +41,21 @@ export const accountActions = {
   reorder: repos.accounts.reorder,
   transactionCount: (id: string) => repos.accounts.transactionCount(id),
 };
+
+/**
+ * Ambito dei conti per totali e liste, secondo il filtro conto e la valuta
+ * principale (vedi resolveAccountScope).
+ */
+export function useAccountScope(): ResolvedScope & { mainScope: AccountScope } {
+  const accountFilter = useUIStore((s) => s.accountFilter);
+  const mainCurrency = useCurrency();
+  const { data } = useLiveQuery(repos.accounts.list({ includeArchived: true }));
+  return useMemo(
+    () => ({
+      ...resolveAccountScope(accountFilter, data ?? [], mainCurrency),
+      // Conti nella valuta principale, indipendentemente dal filtro (es. budget)
+      mainScope: resolveAccountScope('all', data ?? [], mainCurrency).scope,
+    }),
+    [accountFilter, data, mainCurrency],
+  );
+}

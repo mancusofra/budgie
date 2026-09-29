@@ -12,6 +12,7 @@ import type { Category } from '@/db/schema';
 import { useTheme } from '@/hooks/use-theme';
 import { dateLocale } from '@/i18n';
 import { withAlpha } from '@/lib/color';
+import type { AccountScope } from '@/lib/account-scope';
 import type { PeriodRange } from '@/lib/period';
 import { AnimationMs, Spacing, TabularNums } from '@/theme';
 
@@ -24,7 +25,7 @@ type Props = {
   expanded: boolean;
   onToggle: () => void;
   range: PeriodRange;
-  accountFilter: string;
+  scope: AccountScope;
   money: (minor: number) => string;
 };
 
@@ -36,7 +37,7 @@ export function CategoryGroup({
   expanded,
   onToggle,
   range,
-  accountFilter,
+  scope,
   money,
 }: Props) {
   const theme = useTheme();
@@ -69,12 +70,7 @@ export function CategoryGroup({
       </Pressable>
 
       {expanded && (
-        <CategoryTransactions
-          category={category}
-          range={range}
-          accountFilter={accountFilter}
-          money={money}
-        />
+        <CategoryTransactions category={category} range={range} scope={scope} money={money} />
       )}
     </Animated.View>
   );
@@ -83,16 +79,16 @@ export function CategoryGroup({
 function CategoryTransactions({
   category,
   range,
-  accountFilter,
+  scope,
   money,
-}: Pick<Props, 'category' | 'range' | 'accountFilter' | 'money'>) {
+}: Pick<Props, 'category' | 'range' | 'scope' | 'money'>) {
   const { i18n } = useTranslation();
   const theme = useTheme();
   const deleteTransaction = useDeleteTransaction();
   const rows = useTransactionList({
     ...range,
     categoryId: category.id,
-    accountId: accountFilter === 'all' ? undefined : accountFilter,
+    ...scope,
   });
 
   return (

@@ -5,17 +5,15 @@ import { repos } from '@/db/client';
 import { useLiveQueryOn } from '@/db/live-query';
 import { budgetMonths, budgets } from '@/db/schema';
 import { useSettings } from '@/features/settings/hooks';
+import { scopeKey, type AccountScope } from '@/lib/account-scope';
 import { budgetMonthKey, budgetStatus } from '@/lib/budget';
 import { periodRange, shiftPeriod, type Period, type PeriodRange } from '@/lib/period';
 import { chartWindow, fillSeries } from '@/lib/series';
 
-const accountParam = (accountFilter: string) =>
-  accountFilter === 'all' ? undefined : accountFilter;
-
 /** Spese per giorno/mese da mostrare nel grafico a barre del periodo. */
-export function useExpenseSeries(period: Period, range: PeriodRange, accountFilter: string) {
-  const accountId = accountParam(accountFilter);
-  const { data: first } = useLiveQuery(repos.transactions.firstDate(accountId), [accountId]);
+export function useExpenseSeries(period: Period, range: PeriodRange, scope: AccountScope) {
+  const key = scopeKey(scope);
+  const { data: first } = useLiveQuery(repos.transactions.firstDate(scope), [key]);
   const firstMs = first?.[0]?.first ?? undefined;
   const window = useMemo(
     () => chartWindow(period, range, { firstDate: firstMs ? new Date(firstMs) : undefined }),
@@ -23,27 +21,28 @@ export function useExpenseSeries(period: Period, range: PeriodRange, accountFilt
   );
   const { data } = useLiveQuery(
     repos.transactions.seriesByBucket(
-      { from: window.from, to: window.to, accountId },
+      { from: window.from, to: window.to, ...scope },
       window.bucket,
     ),
-    [window.from.getTime(), window.to.getTime(), window.bucket, accountId],
+    [window.from.getTime(), window.to.getTime(), window.bucket, key],
   );
   const points = useMemo(() => fillSeries(window, data ?? []), [window, data]);
   return { window, points };
 }
 
 /** Spese del periodo precedente (per il confronto); null per "Sempre". */
-export function usePreviousExpense(period: Period, accountFilter: string): number | null {
+export function usePreviousExpense(period: Period, scope: AccountScope): number | null {
   const settings = useSettings();
   const opts = {
     weekStartsOn: settings.weekStart ?? 1,
     monthStartDay: settings.monthStartDay ?? 1,
   };
   const previous = period.kind === 'all' ? undefined : periodRange(shiftPeriod(period, -1), opts);
-  const { data } = useLiveQuery(
-    repos.transactions.totals({ ...(previous ?? {}), accountId: accountParam(accountFilter) }),
-    [previous?.from?.getTime(), previous?.to?.getTime(), accountFilter],
-  );
+  const { data } = useLiveQuery(repos.transactions.totals({ ...(previous ?? {}), ...scope }), [
+    previous?.from?.getTime(),
+    previous?.to?.getTime(),
+    scopeKey(scope),
+  ]);
   if (!previous) return null;
   return data?.[0]?.expense ?? 0;
 }
@@ -80,7 +79,7 @@ function budgetAnchor(period: Period, range: PeriodRange, now = new Date()): Dat
  * Budget del mese mostrato (ereditati dal mese precedente se non definiti),
  * con lo speso di quel mese su tutti i conti: ogni mese si riparte da zero.
  */
-export function useBudgetProgress(period: Period, range: PeriodRange) {
+export function useBudgetProgress(period: Period, range: PeriodRange, scope: AccountScope) {
   const settings = useSettings();
   const monthStartDay = settings.monthStartDay ?? 1;
   const anchor = budgetAnchor(period, range);
@@ -92,8 +91,10 @@ export function useBudgetProgress(period: Period, range: PeriodRange) {
     [budgets, budgetMonths],
     [monthKey],
   );
-  const { data: stats } = useLiveQuery(repos.transactions.statsByCategory(month), [
+  // Budget nella valuta principale: contano solo i conti in quella valuta
+  const { data: stats } = useLiveQuery(repos.transactions.statsByCategory({ ...month, ...scope }), [
     month.from?.getTime(),
+    scopeKey(scope),
   ]);
 
   const progress = useMemo<BudgetProgress[]>(() => {

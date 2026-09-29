@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SnackbarHost } from '@/components/ui/snackbar-host';
 import { DatabaseProvider } from '@/db/provider';
+import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
 
 SplashScreen.preventAutoHideAsync();
@@ -24,6 +25,14 @@ export default function RootLayout() {
             <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
             <Stack.Screen name="transfer/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="currency"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.6, 0.95],
+                sheetGrabberVisible: true,
+              }}
+            />
             <Stack.Screen
               name="account/select"
               options={{
@@ -43,6 +52,7 @@ export default function RootLayout() {
             />
           </Stack>
           <SnackbarHost />
+          <SettingsSync />
         </DatabaseProvider>
         <StatusBar style="auto" />
       </ThemeProvider>

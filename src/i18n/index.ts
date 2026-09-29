@@ -26,6 +26,12 @@ export const deviceLocale = device?.languageTag ?? deviceLanguage;
 /** Separatore decimale del dispositivo ("," o "."), per tastierino e display. */
 export const decimalSeparator = device?.decimalSeparator ?? ',';
 
+/** Lingua dell'app: quella scelta nelle impostazioni o quella del dispositivo. */
+export function applyLanguage(preference: 'system' | Language = 'system') {
+  const language = preference === 'system' ? deviceLanguage : preference;
+  if (i18n.language !== language) i18n.changeLanguage(language);
+}
+
 export function dateLocale(language = i18n.language) {
   return language === 'it' ? itLocale : enUS;
 }

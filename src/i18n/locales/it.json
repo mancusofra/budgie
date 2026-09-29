@@ -73,7 +73,15 @@
     "monthStartHint": "Utile se ricevi lo stipendio a fine mese: con 27 il “mese” va dal 27 al 26.",
     "decrease": "Diminuisci",
     "increase": "Aumenta",
-    "manage": "Gestione"
+    "manage": "Gestione",
+    "preferences": "Preferenze",
+    "mainCurrency": "Valuta principale",
+    "theme": "Tema",
+    "themeSystem": "Sistema",
+    "themeLight": "Chiaro",
+    "themeDark": "Scuro",
+    "language": "Lingua",
+    "languageSystem": "Automatica"
   },
   "transactions": {
     "title": "Transazioni",
@@ -188,5 +196,14 @@
     "invalidAmount": "Inserisci un importo maggiore di zero",
     "replaceHint": "Se questa categoria ha già un budget nel mese viene aggiornato.",
     "fromMonthHint": "Vale da questo mese in poi: i mesi precedenti non cambiano."
+  },
+  "currency": {
+    "title": "Valuta principale",
+    "hint": "Usata per totali, budget e nuovi conti. Gli importi non vengono convertiti.",
+    "changeTitle": "Passare a {{code}}?",
+    "changeMessage_one": "Hai 1 conto in {{old}}. Vuoi usare {{code}} anche per quel conto? Gli importi restano uguali, cambia solo la valuta.",
+    "changeMessage_other": "Hai {{count}} conti in {{old}}. Vuoi usare {{code}} anche per quei conti? Gli importi restano uguali, cambia solo la valuta.",
+    "onlyMain": "Solo principale",
+    "alsoAccounts": "Anche i conti"
   }
 }

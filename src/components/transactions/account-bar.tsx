@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
-import { useAccounts } from '@/features/accounts/hooks';
+import { useAccounts, useAccountScope } from '@/features/accounts/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { useUIStore } from '@/store/ui';
 import { Spacing } from '@/theme';
@@ -17,7 +17,10 @@ export function AccountBar() {
   const accounts = useAccounts();
   const accountFilter = useUIStore((s) => s.accountFilter);
   const current = accounts.find((a) => a.id === accountFilter);
-  const label = current?.name ?? t('accounts.all');
+  const { partial, currency } = useAccountScope();
+  // Con conti in valute diverse "tutti" include solo quelli nella valuta principale
+  const label =
+    current?.name ?? (partial ? `${t('accounts.all')} · ${currency}` : t('accounts.all'));
 
   return (
     <View style={styles.row}>

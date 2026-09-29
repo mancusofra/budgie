@@ -90,6 +90,43 @@ export default function SettingsScreen() {
 
         <View style={styles.section}>
           <Text variant="overline" color="textSecondary">
+            {t('settings.preferences')}
+          </Text>
+          <Surface style={styles.card}>
+            <NavRow
+              title={t('settings.mainCurrency')}
+              value={settings.currency ?? 'EUR'}
+              onPress={() => router.push('/currency')}
+              leading={
+                <MaterialCommunityIcons name="currency-eur" size={22} color={theme.primary} />
+              }
+            />
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
+            <Text>{t('settings.theme')}</Text>
+            <SegmentedControl
+              options={[
+                { value: 'system', label: t('settings.themeSystem') },
+                { value: 'light', label: t('settings.themeLight') },
+                { value: 'dark', label: t('settings.themeDark') },
+              ]}
+              value={settings.theme ?? 'system'}
+              onChange={(v) => setSetting('theme', v)}
+            />
+            <View style={[styles.separator, { backgroundColor: theme.border }]} />
+            <Text>{t('settings.language')}</Text>
+            <SegmentedControl
+              options={[
+                { value: 'system', label: t('settings.languageSystem') },
+                { value: 'it', label: 'Italiano' },
+                { value: 'en', label: 'English' },
+              ]}
+              value={settings.language ?? 'system'}
+              onChange={(v) => setSetting('language', v)}
+            />
+          </Surface>
+        </View>
+        <View style={styles.section}>
+          <Text variant="overline" color="textSecondary">
             {t('settings.periods')}
           </Text>
           <Surface style={styles.card}>

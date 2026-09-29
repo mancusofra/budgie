@@ -16,6 +16,7 @@ import { ReorderableStack } from '@/components/ui/reorderable-stack';
 import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { hasGlass, Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
+import { useAccountScope } from '@/features/accounts/hooks';
 import { useCategories } from '@/features/categories/hooks';
 import { useCurrency, useSetSetting, useSettings } from '@/features/settings/hooks';
 import {
@@ -48,7 +49,9 @@ export default function StatsScreen() {
   const theme = useTheme();
   const currency = useCurrency();
   const locale = dateLocale(i18n.language);
-  const money = (minor: number) => formatMoney(minor, currency, deviceLocale);
+  // Importi nella valuta del conto mostrato; i budget nella valuta principale
+  const money = (minor: number) => formatMoney(minor, displayCurrency, deviceLocale);
+  const mainMoney = (minor: number) => formatMoney(minor, currency, deviceLocale);
   const tabBarSpace = useTabBarSpace();
 
   // Layout personalizzabile (ordine e sezioni nascoste), salvato nelle impostazioni
@@ -67,14 +70,14 @@ export default function StatsScreen() {
   const { height: windowHeight } = useWindowDimensions();
 
   const { period, range } = useSelectedPeriod();
-  const accountFilter = useUIStore((s) => s.accountFilter);
+  const { scope, currency: displayCurrency, mainScope } = useAccountScope();
   const setOpenCategory = useUIStore((s) => s.setOpenCategory);
-  const totals = usePeriodTotals(range, accountFilter);
-  const previousExpense = usePreviousExpense(period, accountFilter);
+  const totals = usePeriodTotals(range, scope);
+  const previousExpense = usePreviousExpense(period, scope);
   const change = previousExpense === null ? null : percentChange(totals.expense, previousExpense);
 
   // Grafico
-  const { window, points } = useExpenseSeries(period, range, accountFilter);
+  const { window, points } = useExpenseSeries(period, range, scope);
   const [selection, setSelectedKey] = useState<string>();
   // Cambiando periodo la barra selezionata può non esistere più: ignorala
   const selectedKey = points.some((p) => p.key === selection) ? selection : undefined;
@@ -91,7 +94,7 @@ export default function StatsScreen() {
 
   // Classifica categorie
   const categories = useCategories('expense', { includeArchived: true });
-  const stats = useCategoryStats(range, accountFilter);
+  const stats = useCategoryStats(range, scope);
   const ranking = useMemo(() => {
     const byId = new Map(categories.map((c) => [c.id, c]));
     const rows = stats.flatMap((s) => {
@@ -103,7 +106,7 @@ export default function StatsScreen() {
   }, [stats, categories]);
 
   // Budget
-  const { month, monthKey, progress } = useBudgetProgress(period, range);
+  const { month, monthKey, progress } = useBudgetProgress(period, range, mainScope);
   const monthLabel = month.from ? format(month.from, 'LLLL yyyy', { locale }) : '';
 
   const tile = (label: string, value: number, color: string, footnote?: React.ReactNode) => (
@@ -218,7 +221,7 @@ export default function StatsScreen() {
         </Text>
         {progress.length === 0 && <Text color="textSecondary">{t('stats.noBudgets')}</Text>}
         {progress.map((b) => (
-          <BudgetRow key={b.id} budget={b} money={money} monthKey={monthKey} />
+          <BudgetRow key={b.id} budget={b} money={mainMoney} monthKey={monthKey} />
         ))}
         <Button
           title={t('stats.addBudget')}

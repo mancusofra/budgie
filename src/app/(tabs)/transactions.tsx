@@ -11,9 +11,8 @@ import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Category } from '@/db/schema';
-import { useAccounts } from '@/features/accounts/hooks';
+import { useAccounts, useAccountScope } from '@/features/accounts/hooks';
 import { useCategories } from '@/features/categories/hooks';
-import { useCurrency } from '@/features/settings/hooks';
 import { CategoryGroup } from '@/features/transactions/category-group';
 import {
   useCategoryStats,
@@ -24,6 +23,7 @@ import {
 } from '@/features/transactions/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { dateLocale, deviceLocale } from '@/i18n';
+import type { AccountScope } from '@/lib/account-scope';
 import { groupByDay } from '@/lib/group';
 import { formatMoney } from '@/lib/money';
 import type { PeriodRange } from '@/lib/period';
@@ -33,12 +33,11 @@ import { Radius, Spacing, TabularNums } from '@/theme';
 export default function TransactionsScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
-  const currency = useCurrency();
   const { range } = useSelectedPeriod();
-  const accountFilter = useUIStore((s) => s.accountFilter);
+  const { scope, currency } = useAccountScope();
   const openCategory = useUIStore((s) => s.openCategory);
-  const totals = usePeriodTotals(range, accountFilter);
-  const stats = useCategoryStats(range, accountFilter);
+  const totals = usePeriodTotals(range, scope);
+  const stats = useCategoryStats(range, scope);
   // Anche le archiviate: i loro movimenti restano nel periodo
   const categories = useCategories(undefined, { includeArchived: true });
 
@@ -84,7 +83,7 @@ export default function TransactionsScreen() {
     useTransactionList({
       ...range,
       type: 'transfer',
-      accountId: accountFilter === 'all' ? undefined : accountFilter,
+      ...scope,
     }).length > 0;
 
   const section = (
@@ -111,7 +110,7 @@ export default function TransactionsScreen() {
             expanded={expanded.has(r.category.id)}
             onToggle={() => toggle(r.category.id)}
             range={range}
-            accountFilter={accountFilter}
+            scope={scope}
             money={money}
           />
         ))}
@@ -162,12 +161,7 @@ export default function TransactionsScreen() {
       </View>
 
       {searching ? (
-        <SearchResults
-          search={search.trim()}
-          range={range}
-          accountFilter={accountFilter}
-          money={money}
-        />
+        <SearchResults search={search.trim()} range={range} scope={scope} money={money} />
       ) : (
         <ScrollView
           style={styles.list}
@@ -175,7 +169,7 @@ export default function TransactionsScreen() {
           scrollIndicatorInsets={{ bottom: tabBarSpace }}>
           {section(t('home.expenses'), totals.expense, groups.expense)}
           {section(t('home.income'), totals.income, groups.income)}
-          <TransfersSection range={range} accountFilter={accountFilter} money={money} />
+          <TransfersSection range={range} scope={scope} money={money} />
           {stats.length === 0 && !hasTransfers && (
             <View style={styles.empty}>
               <MaterialCommunityIcons
@@ -197,11 +191,11 @@ type Row = ReturnType<typeof useTransactionList>[number];
 /** Trasferimenti del periodo (non contano come spese o entrate). */
 function TransfersSection({
   range,
-  accountFilter,
+  scope,
   money,
 }: {
   range: PeriodRange;
-  accountFilter: string;
+  scope: AccountScope;
   money: (minor: number) => string;
 }) {
   const { t } = useTranslation();
@@ -210,7 +204,7 @@ function TransfersSection({
   const rows = useTransactionList({
     ...range,
     type: 'transfer',
-    accountId: accountFilter === 'all' ? undefined : accountFilter,
+    ...scope,
   });
   if (rows.length === 0) return null;
 
@@ -246,12 +240,12 @@ const signed = ({ transaction: tx }: Row) =>
 function SearchResults({
   search,
   range,
-  accountFilter,
+  scope,
   money,
 }: {
   search: string;
   range: PeriodRange;
-  accountFilter: string;
+  scope: AccountScope;
   money: (minor: number) => string;
 }) {
   const { t, i18n } = useTranslation();
@@ -261,7 +255,7 @@ function SearchResults({
   const deleteTransaction = useDeleteTransaction();
   const rows = useTransactionList({
     ...range,
-    accountId: accountFilter === 'all' ? undefined : accountFilter,
+    ...scope,
     search,
   });
   const sections = useMemo(() => groupByDay(rows, (r) => r.transaction.date, signed), [rows]);

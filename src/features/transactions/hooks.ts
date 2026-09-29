@@ -9,6 +9,7 @@ import { accounts, categories, transactions, type Transaction } from '@/db/schem
 import { useSnackbar } from '@/store/snackbar';
 import { useSettings } from '@/features/settings/hooks';
 import { dateLocale } from '@/i18n';
+import { scopeKey, type AccountScope } from '@/lib/account-scope';
 import { formatPeriod, periodRange, type PeriodRange } from '@/lib/period';
 import { useUIStore } from '@/store/ui';
 
@@ -34,28 +35,28 @@ export function useSelectedPeriod() {
   }, [period, weekStartsOn, monthStartDay, t, i18n.language]);
 }
 
-const accountParam = (accountFilter: string) =>
-  accountFilter === 'all' ? undefined : accountFilter;
-
 /** Totale per categoria nel periodo (dal più alto), per la ciambella. */
 export function useCategoryTotals(
   range: PeriodRange,
   type: 'expense' | 'income' = 'expense',
-  accountFilter = 'all',
+  scope: AccountScope = {},
 ) {
-  const { data } = useLiveQuery(
-    repos.transactions.sumByCategory({ ...range, type, accountId: accountParam(accountFilter) }),
-    [range.from?.getTime(), range.to?.getTime(), type, accountFilter],
-  );
+  const { data } = useLiveQuery(repos.transactions.sumByCategory({ ...range, ...scope, type }), [
+    range.from?.getTime(),
+    range.to?.getTime(),
+    type,
+    scopeKey(scope),
+  ]);
   return data ?? [];
 }
 
 /** Entrate, spese e saldo del periodo. */
-export function usePeriodTotals(range: PeriodRange, accountFilter = 'all') {
-  const { data } = useLiveQuery(
-    repos.transactions.totals({ ...range, accountId: accountParam(accountFilter) }),
-    [range.from?.getTime(), range.to?.getTime(), accountFilter],
-  );
+export function usePeriodTotals(range: PeriodRange, scope: AccountScope = {}) {
+  const { data } = useLiveQuery(repos.transactions.totals({ ...range, ...scope }), [
+    range.from?.getTime(),
+    range.to?.getTime(),
+    scopeKey(scope),
+  ]);
   const { income = 0, expense = 0 } = data?.[0] ?? {};
   return { income, expense, balance: income - expense };
 }
@@ -112,10 +113,11 @@ export function useTransactionList(filter: DetailedFilter) {
 }
 
 /** Totale e numero di movimenti per categoria nel periodo (spese ed entrate). */
-export function useCategoryStats(range: PeriodRange, accountFilter = 'all') {
-  const { data } = useLiveQuery(
-    repos.transactions.statsByCategory({ ...range, accountId: accountParam(accountFilter) }),
-    [range.from?.getTime(), range.to?.getTime(), accountFilter],
-  );
+export function useCategoryStats(range: PeriodRange, scope: AccountScope = {}) {
+  const { data } = useLiveQuery(repos.transactions.statsByCategory({ ...range, ...scope }), [
+    range.from?.getTime(),
+    range.to?.getTime(),
+    scopeKey(scope),
+  ]);
   return data ?? [];
 }

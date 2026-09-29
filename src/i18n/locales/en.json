@@ -73,7 +73,15 @@
     "monthStartHint": "Handy if you get paid at the end of the month: with 27 a “month” runs from the 27th to the 26th.",
     "decrease": "Decrease",
     "increase": "Increase",
-    "manage": "Manage"
+    "manage": "Manage",
+    "preferences": "Preferences",
+    "mainCurrency": "Main currency",
+    "theme": "Theme",
+    "themeSystem": "System",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "language": "Language",
+    "languageSystem": "Automatic"
   },
   "transactions": {
     "title": "Transactions",
@@ -188,5 +196,14 @@
     "invalidAmount": "Enter an amount greater than zero",
     "replaceHint": "If this category already has a budget this month, it gets updated.",
     "fromMonthHint": "Applies from this month on: earlier months don't change."
+  },
+  "currency": {
+    "title": "Main currency",
+    "hint": "Used for totals, budgets and new accounts. Amounts are not converted.",
+    "changeTitle": "Switch to {{code}}?",
+    "changeMessage_one": "You have 1 account in {{old}}. Use {{code}} for it too? Amounts stay the same, only the currency changes.",
+    "changeMessage_other": "You have {{count}} accounts in {{old}}. Use {{code}} for them too? Amounts stay the same, only the currency changes.",
+    "onlyMain": "Main only",
+    "alsoAccounts": "Accounts too"
   }
 }

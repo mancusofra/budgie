@@ -21,8 +21,8 @@ import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
 import { Text } from '@/components/ui/text';
 import type { Category } from '@/db/schema';
+import { useAccountScope } from '@/features/accounts/hooks';
 import { useCategories } from '@/features/categories/hooks';
-import { useCurrency } from '@/features/settings/hooks';
 import {
   useCategoryTotals,
   usePeriodTotals,
@@ -59,8 +59,7 @@ export default function HomeScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const currency = useCurrency();
-  const accountFilter = useUIStore((s) => s.accountFilter);
+  const { scope, currency } = useAccountScope();
   const shift = useUIStore((s) => s.shiftPeriod);
 
   const { period, range } = useSelectedPeriod();
@@ -71,8 +70,8 @@ export default function HomeScreen() {
   const allCategories = useCategories(chartType, { includeArchived: true });
   // Attorno alla ciambella solo le attive; gli spicchi includono anche le archiviate
   const ringCategories = useMemo(() => allCategories.filter((c) => !c.archived), [allCategories]);
-  const categoryTotals = useCategoryTotals(range, chartType, accountFilter);
-  const totals = usePeriodTotals(range, accountFilter);
+  const categoryTotals = useCategoryTotals(range, chartType, scope);
+  const totals = usePeriodTotals(range, scope);
 
   const [area, setArea] = useState({ width: width - Spacing.three * 2, height: 0 });
   const geometry = useMemo(
