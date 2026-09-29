@@ -70,11 +70,23 @@
     "test": "jest",
     "format": "prettier --write .",
     "prepare": "husky",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:coverage": "jest --coverage"
   },
   "private": true,
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "collectCoverageFrom": [
+      "src/{lib,db,features}/**/*.{ts,tsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "statements": 70,
+        "lines": 70,
+        "functions": 70,
+        "branches": 60
+      }
+    }
   },
   "lint-staged": {
     "*.{ts,tsx,js}": [

@@ -113,7 +113,7 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 - [x] Empty state e onboarding di 3 schermate (riappare dopo "Azzera dati")
 - [x] Performance: test con 10.000+ transazioni, indici SQL (notifiche delle live query raggruppate, lista per categoria a pagine, dati demo in Sviluppo)
 - [ ] Test E2E con Maestro per i flussi principali (aggiungi spesa, modifica, elimina, cambio periodo)
-- [ ] Copertura unit test ≥ 70% su `lib/`, `db/`, `features/`
+- [x] Copertura unit test ≥ 70% su `lib/`, `db/`, `features/` (74% righe; soglia in CI)
 - [ ] Sentry (`@sentry/react-native`) per crash reporting
 
 ## Fase 8 — Build e pubblicazione

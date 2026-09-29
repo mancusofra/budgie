@@ -17,4 +17,4 @@ jobs:
       - run: npm ci
       - run: npx tsc --noEmit
       - run: npx expo lint
-      - run: npx jest --ci --passWithNoTests
+      - run: npx jest --ci --coverage --coverageReporters=text-summary

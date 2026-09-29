@@ -22,7 +22,7 @@ const UNAVAILABLE = new Set([
   'invalid_context',
 ]);
 
-/** Face ID / impronta, con ripiego sul codice del dispositivo. */
+/** Riconoscimento biometrico, con ripiego sul codice del dispositivo. */
 export async function authenticate(
   promptMessage: string,
   cancelLabel: string,
