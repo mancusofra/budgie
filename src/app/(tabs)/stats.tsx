@@ -4,12 +4,15 @@ import { router } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, { useAnimatedRef, useScrollOffset } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BarChart } from '@/components/charts/bar-chart';
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { PeriodHeader } from '@/components/transactions/period-header';
 import { Button } from '@/components/ui/button';
+import { ReorderableStack } from '@/components/ui/reorderable-stack';
 import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -32,11 +35,12 @@ import { formatMoney } from '@/lib/money';
 import { percentChange } from '@/lib/series';
 import {
   normalizeStatsLayout,
+  toggleHidden,
   visibleSections,
+  withVisibleOrder,
   type StatsLayout,
   type StatsSection,
 } from '@/lib/stats-layout';
-import { StatsEditor } from '@/features/stats/stats-editor';
 import { useUIStore } from '@/store/ui';
 import { Radius, Spacing, TabularNums } from '@/theme';
 
@@ -54,6 +58,11 @@ export default function StatsScreen() {
   const layout = useMemo(() => normalizeStatsLayout(settings.statsLayout), [settings.statsLayout]);
   const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
   const [editing, setEditing] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const scrollRef = useAnimatedRef<Animated.ScrollView>();
+  const scrollY = useScrollOffset(scrollRef);
+  const insets = useSafeAreaInsets();
+  const { height: windowHeight } = useWindowDimensions();
   const startEditing = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setEditing(true);
@@ -179,8 +188,6 @@ export default function StatsScreen() {
               setOpenCategory(category.id);
               router.navigate('/transactions');
             }}
-            onLongPress={startEditing}
-            delayLongPress={350}
             style={({ pressed }) => [styles.rankRow, pressed && { opacity: 0.6 }]}>
             <CategoryIcon icon={category.icon} color={category.color} size={32} />
             <View style={styles.flex}>
@@ -213,7 +220,7 @@ export default function StatsScreen() {
         </Text>
         {progress.length === 0 && <Text color="textSecondary">{t('stats.noBudgets')}</Text>}
         {progress.map((b) => (
-          <BudgetRow key={b.id} budget={b} money={money} onLongPress={startEditing} />
+          <BudgetRow key={b.id} budget={b} money={money} />
         ))}
         <Button
           title={t('stats.addBudget')}
@@ -224,50 +231,128 @@ export default function StatsScreen() {
     ),
   };
 
+  const visible = visibleSections(layout);
+  const hidden = layout.order.filter((id) => layout.hidden.includes(id));
+
+  // Il "−" in modifica nasconde la sezione
+  const withHideButton = (id: StatsSection, node: ReactNode) => (
+    <View>
+      {node}
+      {editing && (
+        <Pressable
+          onPress={() => {
+            Haptics.selectionAsync();
+            saveLayout(toggleHidden(layout, id));
+          }}
+          hitSlop={10}
+          accessibilityRole="button"
+          accessibilityLabel={`${t('stats.hide')}: ${t(`stats.section.${id}`)}`}
+          style={[styles.hideButton, { backgroundColor: theme.backgroundSelected }]}>
+          <MaterialCommunityIcons name="minus" size={18} color={theme.text} />
+        </Pressable>
+      )}
+    </View>
+  );
+
   return (
     <Screen scrolls>
-      <ScrollView
-        contentContainerStyle={[styles.content, { paddingBottom: Spacing.four + tabBarSpace }]}
+      <Animated.ScrollView
+        ref={scrollRef}
+        // A tutta larghezza: il margine è nel contenuto, così i badge "−" possono uscire dal riquadro
+        style={styles.scroll}
+        scrollEnabled={!dragging}
+        contentContainerStyle={[
+          styles.content,
+          // In modifica anche lo spazio del pulsante "Fine" fluttuante
+          { paddingBottom: Spacing.four + tabBarSpace + (editing ? 72 : 0) },
+        ]}
         scrollIndicatorInsets={{ bottom: tabBarSpace }}
         showsVerticalScrollIndicator={false}>
         <PeriodHeader />
 
-        {editing ? (
-          <StatsEditor layout={layout} onChange={saveLayout} onDone={() => setEditing(false)} />
-        ) : (
-          <>
-            {visibleSections(layout).map((id) => (
-              <Pressable
-                key={id}
-                onLongPress={startEditing}
-                delayLongPress={350}
-                accessibilityHint={t('stats.longPressHint')}>
-                {sections[id]}
-              </Pressable>
-            ))}
-            <Pressable
-              onPress={startEditing}
-              accessibilityRole="button"
-              style={({ pressed }) => [styles.customize, pressed && { opacity: 0.6 }]}>
-              <MaterialCommunityIcons name="tune-variant" size={18} color={theme.textSecondary} />
-              <Text color="textSecondary">{t('stats.customize')}</Text>
-            </Pressable>
-          </>
+        <ReorderableStack
+          items={visible.map((id) => ({ key: id, node: withHideButton(id, sections[id]) }))}
+          gap={Spacing.three}
+          scrollRef={scrollRef}
+          scrollY={scrollY}
+          autoScrollEdges={{
+            top: insets.top + 120,
+            bottom: windowHeight - Math.max(tabBarSpace, 80) - 80,
+          }}
+          onDragStart={() => {
+            setDragging(true);
+            setEditing(true);
+          }}
+          onDragEnd={() => setDragging(false)}
+          onReorder={(keys) => saveLayout(withVisibleOrder(layout, keys as StatsSection[]))}
+        />
+
+        {editing && (
+          <Text variant="caption" color="textSecondary" style={styles.center}>
+            {t('stats.editHint')}
+          </Text>
         )}
-      </ScrollView>
+
+        {editing && hidden.length > 0 && (
+          <View style={styles.hiddenSection}>
+            <Text variant="overline" color="textSecondary">
+              {t('stats.hiddenSections')}
+            </Text>
+            <View style={styles.hiddenChips}>
+              {hidden.map((id) => (
+                <Pressable
+                  key={id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    saveLayout(toggleHidden(layout, id));
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('stats.show')}: ${t(`stats.section.${id}`)}`}>
+                  <Surface interactive style={styles.hiddenChip}>
+                    <MaterialCommunityIcons name="plus" size={16} color={theme.primary} />
+                    <Text variant="caption" style={styles.hiddenChipLabel}>
+                      {t(`stats.section.${id}`)}
+                    </Text>
+                  </Surface>
+                </Pressable>
+              ))}
+            </View>
+          </View>
+        )}
+
+        {!editing && (
+          <Pressable
+            onPress={startEditing}
+            accessibilityRole="button"
+            accessibilityHint={t('stats.longPressHint')}
+            style={({ pressed }) => [styles.customize, pressed && { opacity: 0.6 }]}>
+            <MaterialCommunityIcons name="tune-variant" size={18} color={theme.textSecondary} />
+            <Text color="textSecondary">{t('stats.customize')}</Text>
+          </Pressable>
+        )}
+      </Animated.ScrollView>
+
+      {/* "Fine" fluttuante: non sposta il contenuto mentre si trascina */}
+      {editing && (
+        <View
+          pointerEvents="box-none"
+          style={[
+            styles.doneFloating,
+            { bottom: Math.max(tabBarSpace, Spacing.three) + Spacing.three },
+          ]}>
+          <Button
+            title={t('stats.done')}
+            filled
+            onPress={() => setEditing(false)}
+            style={styles.doneButton}
+          />
+        </View>
+      )}
     </Screen>
   );
 }
 
-function BudgetRow({
-  budget,
-  money,
-  onLongPress,
-}: {
-  budget: BudgetProgress;
-  money: (m: number) => string;
-  onLongPress: () => void;
-}) {
+function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: number) => string }) {
   const { t } = useTranslation();
   const theme = useTheme();
   const categories = useCategories('expense', { includeArchived: true });
@@ -301,8 +386,6 @@ function BudgetRow({
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/budget/[id]', params: { id: budget.id } })}
-      onLongPress={onLongPress}
-      delayLongPress={350}
       style={({ pressed }) => [styles.budgetRow, pressed && { opacity: 0.6 }]}>
       <View style={styles.rankTop}>
         {category ? (
@@ -339,7 +422,8 @@ function BudgetRow({
 }
 
 const styles = StyleSheet.create({
-  content: { gap: Spacing.three },
+  scroll: { marginHorizontal: -Spacing.three },
+  content: { gap: Spacing.three, paddingHorizontal: Spacing.three },
   tiles: { flexDirection: 'row', gap: Spacing.three },
   tile: { flex: 1, borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.one },
   tileValue: { fontSize: 22, lineHeight: 28, fontWeight: '700', ...TabularNums },
@@ -354,6 +438,31 @@ const styles = StyleSheet.create({
   track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 6 },
   fill: { height: 6, borderRadius: 3 },
   budgetRow: { gap: 2 },
+  doneFloating: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
+  doneButton: { minWidth: 160 },
+  center: { textAlign: 'center' },
+  // Badge nell'angolo in alto a sinistra, a cavallo del bordo (come iOS)
+  hideButton: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  hiddenSection: { gap: Spacing.two },
+  hiddenChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
+  hiddenChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.one,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.two,
+    borderRadius: 999,
+  },
+  hiddenChipLabel: { fontWeight: '500' },
   customize: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -167,14 +167,15 @@
     "done": "Fine",
     "hide": "Nascondi",
     "show": "Mostra",
-    "editHint": "Trascina per riordinare le sezioni, tocca l'occhio per nasconderle.",
+    "editHint": "Tieni premuto e trascina per spostare. Tocca − per nascondere.",
     "longPressHint": "Tieni premuto per personalizzare",
     "section": {
       "summary": "Riepilogo",
       "chart": "Andamento spese",
       "categories": "Spese per categoria",
       "budgets": "Budget"
-    }
+    },
+    "hiddenSections": "Sezioni nascoste"
   },
   "budget": {
     "new": "Nuovo budget",

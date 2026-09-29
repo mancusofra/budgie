@@ -167,14 +167,15 @@
     "done": "Done",
     "hide": "Hide",
     "show": "Show",
-    "editHint": "Drag to reorder sections, tap the eye to hide them.",
+    "editHint": "Long press and drag to move. Tap − to hide.",
     "longPressHint": "Long press to customize",
     "section": {
       "summary": "Summary",
       "chart": "Spending over time",
       "categories": "Spending by category",
       "budgets": "Budgets"
-    }
+    },
+    "hiddenSections": "Hidden sections"
   },
   "budget": {
     "new": "New budget",

@@ -29,3 +29,12 @@ export function toggleHidden(layout: StatsLayout, section: StatsSection): StatsL
 export function visibleSections(layout: StatsLayout): StatsSection[] {
   return layout.order.filter((s) => !layout.hidden.includes(s));
 }
+
+/**
+ * Nuovo ordine dopo il trascinamento delle sezioni visibili: le nascoste
+ * restano in fondo, nell'ordine in cui erano.
+ */
+export function withVisibleOrder(layout: StatsLayout, visible: StatsSection[]): StatsLayout {
+  const rest = layout.order.filter((s) => !visible.includes(s));
+  return { ...layout, order: [...visible, ...rest] };
+}
