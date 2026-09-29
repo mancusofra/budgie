@@ -168,7 +168,9 @@ export default function StatsScreen() {
         {chartTotal === 0 ? (
           <View style={styles.chartEmpty}>
             <MaterialCommunityIcons name="chart-bar" size={32} color={theme.textSecondary} />
-            <Text color="textSecondary">{t('stats.chartEmpty')}</Text>
+            <Text color="textSecondary" style={styles.chartEmptyText}>
+              {t('stats.chartEmpty')}
+            </Text>
           </View>
         ) : (
           <BarChart
@@ -459,6 +461,7 @@ function BudgetRow({
 
 const styles = StyleSheet.create({
   chartEmpty: { alignItems: 'center', gap: Spacing.two, paddingVertical: Spacing.four },
+  chartEmptyText: { textAlign: 'center', alignSelf: 'stretch' },
   scroll: { marginHorizontal: -Spacing.three },
   content: { gap: Spacing.three, paddingHorizontal: Spacing.three },
   tiles: { flexDirection: 'row', gap: Spacing.three },

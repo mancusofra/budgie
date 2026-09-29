@@ -1,25 +1,30 @@
 import { Platform } from 'react-native';
 
+/**
+ * Contrasto WCAG AA (≥ 4,5:1) per testo normale: accenti su sfondo, superfici
+ * e sui loro fondi tenui (16%). Verificato da __tests__/lib/contrast.test.ts.
+ */
 export const Colors = {
   light: {
     text: '#1C1C1E',
-    textSecondary: '#6E6E73',
+    textSecondary: '#626266',
     textOnColor: '#FFFFFF',
     background: '#F7F7F8',
     surface: '#EEEEF0',
     backgroundElement: '#E9E9EC',
     backgroundSelected: '#DEDEE2',
     border: '#E2E2E6',
-    primary: '#4B63C9',
-    expense: '#C4554D',
-    income: '#3D8B63',
+    primary: '#3E58C5',
+    expense: '#A83F38',
+    income: '#306E4E',
     /** Stato "attenzione" (budget oltre l'80%): sempre con icona ed etichetta. */
-    warning: '#B7791F',
+    warning: '#865817',
   },
   dark: {
     text: '#F2F2F4',
     textSecondary: '#9A9AA1',
-    textOnColor: '#FFFFFF',
+    /** Scuro: gli accenti chiari del tema scuro con il bianco non sono leggibili. */
+    textOnColor: '#0E0E10',
     background: '#0E0E10',
     surface: '#1C1C1F',
     backgroundElement: '#232326',

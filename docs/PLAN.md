@@ -109,7 +109,7 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 7 — Rifinitura e qualità
 
-- [ ] Accessibilità: label per screen reader, contrasto, dimensioni font dinamiche
+- [x] Accessibilità: label per screen reader, intestazioni, contrasto AA verificato da test, font dinamici (provati a 2×)
 - [x] Empty state e onboarding di 3 schermate (riappare dopo "Azzera dati")
 - [x] Performance: test con 10.000+ transazioni, indici SQL (notifiche delle live query raggruppate, lista per categoria a pagine, dati demo in Sviluppo)
 - [ ] Test E2E con Maestro per i flussi principali (aggiungi spesa, modifica, elimina, cambio periodo)

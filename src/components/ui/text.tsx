@@ -8,9 +8,18 @@ export type TextProps = RNTextProps & {
   color?: ThemeColor;
 };
 
+/** Varianti annunciate come intestazioni dallo screen reader (navigazione per sezioni). */
+const HEADERS = new Set<TextProps['variant']>(['title', 'subtitle', 'overline']);
+
 export function Text({ style, variant = 'body', color = 'text', ...rest }: TextProps) {
   const theme = useTheme();
-  return <RNText style={[{ color: theme[color] }, styles[variant], style]} {...rest} />;
+  return (
+    <RNText
+      accessibilityRole={HEADERS.has(variant) ? 'header' : undefined}
+      style={[{ color: theme[color] }, styles[variant], style]}
+      {...rest}
+    />
+  );
 }
 
 const styles = StyleSheet.create({

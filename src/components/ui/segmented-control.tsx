@@ -32,6 +32,9 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             <Text
               variant="caption"
               numberOfLines={1}
+              // Con caratteri molto grandi rimpicciolisce invece di troncare
+              adjustsFontSizeToFit
+              minimumFontScale={0.6}
               color={selected ? 'text' : 'textSecondary'}
               style={selected ? styles.selected : styles.label}>
               {o.label}
