@@ -116,6 +116,8 @@
     "empty": "No transactions in this period",
     "emptyFiltered": "No results",
     "deleted": "Transaction deleted",
+    "showMore_one": "Show more (1)",
+    "showMore_other": "Show more ({{count}})",
     "transfer": "Transfer",
     "editTransferUnsupported": "Editing transfers will come with account management."
   },

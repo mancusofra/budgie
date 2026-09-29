@@ -116,6 +116,8 @@
     "empty": "Nessuna transazione in questo periodo",
     "emptyFiltered": "Nessun risultato",
     "deleted": "Transazione eliminata",
+    "showMore_one": "Mostra altre (1)",
+    "showMore_other": "Mostra altre ({{count}})",
     "transfer": "Trasferimento",
     "editTransferUnsupported": "La modifica dei trasferimenti arriverà con la gestione dei conti."
   },

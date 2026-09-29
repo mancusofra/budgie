@@ -1,6 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
@@ -70,26 +71,39 @@ export function CategoryGroup({
       </Pressable>
 
       {expanded && (
-        <CategoryTransactions category={category} range={range} scope={scope} money={money} />
+        <CategoryTransactions
+          category={category}
+          count={count}
+          range={range}
+          scope={scope}
+          money={money}
+        />
       )}
     </Animated.View>
   );
 }
 
+/** Righe mostrate all'apertura e a ogni "Mostra altre": la lista non è virtualizzata. */
+const PAGE = 50;
+
 function CategoryTransactions({
   category,
+  count,
   range,
   scope,
   money,
-}: Pick<Props, 'category' | 'range' | 'scope' | 'money'>) {
-  const { i18n } = useTranslation();
+}: Pick<Props, 'category' | 'count' | 'range' | 'scope' | 'money'>) {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const deleteTransaction = useDeleteTransaction();
+  const [limit, setLimit] = useState(PAGE);
   const rows = useTransactionList({
     ...range,
     categoryId: category.id,
     ...scope,
+    limit,
   });
+  const remaining = count - rows.length;
 
   return (
     <Animated.View entering={FadeIn.duration(AnimationMs)} exiting={FadeOut.duration(AnimationMs)}>
@@ -117,6 +131,16 @@ function CategoryTransactions({
           </Pressable>
         </SwipeToDelete>
       ))}
+      {remaining > 0 && rows.length >= limit && (
+        <Pressable
+          onPress={() => setLimit((l) => l + PAGE * 2)}
+          accessibilityRole="button"
+          style={({ pressed }) => [styles.more, pressed && { opacity: 0.6 }]}>
+          <Text style={[styles.moreText, { color: theme.primary }]}>
+            {t('transactions.showMore', { count: remaining })}
+          </Text>
+        </Pressable>
+      )}
     </Animated.View>
   );
 }
@@ -145,4 +169,9 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
   itemTexts: { flex: 1 },
   itemAmount: { ...TabularNums },
+  more: {
+    paddingVertical: Spacing.three,
+    paddingLeft: Spacing.three + 20 + Spacing.two + 2 + 14,
+  },
+  moreText: { fontWeight: '600' },
 });

@@ -84,6 +84,7 @@ export default function TransactionsScreen() {
       ...range,
       type: 'transfer',
       ...scope,
+      limit: 1,
     }).length > 0;
 
   const section = (

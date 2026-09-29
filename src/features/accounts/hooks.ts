@@ -1,8 +1,7 @@
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useMemo } from 'react';
 
 import { repos } from '@/db/client';
-import { useLiveQueryOn } from '@/db/live-query';
+import { useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import { accounts, transactions } from '@/db/schema';
 import type { Account } from '@/db/schema';
 import { useCurrency } from '@/features/settings/hooks';

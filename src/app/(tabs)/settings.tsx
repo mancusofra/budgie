@@ -11,6 +11,8 @@ import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Backup } from '@/db/backup';
+import { db } from '@/db/client';
+import { generateDemoTransactions } from '@/db/demo';
 import { authenticate } from '@/features/settings/app-lock';
 import { useDataTransfer } from '@/features/settings/data-transfer';
 import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
@@ -80,6 +82,12 @@ export default function SettingsScreen() {
     it: 'Italiano',
     en: 'English',
   }[settings.language ?? 'system'];
+
+  const generateDemo = async () => {
+    const start = Date.now();
+    const count = await generateDemoTransactions(db);
+    Alert.alert(`${count} transazioni demo in ${Date.now() - start} ms`);
+  };
 
   const confirmReset = () =>
     Alert.alert(t('settings.resetConfirmTitle'), t('settings.resetConfirmMessage'), [
@@ -260,6 +268,17 @@ export default function SettingsScreen() {
                 <MaterialCommunityIcons name="delete-outline" size={20} color={theme.expense} />
               }
               onPress={confirmReset}
+            />
+            <Button
+              title="Genera 10.000 transazioni demo"
+              icon={
+                <MaterialCommunityIcons
+                  name="database-plus-outline"
+                  size={20}
+                  color={theme.primary}
+                />
+              }
+              onPress={() => run(generateDemo, 'Errore nella generazione')}
             />
           </View>
         )}

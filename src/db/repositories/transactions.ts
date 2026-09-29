@@ -25,6 +25,8 @@ export type TransactionFilter = Partial<DateRange> &
 export type DetailedFilter = TransactionFilter & {
   /** Testo cercato nella nota e nel nome della categoria (senza distinzione maiuscole). */
   search?: string;
+  /** Numero massimo di righe (le più recenti). */
+  limit?: number;
 };
 
 export type NewTransaction = {
@@ -186,7 +188,8 @@ export function createTransactionsRepo(db: AppDatabase) {
               : undefined,
           ),
         )
-        .orderBy(desc(t.date), desc(t.createdAt));
+        .orderBy(desc(t.date), desc(t.createdAt))
+        .limit(filter.limit ?? -1);
     },
 
     /** Transazioni filtrate, dalla più recente. */

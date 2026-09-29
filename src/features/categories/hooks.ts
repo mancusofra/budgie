@@ -1,4 +1,4 @@
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
+import { useLiveQuery } from '@/db/live-query';
 
 import { repos } from '@/db/client';
 import type { Category, CategoryType } from '@/db/schema';

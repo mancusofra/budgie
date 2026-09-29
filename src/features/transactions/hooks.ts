@@ -1,9 +1,8 @@
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { repos } from '@/db/client';
-import { useLiveQueryOn } from '@/db/live-query';
+import { useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import type { DetailedFilter, NewTransaction, TransactionPatch } from '@/db/repositories';
 import { accounts, categories, transactions, type Transaction } from '@/db/schema';
 import { useSnackbar } from '@/store/snackbar';
@@ -104,9 +103,11 @@ export function useTransactionList(filter: DetailedFilter) {
       filter.from?.getTime(),
       filter.to?.getTime(),
       filter.accountId,
+      filter.accountIds?.join(),
       filter.categoryId,
       filter.type,
       filter.search,
+      filter.limit,
     ],
   );
   return data ?? [];

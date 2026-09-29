@@ -1,8 +1,7 @@
-import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useMemo } from 'react';
 
 import { repos } from '@/db/client';
-import { useLiveQueryOn } from '@/db/live-query';
+import { useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import { budgetMonths, budgets } from '@/db/schema';
 import { useSettings } from '@/features/settings/hooks';
 import { scopeKey, type AccountScope } from '@/lib/account-scope';

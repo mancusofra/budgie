@@ -111,7 +111,7 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 - [ ] Accessibilità: label per screen reader, contrasto, dimensioni font dinamiche
 - [ ] Empty state e onboarding di 2–3 schermate
-- [ ] Performance: test con 10.000+ transazioni, indici SQL
+- [x] Performance: test con 10.000+ transazioni, indici SQL (notifiche delle live query raggruppate, lista per categoria a pagine, dati demo in Sviluppo)
 - [ ] Test E2E con Maestro per i flussi principali (aggiungi spesa, modifica, elimina, cambio periodo)
 - [ ] Copertura unit test ≥ 70% su `lib/`, `db/`, `features/`
 - [ ] Sentry (`@sentry/react-native`) per crash reporting
