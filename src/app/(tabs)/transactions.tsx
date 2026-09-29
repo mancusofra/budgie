@@ -7,7 +7,7 @@ import { Pressable, ScrollView, SectionList, StyleSheet, TextInput, View } from 
 
 import { PeriodHeader } from '@/components/transactions/period-header';
 import { TransactionRow } from '@/components/transactions/transaction-row';
-import { Screen } from '@/components/ui/screen';
+import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Category } from '@/db/schema';
@@ -42,6 +42,7 @@ export default function TransactionsScreen() {
   // Anche le archiviate: i loro movimenti restano nel periodo
   const categories = useCategories(undefined, { includeArchived: true });
 
+  const tabBarSpace = useTabBarSpace();
   const [searchOpen, setSearchOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
@@ -118,7 +119,7 @@ export default function TransactionsScreen() {
     );
 
   return (
-    <Screen>
+    <Screen scrolls>
       <View style={styles.header}>
         <PeriodHeader />
         <View style={styles.balanceRow}>
@@ -168,7 +169,10 @@ export default function TransactionsScreen() {
           money={money}
         />
       ) : (
-        <ScrollView style={styles.list} contentContainerStyle={styles.listContent}>
+        <ScrollView
+          style={styles.list}
+          contentContainerStyle={{ paddingBottom: Spacing.four + tabBarSpace }}
+          scrollIndicatorInsets={{ bottom: tabBarSpace }}>
           {section(t('home.expenses'), totals.expense, groups.expense)}
           {section(t('home.income'), totals.income, groups.income)}
           <TransfersSection range={range} accountFilter={accountFilter} money={money} />
@@ -253,6 +257,7 @@ function SearchResults({
   const { t, i18n } = useTranslation();
   const theme = useTheme();
   const accounts = useAccounts();
+  const tabBarSpace = useTabBarSpace();
   const deleteTransaction = useDeleteTransaction();
   const rows = useTransactionList({
     ...range,
@@ -275,6 +280,8 @@ function SearchResults({
       style={styles.list}
       sections={sections}
       keyExtractor={(r) => r.transaction.id}
+      contentContainerStyle={{ paddingBottom: Spacing.four + tabBarSpace }}
+      scrollIndicatorInsets={{ bottom: tabBarSpace }}
       stickySectionHeadersEnabled
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode="on-drag"
@@ -351,7 +358,6 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, paddingVertical: Spacing.two + 2, fontSize: 16 },
   list: { flex: 1, marginHorizontal: -Spacing.three },
-  listContent: { paddingBottom: Spacing.four },
   section: { marginTop: Spacing.two },
   sectionHeader: {
     flexDirection: 'row',

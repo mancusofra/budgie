@@ -6,7 +6,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { NavRow, RowSeparator } from '@/components/ui/nav-row';
-import { Screen } from '@/components/ui/screen';
+import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -20,6 +20,7 @@ export default function SettingsScreen() {
   const settings = useSettings();
   const setSetting = useSetSetting();
   const resetDatabase = useResetDatabase();
+  const tabBarSpace = useTabBarSpace();
   const weekStart = settings.weekStart ?? 1;
   const monthStartDay = settings.monthStartDay ?? 1;
 
@@ -58,8 +59,10 @@ export default function SettingsScreen() {
   );
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.content}>
+    <Screen scrolls>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: Spacing.four + tabBarSpace }]}
+        scrollIndicatorInsets={{ bottom: tabBarSpace }}>
         <Text variant="title">{t('settings.title')}</Text>
 
         <View style={styles.section}>
@@ -139,7 +142,7 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { gap: Spacing.four, paddingBottom: Spacing.four },
+  content: { gap: Spacing.four },
   section: { gap: Spacing.two },
   card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.three },
   listCard: { borderRadius: Radius + 4, paddingHorizontal: Spacing.three },

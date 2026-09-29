@@ -9,7 +9,7 @@ import { BarChart } from '@/components/charts/bar-chart';
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { PeriodHeader } from '@/components/transactions/period-header';
 import { Button } from '@/components/ui/button';
-import { Screen } from '@/components/ui/screen';
+import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { useCategories } from '@/features/categories/hooks';
@@ -38,6 +38,7 @@ export default function StatsScreen() {
   const currency = useCurrency();
   const locale = dateLocale(i18n.language);
   const money = (minor: number) => formatMoney(minor, currency, deviceLocale);
+  const tabBarSpace = useTabBarSpace();
 
   const { period, range } = useSelectedPeriod();
   const accountFilter = useUIStore((s) => s.accountFilter);
@@ -92,8 +93,11 @@ export default function StatsScreen() {
   );
 
   return (
-    <Screen>
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+    <Screen scrolls>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingBottom: Spacing.four + tabBarSpace }]}
+        scrollIndicatorInsets={{ bottom: tabBarSpace }}
+        showsVerticalScrollIndicator={false}>
         <PeriodHeader />
 
         <View style={styles.tiles}>
@@ -274,7 +278,7 @@ function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: numbe
 }
 
 const styles = StyleSheet.create({
-  content: { gap: Spacing.three, paddingBottom: Spacing.four },
+  content: { gap: Spacing.three },
   tiles: { flexDirection: 'row', gap: Spacing.three },
   tile: { flex: 1, borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.one },
   tileValue: { fontSize: 22, lineHeight: 28, fontWeight: '700', ...TabularNums },

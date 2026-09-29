@@ -5,26 +5,38 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useTheme } from '@/hooks/use-theme';
 import { FloatingTabBarHeight, Spacing } from '@/theme';
 
+/**
+ * Spazio occupato in basso dalla tab bar che fluttua sopra il contenuto
+ * (iOS 26, Liquid Glass). 0 dove la barra non si sovrappone (Android).
+ */
+export function useTabBarSpace(): number {
+  const insets = useSafeAreaInsets();
+  return FloatingTabBarHeight > 0 ? insets.bottom + FloatingTabBarHeight : 0;
+}
+
 type Props = {
   children: ReactNode;
   /**
-   * La schermata è dentro le tab. Su iOS la tab bar nativa fluttua sopra il
-   * contenuto: lascia spazio in basso perché non copra nulla.
+   * La schermata scorre: il contenuto arriva fino al bordo e passa sotto la
+   * tab bar di vetro. La lista deve aggiungere `useTabBarSpace()` in fondo.
+   * Altrimenti (schermata fissa) si lascia spazio perché la barra non copra nulla.
    */
-  inTabs?: boolean;
+  scrolls?: boolean;
 };
 
-export function Screen({ children, inTabs = true }: Props) {
+export function Screen({ children, scrolls = false }: Props) {
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
-  const tabBarSpace = inTabs && FloatingTabBarHeight > 0 ? insets.bottom + FloatingTabBarHeight : 0;
+  const tabBarSpace = useTabBarSpace();
 
   return (
     <SafeAreaView
       edges={['top', 'left', 'right']}
       style={[
         styles.container,
-        { backgroundColor: theme.background, paddingBottom: Spacing.three + tabBarSpace },
+        {
+          backgroundColor: theme.background,
+          paddingBottom: scrolls ? 0 : Spacing.three + tabBarSpace,
+        },
       ]}>
       {children}
     </SafeAreaView>
