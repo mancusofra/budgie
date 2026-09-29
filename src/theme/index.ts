@@ -64,6 +64,12 @@ export const TabularNums = Platform.select({
  */
 export const FloatingTabBarHeight = Platform.select({ ios: 50, default: 0 });
 
+/**
+ * Su Android la tab bar nativa, anche nascosta, continua a intercettare i tocchi
+ * nella sua zona in basso: ciò che la sostituisce va posizionato sopra.
+ */
+export const HiddenTabBarTouchArea = Platform.select({ android: 80, default: 0 });
+
 export const Fonts = Platform.select({
   ios: { sans: 'system-ui', rounded: 'ui-rounded', mono: 'ui-monospace' },
   default: { sans: 'normal', rounded: 'normal', mono: 'monospace' },

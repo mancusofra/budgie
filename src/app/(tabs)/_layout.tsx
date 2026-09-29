@@ -2,13 +2,17 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useTranslation } from 'react-i18next';
 
 import { useTheme } from '@/hooks/use-theme';
+import { useUIStore } from '@/store/ui';
 
 export default function TabLayout() {
   const theme = useTheme();
   const { t } = useTranslation();
+  // Durante la modifica del layout la barra lascia il posto al pulsante "Fine"
+  const editingLayout = useUIStore((s) => s.editingLayout);
 
   return (
     <NativeTabs
+      hidden={editingLayout}
       backgroundColor={theme.background}
       indicatorColor={theme.backgroundSelected}
       labelStyle={{ selected: { color: theme.text } }}>

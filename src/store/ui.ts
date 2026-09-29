@@ -11,18 +11,22 @@ type UIState = {
    * spicchio). `at` distingue richieste ripetute per la stessa categoria.
    */
   openCategory?: { id: string; at: number };
+  /** Modifica del layout in corso (Statistiche): la tab bar è nascosta. */
+  editingLayout: boolean;
   setPeriodKind: (kind: Exclude<PeriodKind, 'custom'>) => void;
   setCustomPeriod: (from: Date, to: Date) => void;
   shiftPeriod: (direction: -1 | 1) => void;
   resetPeriod: () => void;
   setAccountFilter: (id: string) => void;
   setOpenCategory: (id: string) => void;
+  setEditingLayout: (editing: boolean) => void;
 };
 
 export const useUIStore = create<UIState>()((set) => ({
   period: { kind: 'month', anchor: new Date() },
   accountFilter: 'all',
   openCategory: undefined,
+  editingLayout: false,
   setPeriodKind: (kind) => set((s) => ({ period: { kind, anchor: s.period.anchor } })),
   setCustomPeriod: (from, to) => set({ period: customPeriod(from, to) }),
   shiftPeriod: (direction) => set((s) => ({ period: shiftPeriod(s.period, direction) })),
@@ -32,4 +36,5 @@ export const useUIStore = create<UIState>()((set) => ({
     })),
   setAccountFilter: (accountFilter) => set({ accountFilter }),
   setOpenCategory: (id) => set({ openCategory: { id, at: Date.now() } }),
+  setEditingLayout: (editingLayout) => set({ editingLayout }),
 }));

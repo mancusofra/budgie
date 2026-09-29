@@ -163,19 +163,16 @@
     "statusWarning": "{{percent}}% used",
     "statusOver": "Over by {{amount}}",
     "barLabel": "{{label}}: {{value}}",
-    "customize": "Customize",
     "done": "Done",
     "hide": "Hide",
     "show": "Show",
-    "editHint": "Long press and drag to move. Tap − to hide.",
-    "longPressHint": "Long press to customize",
+    "editHint": "Long press and drag to move. Tap the eye to show or hide.",
     "section": {
       "summary": "Summary",
       "chart": "Spending over time",
       "categories": "Spending by category",
       "budgets": "Budgets"
-    },
-    "hiddenSections": "Hidden sections"
+    }
   },
   "budget": {
     "new": "New budget",

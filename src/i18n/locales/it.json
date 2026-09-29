@@ -163,19 +163,16 @@
     "statusWarning": "Usato il {{percent}}%",
     "statusOver": "Superato di {{amount}}",
     "barLabel": "{{label}}: {{value}}",
-    "customize": "Personalizza",
     "done": "Fine",
     "hide": "Nascondi",
     "show": "Mostra",
-    "editHint": "Tieni premuto e trascina per spostare. Tocca − per nascondere.",
-    "longPressHint": "Tieni premuto per personalizzare",
+    "editHint": "Tieni premuto e trascina per spostare. Tocca l'occhio per mostrare o nascondere.",
     "section": {
       "summary": "Riepilogo",
       "chart": "Andamento spese",
       "categories": "Spese per categoria",
       "budgets": "Budget"
-    },
-    "hiddenSections": "Sezioni nascoste"
+    }
   },
   "budget": {
     "new": "Nuovo budget",

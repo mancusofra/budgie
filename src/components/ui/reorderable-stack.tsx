@@ -67,8 +67,12 @@ export function ReorderableStack({
   const heights = useSharedValue<Heights>({});
   const [ready, setReady] = useState(false);
 
+  // Elementi aggiunti o tolti: mantiene l'ordine corrente (anche durante un
+  // trascinamento) e accoda i nuovi in fondo
   useEffect(() => {
-    order.set(signature ? signature.split('|') : []);
+    const next = signature ? signature.split('|') : [];
+    const current = order.get().filter((k) => next.includes(k));
+    order.set([...current, ...next.filter((k) => !current.includes(k))]);
   }, [signature, order]);
 
   const containerStyle = useAnimatedStyle(() => {

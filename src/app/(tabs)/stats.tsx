@@ -37,12 +37,11 @@ import {
   normalizeStatsLayout,
   toggleHidden,
   visibleSections,
-  withVisibleOrder,
   type StatsLayout,
   type StatsSection,
 } from '@/lib/stats-layout';
 import { useUIStore } from '@/store/ui';
-import { Radius, Spacing, TabularNums } from '@/theme';
+import { HiddenTabBarTouchArea, Radius, Spacing, TabularNums } from '@/theme';
 
 export default function StatsScreen() {
   const { t, i18n } = useTranslation();
@@ -57,16 +56,13 @@ export default function StatsScreen() {
   const setSetting = useSetSetting();
   const layout = useMemo(() => normalizeStatsLayout(settings.statsLayout), [settings.statsLayout]);
   const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
-  const [editing, setEditing] = useState(false);
+  const editing = useUIStore((s) => s.editingLayout);
+  const setEditing = useUIStore((s) => s.setEditingLayout);
   const [dragging, setDragging] = useState(false);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
   const scrollY = useScrollOffset(scrollRef);
   const insets = useSafeAreaInsets();
   const { height: windowHeight } = useWindowDimensions();
-  const startEditing = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setEditing(true);
-  };
 
   const { period, range } = useSelectedPeriod();
   const accountFilter = useUIStore((s) => s.accountFilter);
@@ -231,60 +227,76 @@ export default function StatsScreen() {
     ),
   };
 
+  // In modifica si vedono tutte le sezioni: prima le visibili, poi le nascoste
+  // (in fondo, così entrando in modifica le visibili non si spostano)
   const visible = visibleSections(layout);
-  const hidden = layout.order.filter((id) => layout.hidden.includes(id));
+  const hiddenSections = layout.order.filter((id) => layout.hidden.includes(id));
+  const stack = editing ? [...visible, ...hiddenSections] : visible;
 
-  // Il "−" in modifica nasconde la sezione
-  const withHideButton = (id: StatsSection, node: ReactNode) => (
-    <View>
-      {node}
-      {editing && (
-        <Pressable
-          onPress={() => {
-            Haptics.selectionAsync();
-            saveLayout(toggleHidden(layout, id));
-          }}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel={`${t('stats.hide')}: ${t(`stats.section.${id}`)}`}
-          style={[styles.hideButton, { backgroundColor: theme.backgroundSelected }]}>
-          <MaterialCommunityIcons name="minus" size={18} color={theme.text} />
-        </Pressable>
-      )}
-    </View>
-  );
+  const withVisibilityToggle = (id: StatsSection, node: ReactNode) => {
+    const isHidden = layout.hidden.includes(id);
+    return (
+      <View>
+        <View style={editing && isHidden ? styles.hiddenCard : undefined}>{node}</View>
+        {editing && (
+          <Pressable
+            onPress={() => {
+              Haptics.selectionAsync();
+              saveLayout(toggleHidden(layout, id));
+            }}
+            hitSlop={10}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: !isHidden }}
+            accessibilityLabel={`${t(isHidden ? 'stats.show' : 'stats.hide')}: ${t(`stats.section.${id}`)}`}
+            style={styles.eyeButton}>
+            <Surface interactive style={styles.eye}>
+              <MaterialCommunityIcons
+                name={isHidden ? 'eye-off-outline' : 'eye-outline'}
+                size={20}
+                color={isHidden ? theme.textSecondary : theme.primary}
+              />
+            </Surface>
+          </Pressable>
+        )}
+      </View>
+    );
+  };
 
   return (
     <Screen scrolls>
       <Animated.ScrollView
         ref={scrollRef}
-        // A tutta larghezza: il margine è nel contenuto, così i badge "−" possono uscire dal riquadro
         style={styles.scroll}
         scrollEnabled={!dragging}
         contentContainerStyle={[
           styles.content,
-          // In modifica anche lo spazio del pulsante "Fine" fluttuante
-          { paddingBottom: Spacing.four + tabBarSpace + (editing ? 72 : 0) },
+          // In modifica la tab bar lascia il posto al pulsante "Fine"
+          {
+            paddingBottom:
+              Spacing.four + (editing ? insets.bottom + HiddenTabBarTouchArea + 72 : tabBarSpace),
+          },
         ]}
         scrollIndicatorInsets={{ bottom: tabBarSpace }}
         showsVerticalScrollIndicator={false}>
         <PeriodHeader />
 
         <ReorderableStack
-          items={visible.map((id) => ({ key: id, node: withHideButton(id, sections[id]) }))}
+          items={stack.map((id) => ({ key: id, node: withVisibilityToggle(id, sections[id]) }))}
           gap={Spacing.three}
           scrollRef={scrollRef}
           scrollY={scrollY}
           autoScrollEdges={{
             top: insets.top + 120,
-            bottom: windowHeight - Math.max(tabBarSpace, 80) - 80,
+            bottom: windowHeight - Math.max(tabBarSpace, insets.bottom + 72) - 60,
           }}
           onDragStart={() => {
             setDragging(true);
             setEditing(true);
           }}
           onDragEnd={() => setDragging(false)}
-          onReorder={(keys) => saveLayout(withVisibleOrder(layout, keys as StatsSection[]))}
+          onReorder={(keys) =>
+            saveLayout(normalizeStatsLayout({ ...layout, order: keys as StatsSection[] }))
+          }
         />
 
         {editing && (
@@ -292,58 +304,20 @@ export default function StatsScreen() {
             {t('stats.editHint')}
           </Text>
         )}
-
-        {editing && hidden.length > 0 && (
-          <View style={styles.hiddenSection}>
-            <Text variant="overline" color="textSecondary">
-              {t('stats.hiddenSections')}
-            </Text>
-            <View style={styles.hiddenChips}>
-              {hidden.map((id) => (
-                <Pressable
-                  key={id}
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    saveLayout(toggleHidden(layout, id));
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${t('stats.show')}: ${t(`stats.section.${id}`)}`}>
-                  <Surface interactive style={styles.hiddenChip}>
-                    <MaterialCommunityIcons name="plus" size={16} color={theme.primary} />
-                    <Text variant="caption" style={styles.hiddenChipLabel}>
-                      {t(`stats.section.${id}`)}
-                    </Text>
-                  </Surface>
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        )}
-
-        {!editing && (
-          <Pressable
-            onPress={startEditing}
-            accessibilityRole="button"
-            accessibilityHint={t('stats.longPressHint')}
-            style={({ pressed }) => [styles.customize, pressed && { opacity: 0.6 }]}>
-            <MaterialCommunityIcons name="tune-variant" size={18} color={theme.textSecondary} />
-            <Text color="textSecondary">{t('stats.customize')}</Text>
-          </Pressable>
-        )}
       </Animated.ScrollView>
 
-      {/* "Fine" fluttuante: non sposta il contenuto mentre si trascina */}
+      {/* "Fine" al posto della tab bar: finché non si preme non si cambia schermata */}
       {editing && (
         <View
           pointerEvents="box-none"
-          style={[
-            styles.doneFloating,
-            { bottom: Math.max(tabBarSpace, Spacing.three) + Spacing.three },
-          ]}>
+          style={[styles.doneBar, { bottom: insets.bottom + HiddenTabBarTouchArea + Spacing.two }]}>
           <Button
             title={t('stats.done')}
             filled
-            onPress={() => setEditing(false)}
+            onPress={() => {
+              Haptics.selectionAsync();
+              setEditing(false);
+            }}
             style={styles.doneButton}
           />
         </View>
@@ -438,37 +412,11 @@ const styles = StyleSheet.create({
   track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 6 },
   fill: { height: 6, borderRadius: 3 },
   budgetRow: { gap: 2 },
-  doneFloating: { position: 'absolute', left: 0, right: 0, alignItems: 'center' },
-  doneButton: { minWidth: 160 },
+  doneBar: { position: 'absolute', left: Spacing.three, right: Spacing.three },
+  doneButton: { alignSelf: 'stretch' },
   center: { textAlign: 'center' },
-  // Badge nell'angolo in alto a sinistra, a cavallo del bordo (come iOS)
-  hideButton: {
-    position: 'absolute',
-    top: -8,
-    left: -8,
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  hiddenSection: { gap: Spacing.two },
-  hiddenChips: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  hiddenChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two,
-    borderRadius: 999,
-  },
-  hiddenChipLabel: { fontWeight: '500' },
-  customize: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: Spacing.two,
-    paddingVertical: Spacing.two,
-  },
+  hiddenCard: { opacity: 0.4 },
+  eyeButton: { position: 'absolute', top: Spacing.two, right: Spacing.two },
+  eye: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
 });

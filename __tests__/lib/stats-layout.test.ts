@@ -3,7 +3,6 @@ import {
   STATS_SECTIONS,
   toggleHidden,
   visibleSections,
-  withVisibleOrder,
 } from '@/lib/stats-layout';
 
 describe('layout Statistiche', () => {
@@ -27,13 +26,5 @@ describe('layout Statistiche', () => {
     const hidden = toggleHidden(base, 'chart');
     expect(visibleSections(hidden)).toEqual(['summary', 'categories', 'budgets']);
     expect(visibleSections(toggleHidden(hidden, 'chart'))).toEqual([...STATS_SECTIONS]);
-  });
-
-  it('salva il nuovo ordine delle visibili lasciando in fondo le nascoste', () => {
-    const layout = toggleHidden(normalizeStatsLayout(), 'chart');
-    expect(withVisibleOrder(layout, ['budgets', 'summary', 'categories'])).toEqual({
-      order: ['budgets', 'summary', 'categories', 'chart'],
-      hidden: ['chart'],
-    });
   });
 });
