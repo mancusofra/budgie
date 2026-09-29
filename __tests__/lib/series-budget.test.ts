@@ -1,4 +1,4 @@
-import { budgetStatus } from '@/lib/budget';
+import { budgetMonthKey, budgetStatus } from '@/lib/budget';
 import { customPeriod, periodRange, type Period } from '@/lib/period';
 import { chartWindow, fillSeries, percentChange } from '@/lib/series';
 
@@ -68,5 +68,14 @@ describe('percentChange / budgetStatus', () => {
     expect(budgetStatus(8000, 10000).level).toBe('warning');
     expect(budgetStatus(10000, 10000)).toEqual({ ratio: 1, level: 'over', remaining: 0 });
     expect(budgetStatus(12000, 10000).remaining).toBe(-2000);
+  });
+});
+
+describe('budgetMonthKey', () => {
+  it('usa l’inizio del mese contabile', () => {
+    expect(budgetMonthKey(new Date(2026, 8, 28))).toBe('2026-09');
+    // mese dal 27: il 10 settembre appartiene al mese iniziato il 27 agosto
+    expect(budgetMonthKey(new Date(2026, 8, 10), 27)).toBe('2026-08');
+    expect(budgetMonthKey(new Date(2026, 8, 28), 27)).toBe('2026-09');
   });
 });

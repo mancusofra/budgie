@@ -12,32 +12,74 @@ async function setup() {
   return { ...ctx, cash, food, home, salary };
 }
 
-describe('budgetsRepo', () => {
-  it('un budget per categoria (e uno globale): set aggiorna invece di duplicare', async () => {
-    const { repos, food, close } = await setup();
-    const global = await repos.budgets.set({ categoryId: null, amount: 100000 });
-    await repos.budgets.set({ categoryId: food.id, amount: 30000 });
-    await repos.budgets.set({ categoryId: food.id, amount: 35000 });
-
-    const list = await repos.budgets.list();
-    expect(list.map((b) => [b.categoryId, b.amount])).toEqual([
-      [null, 100000],
-      [food.id, 35000],
-    ]);
-    await expect(repos.budgets.set({ categoryId: null, amount: 0 })).rejects.toThrow(
-      InvalidBudgetError,
+describe('budgetsRepo – budget mensili con ereditarietà', () => {
+  const summary = async (
+    repos: Awaited<ReturnType<typeof setup>>['repos'],
+    month: string,
+    names: Record<string, string>,
+  ) =>
+    (await repos.budgets.effective(month)).map(
+      (b) => `${names[b.categoryId ?? 'global']}:${b.amount}`,
     );
 
-    await repos.budgets.remove(global.id);
-    expect(await repos.budgets.list()).toHaveLength(1);
+  it('segue l’esempio: eredita dal mese precedente, le modifiche valgono da quel mese in poi', async () => {
+    const { repos, food, home, close } = await setup();
+    const names = { global: 'generale', [food.id]: 'cibo', [home.id]: 'medicine' };
+
+    // mese 1: generale 200, cibo 100, medicine 50
+    await repos.budgets.set({ month: '2026-01', categoryId: null, amount: 20000 });
+    await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 10000 });
+    await repos.budgets.set({ month: '2026-01', categoryId: home.id, amount: 5000 });
+    // mese 2: tolgo medicine
+    await repos.budgets.remove({ month: '2026-02', categoryId: home.id });
+    // mese 4: cancello tutto
+    await repos.budgets.remove({ month: '2026-04', categoryId: null });
+    await repos.budgets.remove({ month: '2026-04', categoryId: food.id });
+
+    expect(await summary(repos, '2025-12', names)).toEqual([]);
+    expect(await summary(repos, '2026-01', names)).toEqual([
+      'generale:20000',
+      'cibo:10000',
+      'medicine:5000',
+    ]);
+    expect(await summary(repos, '2026-02', names)).toEqual(['generale:20000', 'cibo:10000']);
+    // mese 3: nessuna modifica → eredita il mese 2
+    expect(await summary(repos, '2026-03', names)).toEqual(['generale:20000', 'cibo:10000']);
+    expect(await repos.budgets.sourceMonth('2026-03')).toBe('2026-02');
+    expect(await summary(repos, '2026-04', names)).toEqual([]);
+    // mese 5: eredita il "cancello tutto" del mese 4
+    expect(await summary(repos, '2026-05', names)).toEqual([]);
+    close();
+  });
+
+  it('modificare un mese non cambia i mesi precedenti', async () => {
+    const { repos, food, close } = await setup();
+    await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 10000 });
+    await repos.budgets.set({ month: '2026-03', categoryId: food.id, amount: 15000 });
+    const amount = async (month: string) => (await repos.budgets.effective(month))[0]?.amount;
+    expect(await amount('2026-01')).toBe(10000);
+    expect(await amount('2026-02')).toBe(10000);
+    expect(await amount('2026-03')).toBe(15000);
+    expect(await amount('2026-09')).toBe(15000);
+    close();
+  });
+
+  it('un solo budget per categoria nel mese; importo non valido rifiutato', async () => {
+    const { repos, food, close } = await setup();
+    await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 100 });
+    await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 200 });
+    expect((await repos.budgets.effective('2026-01')).map((b) => b.amount)).toEqual([200]);
+    await expect(
+      repos.budgets.set({ month: '2026-01', categoryId: null, amount: 0 }),
+    ).rejects.toThrow(InvalidBudgetError);
     close();
   });
 
   it('eliminando una categoria non usata si eliminano anche i suoi budget', async () => {
     const { repos, home, close } = await setup();
-    await repos.budgets.set({ categoryId: home.id, amount: 5000 });
+    await repos.budgets.set({ month: '2026-01', categoryId: home.id, amount: 5000 });
     await repos.categories.remove(home.id);
-    expect(await repos.budgets.list()).toHaveLength(0);
+    expect(await repos.budgets.effective('2026-01')).toHaveLength(0);
     close();
   });
 });

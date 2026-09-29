@@ -1,3 +1,4 @@
+import { format } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -13,30 +14,43 @@ import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Budget } from '@/db/schema';
 import { useCategories } from '@/features/categories/hooks';
-import { useCurrency } from '@/features/settings/hooks';
+import { useCurrency, useSettings } from '@/features/settings/hooks';
 import { budgetActions, useBudget } from '@/features/stats/hooks';
 import { useStackHeader } from '@/hooks/use-stack-header';
 import { useTheme } from '@/hooks/use-theme';
-import { decimalSeparator } from '@/i18n';
+import { dateLocale, decimalSeparator } from '@/i18n';
+import { budgetMonthKey } from '@/lib/budget';
 import { withAlpha } from '@/lib/color';
 import { applyKey, evaluate, minorToExpression } from '@/lib/expression';
 import { Radius, Spacing } from '@/theme';
 
 export default function BudgetScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, month } = useLocalSearchParams<{ id: string; month?: string }>();
   const isNew = id === 'new';
   const budget = useBudget(isNew ? undefined : id);
+  const monthStartDay = useSettings().monthStartDay ?? 1;
   if (!isNew && !budget) return null;
-  return <BudgetForm key={budget?.id ?? 'new'} budget={budget ?? undefined} />;
+  return (
+    <BudgetForm
+      key={budget?.id ?? 'new'}
+      budget={budget ?? undefined}
+      // Mese a cui si applica la modifica (quello mostrato in Statistiche)
+      month={month ?? budgetMonthKey(new Date(), monthStartDay)}
+    />
+  );
 }
 
-function BudgetForm({ budget }: { budget?: Budget }) {
-  const { t } = useTranslation();
+function BudgetForm({ budget, month }: { budget?: Budget; month: string }) {
+  const { t, i18n } = useTranslation();
   const theme = useTheme();
   const currency = useCurrency();
   const header = useStackHeader(budget ? t('budget.edit') : t('budget.new'));
   const insets = useSafeAreaInsets();
   const categories = useCategories('expense');
+  const [year, monthIndex] = month.split('-').map(Number);
+  const monthLabel = format(new Date(year, monthIndex - 1, 1), 'LLLL yyyy', {
+    locale: dateLocale(i18n.language),
+  });
   const [categoryId, setCategoryId] = useState<string | null>(budget?.categoryId ?? null);
   const [expr, setExpr] = useState(budget ? minorToExpression(budget.amount, currency) : '');
   // Tastierino dell'app (con la conferma integrata): aperto subito per un nuovo budget
@@ -50,7 +64,7 @@ function BudgetForm({ budget }: { budget?: Budget }) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-    await budgetActions.set({ categoryId, amount });
+    await budgetActions.set({ month, categoryId, amount });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
@@ -63,7 +77,7 @@ function BudgetForm({ budget }: { budget?: Budget }) {
         text: t('common.delete'),
         style: 'destructive',
         onPress: async () => {
-          await budgetActions.remove(budget.id);
+          await budgetActions.remove({ month, categoryId: budget.categoryId });
           router.back();
         },
       },
@@ -101,6 +115,15 @@ function BudgetForm({ budget }: { budget?: Budget }) {
         style={{ backgroundColor: theme.background }}
         contentContainerStyle={styles.content}
         onScrollBeginDrag={() => setPadOpen(false)}>
+        <View style={styles.monthInfo}>
+          <Text variant="overline" color="textSecondary">
+            {monthLabel}
+          </Text>
+          <Text variant="caption" color="textSecondary">
+            {t('budget.fromMonthHint')}
+          </Text>
+        </View>
+
         <Surface style={styles.card}>
           <Text variant="overline" color="textSecondary">
             {t('budget.amount')}
@@ -183,6 +206,7 @@ const styles = StyleSheet.create({
     borderRadius: Radius,
   },
   selected: { fontWeight: '600' },
+  monthInfo: { gap: 2, paddingHorizontal: Spacing.one },
   footer: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
   flex: { flex: 1 },
 });

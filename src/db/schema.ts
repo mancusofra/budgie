@@ -49,12 +49,28 @@ export const transactions = sqliteTable(
   ],
 );
 
-export const budgets = sqliteTable('budgets', {
-  id: text('id').primaryKey(),
-  /** NULL = budget globale. */
-  categoryId: text('category_id').references(() => categories.id),
-  amount: integer('amount').notNull(),
-  period: text('period', { enum: ['week', 'month', 'year'] }).notNull(),
+export const budgets = sqliteTable(
+  'budgets',
+  {
+    id: text('id').primaryKey(),
+    /** NULL = budget globale. */
+    categoryId: text('category_id').references(() => categories.id),
+    amount: integer('amount').notNull(),
+    period: text('period', { enum: ['week', 'month', 'year'] }).notNull(),
+    /** Mese a cui appartiene ('YYYY-MM', inizio del mese contabile). */
+    month: text('month').notNull().default(''),
+    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
+  },
+  (t) => [index('budgets_month_idx').on(t.month)],
+);
+
+/**
+ * Mesi in cui l'insieme dei budget è stato definito o modificato. Un mese
+ * senza riga eredita i budget dell'ultimo mese precedente che ne ha una
+ * (anche vuoto: "cancello tutto" vale anche per i mesi successivi).
+ */
+export const budgetMonths = sqliteTable('budget_months', {
+  month: text('month').primaryKey(),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 });
 

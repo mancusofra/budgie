@@ -186,6 +186,7 @@
     "delete": "Delete budget",
     "deleteConfirm": "Delete this budget?",
     "invalidAmount": "Enter an amount greater than zero",
-    "replaceHint": "If this category already has a budget, it gets updated."
+    "replaceHint": "If this category already has a budget this month, it gets updated.",
+    "fromMonthHint": "Applies from this month on: earlier months don't change."
   }
 }

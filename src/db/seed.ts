@@ -5,6 +5,7 @@ import { createId } from '@/lib/id';
 import type { SettingKey } from './repositories/settings';
 import {
   accounts,
+  budgetMonths,
   budgets,
   categories,
   settings,
@@ -231,6 +232,7 @@ export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
   db.transaction((tx) => {
     tx.delete(transactions).run();
     tx.delete(budgets).run();
+    tx.delete(budgetMonths).run();
     tx.delete(categories).run();
     tx.delete(accounts).run();
     tx.delete(settings).run();

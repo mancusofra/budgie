@@ -103,8 +103,8 @@ export default function StatsScreen() {
   }, [stats, categories]);
 
   // Budget
-  const { month, progress } = useBudgetProgress();
-  const monthLabel = month.from ? format(month.from, 'LLLL', { locale }) : '';
+  const { month, monthKey, progress } = useBudgetProgress(period, range);
+  const monthLabel = month.from ? format(month.from, 'LLLL yyyy', { locale }) : '';
 
   const tile = (label: string, value: number, color: string, footnote?: React.ReactNode) => (
     <Surface style={styles.tile}>
@@ -218,12 +218,14 @@ export default function StatsScreen() {
         </Text>
         {progress.length === 0 && <Text color="textSecondary">{t('stats.noBudgets')}</Text>}
         {progress.map((b) => (
-          <BudgetRow key={b.id} budget={b} money={money} />
+          <BudgetRow key={b.id} budget={b} money={money} monthKey={monthKey} />
         ))}
         <Button
           title={t('stats.addBudget')}
           icon={<MaterialCommunityIcons name="plus" size={20} color={theme.primary} />}
-          onPress={() => router.push({ pathname: '/budget/[id]', params: { id: 'new' } })}
+          onPress={() =>
+            router.push({ pathname: '/budget/[id]', params: { id: 'new', month: monthKey } })
+          }
         />
       </Surface>
     ),
@@ -364,7 +366,15 @@ export default function StatsScreen() {
   );
 }
 
-function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: number) => string }) {
+function BudgetRow({
+  budget,
+  money,
+  monthKey,
+}: {
+  budget: BudgetProgress;
+  money: (m: number) => string;
+  monthKey: string;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const categories = useCategories('expense', { includeArchived: true });
@@ -397,7 +407,9 @@ function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: numbe
   return (
     <Pressable
       accessibilityRole="button"
-      onPress={() => router.push({ pathname: '/budget/[id]', params: { id: budget.id } })}
+      onPress={() =>
+        router.push({ pathname: '/budget/[id]', params: { id: budget.id, month: monthKey } })
+      }
       style={({ pressed }) => [styles.budgetRow, pressed && { opacity: 0.6 }]}>
       <View style={styles.rankTop}>
         {category ? (

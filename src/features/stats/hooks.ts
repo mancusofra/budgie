@@ -2,8 +2,10 @@ import { useLiveQuery } from 'drizzle-orm/expo-sqlite';
 import { useMemo } from 'react';
 
 import { repos } from '@/db/client';
+import { useLiveQueryOn } from '@/db/live-query';
+import { budgetMonths, budgets } from '@/db/schema';
 import { useSettings } from '@/features/settings/hooks';
-import { budgetStatus } from '@/lib/budget';
+import { budgetMonthKey, budgetStatus } from '@/lib/budget';
 import { periodRange, shiftPeriod, type Period, type PeriodRange } from '@/lib/period';
 import { chartWindow, fillSeries } from '@/lib/series';
 
@@ -54,16 +56,42 @@ export type BudgetProgress = {
 } & ReturnType<typeof budgetStatus>;
 
 /**
- * Budget mensili con lo speso del mese corrente (tutti i conti), rispettando
- * il giorno di inizio del mese.
+ * Data di riferimento del mese dei budget per il periodo selezionato:
+ * il mese stesso (o quello che contiene giorno/settimana/intervallo); per
+ * un anno il mese corrente se è l'anno in corso, altrimenti il suo ultimo;
+ * per "Sempre" il mese corrente.
  */
-export function useBudgetProgress() {
+function budgetAnchor(period: Period, range: PeriodRange, now = new Date()): Date {
+  switch (period.kind) {
+    case 'year': {
+      const last = new Date(range.to!.getTime() - 1);
+      return now >= range.from! && now < range.to! ? now : last;
+    }
+    case 'all':
+      return now;
+    case 'custom':
+      return period.from;
+    default:
+      return period.anchor;
+  }
+}
+
+/**
+ * Budget del mese mostrato (ereditati dal mese precedente se non definiti),
+ * con lo speso di quel mese su tutti i conti: ogni mese si riparte da zero.
+ */
+export function useBudgetProgress(period: Period, range: PeriodRange) {
   const settings = useSettings();
-  const month = periodRange(
-    { kind: 'month', anchor: new Date() },
-    { monthStartDay: settings.monthStartDay ?? 1 },
+  const monthStartDay = settings.monthStartDay ?? 1;
+  const anchor = budgetAnchor(period, range);
+  const month = periodRange({ kind: 'month', anchor }, { monthStartDay });
+  const monthKey = budgetMonthKey(anchor, monthStartDay);
+
+  const { data: budgetRows } = useLiveQueryOn(
+    repos.budgets.effective(monthKey),
+    [budgets, budgetMonths],
+    [monthKey],
   );
-  const { data: budgets } = useLiveQuery(repos.budgets.list('month'));
   const { data: stats } = useLiveQuery(repos.transactions.statsByCategory(month), [
     month.from?.getTime(),
   ]);
@@ -72,20 +100,20 @@ export function useBudgetProgress() {
     const byCategory = new Map(
       (stats ?? []).filter((s) => s.type === 'expense').map((s) => [s.categoryId, s.total]),
     );
-    const totalExpense = [...byCategory.values()].reduce((a, b) => a + b, 0);
-    return (budgets ?? []).map((b) => {
-      const spent = b.categoryId ? (byCategory.get(b.categoryId) ?? 0) : totalExpense;
+    const totalExpense = [...byCategory.values()].reduce((a, v) => a + v, 0);
+    return (budgetRows ?? []).map((row) => {
+      const spent = row.categoryId ? (byCategory.get(row.categoryId) ?? 0) : totalExpense;
       return {
-        id: b.id,
-        categoryId: b.categoryId,
-        amount: b.amount,
+        id: row.id,
+        categoryId: row.categoryId,
+        amount: row.amount,
         spent,
-        ...budgetStatus(spent, b.amount),
+        ...budgetStatus(spent, row.amount),
       };
     });
-  }, [budgets, stats]);
+  }, [budgetRows, stats]);
 
-  return { month, progress };
+  return { month, monthKey, progress };
 }
 
 export function useBudget(id: string | undefined) {
@@ -96,5 +124,5 @@ export function useBudget(id: string | undefined) {
 
 export const budgetActions = {
   set: repos.budgets.set,
-  remove: (id: string) => repos.budgets.remove(id),
+  remove: repos.budgets.remove,
 };

@@ -23,6 +23,12 @@ npx expo install --fix      # fix incompatible package versions
 
 Run lint and typecheck before declaring any task done.
 
+### Database migrations (Drizzle)
+
+- Change `src/db/schema.ts`, then `npm run db:generate` (or `npx drizzle-kit generate --custom --name <name>` for data-only SQL).
+- The `.sql` files are inlined into the bundle by `babel-plugin-inline-import`, which does **not** track them: Metro keeps serving the old SQL after you edit a migration (touching `migrations.js` is not enough, the cache is content-based). After creating or editing a migration, restart Metro with `npx expo start --clear` **before** the app reloads, or the device may apply and record a stale version.
+- Never edit a migration that may already have run on a device: add a new one (make data fixes idempotent).
+
 ## Navigation & Routing
 
 - Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
