@@ -3,12 +3,12 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DateChips } from '@/components/transactions/date-chips';
 import { Button } from '@/components/ui/button';
-import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
+import { AmountField } from '@/components/ui/amount-field';
 import { Keypad } from '@/components/ui/keypad';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -24,7 +24,7 @@ import {
   minorToExpression,
   type KeypadKey,
 } from '@/lib/expression';
-import { formatMoney, parseAmount } from '@/lib/money';
+import { formatMoney } from '@/lib/money';
 import { Radius, Spacing } from '@/theme';
 
 export type TransferValues = {
@@ -57,11 +57,11 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
   const [expr, setExpr] = useState(() =>
     initial?.amount ? minorToExpression(initial.amount, currency) : '',
   );
-  const [toAmountText, setToAmountText] = useState(() =>
-    initial?.toAmount && to
-      ? minorToExpression(initial.toAmount, to.currency).replace(',', decimalSeparator)
-      : '',
+  const [toExpr, setToExpr] = useState(() =>
+    initial?.toAmount && to ? minorToExpression(initial.toAmount, to.currency) : '',
   );
+  // Il tastierino scrive nell'importo o in quello accreditato (valute diverse)
+  const [target, setTarget] = useState<'amount' | 'received'>('amount');
   const [note, setNote] = useState(initial?.note ?? '');
   const [date, setDate] = useState(() => initial?.date ?? new Date());
   const [error, setError] = useState<string>();
@@ -94,7 +94,7 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
     if (!amount || amount <= 0) return fail(t('transaction.invalidAmount'));
     let toAmount: number | null = null;
     if (differentCurrency) {
-      toAmount = parseAmount(toAmountText, to.currency);
+      toAmount = evaluate(toExpr, to.currency);
       if (!toAmount || toAmount <= 0) return fail(t('accounts.invalidAmount'));
     }
     if (saving) return;
@@ -197,15 +197,18 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
         {accountChips(to, setToId)}
       </View>
 
-      <View style={styles.display}>
+      <Pressable
+        onPress={() => setTarget('amount')}
+        accessibilityRole="button"
+        style={[styles.display, target !== 'amount' && styles.inactive]}>
         <Text style={[styles.amount, { color }]} numberOfLines={1} adjustsFontSizeToFit>
           {expr ? expr.replaceAll(',', decimalSeparator) : formatMoney(0, currency, deviceLocale)}
         </Text>
         {hasOperator(expr) && amount !== null && (
           <Text color="textSecondary">= {formatMoney(amount, currency, deviceLocale)}</Text>
         )}
-        {error && <Text style={{ color: theme.expense }}>{error}</Text>}
-      </View>
+      </Pressable>
+      {error && <Text style={{ color: theme.expense, textAlign: 'right' }}>{error}</Text>}
 
       <View style={styles.form}>
         {differentCurrency && to && (
@@ -213,18 +216,15 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
             <Text variant="caption" color="textSecondary">
               {t('transfer.received')} ({to.currency})
             </Text>
-            <TextInput
-              value={toAmountText}
-              onChangeText={(v) => {
-                setToAmountText(v);
-                setError(undefined);
+            <AmountField
+              expr={toExpr}
+              active={target === 'received'}
+              onPress={() => {
+                Keyboard.dismiss();
+                setTarget('received');
               }}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-              inputAccessoryViewID={KEYBOARD_DONE_ID}
-              placeholder={`0${decimalSeparator}00`}
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text }]}
+              suffix={to.currency}
+              accessibilityLabel={t('transfer.received')}
             />
           </Surface>
         )}
@@ -243,14 +243,14 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
         <Keypad
           onKey={(key: KeypadKey) => {
             setError(undefined);
-            setExpr((e) => applyKey(e, key, currency));
+            if (target === 'received' && to) setToExpr((e) => applyKey(e, key, to.currency));
+            else setExpr((e) => applyKey(e, key, currency));
           }}
           labels={keyLabels}
           decimalSeparator={decimalSeparator}
         />
         <Button title={t('common.save')} filled onPress={save} disabled={saving} />
       </View>
-      <KeyboardDoneAccessory />
     </SafeAreaView>
   );
 }
@@ -290,4 +290,5 @@ const styles = StyleSheet.create({
   },
   input: { paddingVertical: Spacing.two + 2, fontSize: 16 },
   flex: { flex: 1 },
+  inactive: { opacity: 0.45 },
 });

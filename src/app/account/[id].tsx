@@ -3,11 +3,13 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
-import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
+import { AmountField } from '@/components/ui/amount-field';
+import { AmountPad } from '@/components/ui/amount-pad';
 import { ColorPicker, IconPicker } from '@/components/ui/pickers';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -19,8 +21,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { decimalSeparator } from '@/i18n';
 import { withAlpha } from '@/lib/color';
 import { COMMON_CURRENCIES } from '@/lib/currencies';
-import { minorToExpression } from '@/lib/expression';
-import { parseAmount } from '@/lib/money';
+import { applyKey, evaluate, minorToExpression } from '@/lib/expression';
 import { ACCOUNT_ICONS, PICKER_COLORS } from '@/theme/palette';
 import { Radius, Spacing } from '@/theme';
 
@@ -51,9 +52,12 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
   const [name, setName] = useState(account?.name ?? '');
   const [currency, setCurrency] = useState(account?.currency ?? defaultCurrency);
   const [negative, setNegative] = useState(initial < 0);
-  const [balanceText, setBalanceText] = useState(
-    initial ? minorToExpression(Math.abs(initial), currency).replace(',', decimalSeparator) : '',
+  const [balanceExpr, setBalanceExpr] = useState(
+    initial ? minorToExpression(Math.abs(initial), currency) : '',
   );
+  // Tastierino dell'app per il saldo (conferma integrata, niente tastiera di sistema)
+  const [padOpen, setPadOpen] = useState(false);
+  const insets = useSafeAreaInsets();
   const [color, setColor] = useState<string>(account?.color ?? PICKER_COLORS[5]);
   const [icon, setIcon] = useState<string>(account?.icon ?? 'wallet');
   const [error, setError] = useState<string>();
@@ -70,7 +74,7 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
 
   const save = async () => {
     if (!name.trim()) return fail(t('accounts.nameRequired'));
-    const parsed = balanceText.trim() ? parseAmount(balanceText, currency) : 0;
+    const parsed = balanceExpr ? evaluate(balanceExpr, currency) : 0;
     if (parsed === null || parsed < 0) return fail(t('accounts.invalidAmount'));
     const initialBalance = negative ? -parsed : parsed;
     if (account) {
@@ -142,6 +146,7 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
             style={[styles.input, { color: theme.text, borderColor: theme.border }]}
             maxLength={40}
             autoFocus={!account}
+            onFocus={() => setPadOpen(false)}
           />
 
           <Text variant="overline" color="textSecondary">
@@ -164,24 +169,17 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
                 />
               </Surface>
             </Pressable>
-            <TextInput
-              value={balanceText}
-              onChangeText={(v) => {
-                setBalanceText(v);
-                setError(undefined);
+            <AmountField
+              expr={balanceExpr}
+              active={padOpen}
+              onPress={() => {
+                Keyboard.dismiss();
+                setPadOpen(true);
               }}
-              placeholder={`0${decimalSeparator}00`}
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-              inputAccessoryViewID={KEYBOARD_DONE_ID}
-              style={[
-                styles.input,
-                styles.flex,
-                { color: negative ? theme.expense : theme.text, borderColor: theme.border },
-              ]}
+              suffix={currency}
+              color={negative ? theme.expense : theme.text}
+              accessibilityLabel={t('accounts.initialBalance')}
             />
-            <Text color="textSecondary">{currency}</Text>
           </View>
           {error && <Text style={{ color: theme.expense }}>{error}</Text>}
         </Surface>
@@ -242,7 +240,27 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
           </Text>
         )}
       </ScrollView>
-      <KeyboardDoneAccessory />
+      {padOpen && (
+        <View
+          style={[
+            styles.padFooter,
+            { backgroundColor: theme.background, paddingBottom: insets.bottom + Spacing.three },
+          ]}>
+          <AmountPad
+            onKey={(key) => {
+              setError(undefined);
+              setBalanceExpr((e) => applyKey(e, key, currency));
+            }}
+            onDone={() => setPadOpen(false)}
+            decimalSeparator={decimalSeparator}
+            labels={{
+              backspace: t('keypad.backspace'),
+              comma: t('keypad.comma'),
+              done: t('stats.done'),
+            }}
+          />
+        </View>
+      )}
     </>
   );
 }
@@ -269,4 +287,5 @@ const styles = StyleSheet.create({
   chip: { paddingHorizontal: Spacing.three, paddingVertical: Spacing.one + 3, borderRadius: 999 },
   chipLabel: { fontWeight: '600' },
   center: { textAlign: 'center' },
+  padFooter: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
 });

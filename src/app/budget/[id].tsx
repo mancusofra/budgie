@@ -2,19 +2,12 @@ import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Alert,
-  Keyboard,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
+import { AmountField } from '@/components/ui/amount-field';
+import { AmountPad } from '@/components/ui/amount-pad';
 import { Button } from '@/components/ui/button';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -22,13 +15,11 @@ import type { Budget } from '@/db/schema';
 import { useCategories } from '@/features/categories/hooks';
 import { useCurrency } from '@/features/settings/hooks';
 import { budgetActions, useBudget } from '@/features/stats/hooks';
-import { useKeyboardHeight } from '@/hooks/use-keyboard-height';
 import { useStackHeader } from '@/hooks/use-stack-header';
 import { useTheme } from '@/hooks/use-theme';
 import { decimalSeparator } from '@/i18n';
 import { withAlpha } from '@/lib/color';
-import { minorToExpression } from '@/lib/expression';
-import { parseAmount } from '@/lib/money';
+import { applyKey, evaluate, minorToExpression } from '@/lib/expression';
 import { Radius, Spacing } from '@/theme';
 
 export default function BudgetScreen() {
@@ -45,22 +36,15 @@ function BudgetForm({ budget }: { budget?: Budget }) {
   const currency = useCurrency();
   const header = useStackHeader(budget ? t('budget.edit') : t('budget.new'));
   const insets = useSafeAreaInsets();
-  const keyboardHeight = useKeyboardHeight();
-  // Su Android l'altezza della tastiera non include la barra di navigazione
-  const keyboardBottom =
-    keyboardHeight > 0
-      ? keyboardHeight + (Platform.OS === 'android' ? insets.bottom : 0)
-      : insets.bottom;
   const categories = useCategories('expense');
   const [categoryId, setCategoryId] = useState<string | null>(budget?.categoryId ?? null);
-  const [amountText, setAmountText] = useState(
-    budget ? minorToExpression(budget.amount, currency).replace(',', decimalSeparator) : '',
-  );
+  const [expr, setExpr] = useState(budget ? minorToExpression(budget.amount, currency) : '');
+  // Tastierino dell'app (con la conferma integrata): aperto subito per un nuovo budget
+  const [padOpen, setPadOpen] = useState(!budget);
   const [error, setError] = useState<string>();
 
   const save = async () => {
-    Keyboard.dismiss();
-    const amount = parseAmount(amountText, currency);
+    const amount = evaluate(expr, currency);
     if (!amount || amount <= 0) {
       setError(t('budget.invalidAmount'));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
@@ -93,7 +77,7 @@ function BudgetForm({ budget }: { budget?: Budget }) {
         key={id ?? 'global'}
         disabled={!!budget}
         onPress={() => {
-          Keyboard.dismiss();
+          setPadOpen(false);
           setCategoryId(id);
         }}
         accessibilityRole="radio"
@@ -116,26 +100,20 @@ function BudgetForm({ budget }: { budget?: Budget }) {
       <ScrollView
         style={{ backgroundColor: theme.background }}
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        keyboardDismissMode="on-drag">
+        onScrollBeginDrag={() => setPadOpen(false)}>
         <Surface style={styles.card}>
           <Text variant="overline" color="textSecondary">
             {t('budget.amount')}
           </Text>
           <View style={styles.amountRow}>
-            <TextInput
-              value={amountText}
-              onChangeText={(v) => {
-                setAmountText(v);
-                setError(undefined);
-              }}
-              keyboardType="decimal-pad"
-              returnKeyType="done"
-              placeholder={`0${decimalSeparator}00`}
-              placeholderTextColor={theme.textSecondary}
-              style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            <AmountField
+              expr={expr}
+              active={padOpen}
+              onPress={() => setPadOpen(true)}
+              suffix={currency}
+              size={26}
+              accessibilityLabel={t('budget.amount')}
             />
-            <Text color="textSecondary">{currency}</Text>
           </View>
           {error && <Text style={{ color: theme.expense }}>{error}</Text>}
         </Surface>
@@ -164,17 +142,30 @@ function BudgetForm({ budget }: { budget?: Budget }) {
 
         {budget && <Button title={t('budget.delete')} color="expense" onPress={remove} />}
       </ScrollView>
-      {/* Salva sempre visibile (l'elenco delle categorie può essere lungo) e, con la
-          tastiera aperta, appoggiato sopra di essa: un tocco salva e la chiude */}
+      {/* In fondo, sempre visibile: il tastierino (con la conferma integrata)
+          mentre si scrive l'importo, altrimenti Salva */}
       <View
         style={[
           styles.footer,
-          {
-            backgroundColor: theme.background,
-            paddingBottom: keyboardBottom + Spacing.three,
-          },
+          { backgroundColor: theme.background, paddingBottom: insets.bottom + Spacing.three },
         ]}>
-        <Button title={t('common.save')} filled onPress={save} />
+        {padOpen ? (
+          <AmountPad
+            onKey={(key) => {
+              setError(undefined);
+              setExpr((e) => applyKey(e, key, currency));
+            }}
+            onDone={() => setPadOpen(false)}
+            decimalSeparator={decimalSeparator}
+            labels={{
+              backspace: t('keypad.backspace'),
+              comma: t('keypad.comma'),
+              done: t('stats.done'),
+            }}
+          />
+        ) : (
+          <Button title={t('common.save')} filled onPress={save} />
+        )}
       </View>
     </>
   );
@@ -184,13 +175,6 @@ const styles = StyleSheet.create({
   content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.six },
   card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.two },
   amountRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
-  input: {
-    flex: 1,
-    fontSize: 22,
-    fontWeight: '600',
-    paddingVertical: Spacing.two,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',
