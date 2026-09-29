@@ -124,6 +124,7 @@ function SortableRow({
         }
         updated[id] = next;
         positions.set(updated);
+        scheduleOnRN(Haptics.selectionAsync);
       }
     })
     .onFinalize(() => {

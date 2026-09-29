@@ -162,7 +162,19 @@
     "statusOk": "{{amount}} left",
     "statusWarning": "{{percent}}% used",
     "statusOver": "Over by {{amount}}",
-    "barLabel": "{{label}}: {{value}}"
+    "barLabel": "{{label}}: {{value}}",
+    "customize": "Customize",
+    "done": "Done",
+    "hide": "Hide",
+    "show": "Show",
+    "editHint": "Drag to reorder sections, tap the eye to hide them.",
+    "longPressHint": "Long press to customize",
+    "section": {
+      "summary": "Summary",
+      "chart": "Spending over time",
+      "categories": "Spending by category",
+      "budgets": "Budgets"
+    }
   },
   "budget": {
     "new": "New budget",

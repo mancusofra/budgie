@@ -1,5 +1,7 @@
 import { eq } from 'drizzle-orm';
 
+import type { StatsLayout } from '@/lib/stats-layout';
+
 import { settings } from '../schema';
 import type { AppDatabase } from '../types';
 
@@ -12,6 +14,8 @@ export type SettingsMap = {
   /** Giorno del mese da cui parte il "mese" (1–28). */
   monthStartDay: number;
   seedVersion: number;
+  /** Ordine e sezioni nascoste della schermata Statistiche. */
+  statsLayout: StatsLayout;
 };
 
 export type SettingKey = keyof SettingsMap;

@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { format } from 'date-fns';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import * as Haptics from 'expo-haptics';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -13,7 +14,7 @@ import { Screen, useTabBarSpace } from '@/components/ui/screen';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { useCategories } from '@/features/categories/hooks';
-import { useCurrency } from '@/features/settings/hooks';
+import { useCurrency, useSetSetting, useSettings } from '@/features/settings/hooks';
 import {
   useBudgetProgress,
   useExpenseSeries,
@@ -29,6 +30,13 @@ import { useTheme } from '@/hooks/use-theme';
 import { dateLocale, deviceLocale } from '@/i18n';
 import { formatMoney } from '@/lib/money';
 import { percentChange } from '@/lib/series';
+import {
+  normalizeStatsLayout,
+  visibleSections,
+  type StatsLayout,
+  type StatsSection,
+} from '@/lib/stats-layout';
+import { StatsEditor } from '@/features/stats/stats-editor';
 import { useUIStore } from '@/store/ui';
 import { Radius, Spacing, TabularNums } from '@/theme';
 
@@ -39,6 +47,17 @@ export default function StatsScreen() {
   const locale = dateLocale(i18n.language);
   const money = (minor: number) => formatMoney(minor, currency, deviceLocale);
   const tabBarSpace = useTabBarSpace();
+
+  // Layout personalizzabile (ordine e sezioni nascoste), salvato nelle impostazioni
+  const settings = useSettings();
+  const setSetting = useSetSetting();
+  const layout = useMemo(() => normalizeStatsLayout(settings.statsLayout), [settings.statsLayout]);
+  const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
+  const [editing, setEditing] = useState(false);
+  const startEditing = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setEditing(true);
+  };
 
   const { period, range } = useSelectedPeriod();
   const accountFilter = useUIStore((s) => s.accountFilter);
@@ -92,6 +111,119 @@ export default function StatsScreen() {
     </Surface>
   );
 
+  const sections: Record<StatsSection, ReactNode> = {
+    summary: (
+      <View style={styles.tiles}>
+        {tile(
+          t('home.expenses'),
+          totals.expense,
+          theme.expense,
+          change !== null && (
+            <View style={styles.change}>
+              <MaterialCommunityIcons
+                name={change > 0 ? 'arrow-up' : change < 0 ? 'arrow-down' : 'equal'}
+                size={12}
+                color={theme.textSecondary}
+              />
+              <Text variant="caption" color="textSecondary" numberOfLines={2} style={styles.flex}>
+                {Math.round(change) === 0
+                  ? t('stats.samePrevious')
+                  : t('stats.vsPrevious', { value: `${Math.abs(Math.round(change))}%` })}
+              </Text>
+            </View>
+          ),
+        )}
+        {tile(t('home.income'), totals.income, theme.income)}
+      </View>
+    ),
+    chart: (
+      <Surface style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text variant="overline" color="textSecondary">
+            {t('stats.chartTitle')}
+          </Text>
+          <Text style={[styles.chartValue, TabularNums]}>
+            {selected ? money(selected.value) : money(chartTotal)}
+          </Text>
+          <Text variant="caption" color="textSecondary">
+            {selected
+              ? fullLabel(selected.date)
+              : t(window.bucket === 'day' ? 'stats.averageDay' : 'stats.averageMonth', {
+                  value: money(average),
+                })}
+          </Text>
+        </View>
+        <BarChart
+          data={bars}
+          color={theme.expense}
+          selectedKey={selectedKey}
+          onSelect={setSelectedKey}
+          accessibilityLabelFor={(d) => {
+            const p = points.find((x) => x.key === d.key)!;
+            return t('stats.barLabel', { label: fullLabel(p.date), value: money(p.value) });
+          }}
+        />
+      </Surface>
+    ),
+    categories: (
+      <Surface style={styles.card}>
+        <Text variant="overline" color="textSecondary">
+          {t('stats.byCategory')}
+        </Text>
+        {ranking.length === 0 && <Text color="textSecondary">{t('stats.empty')}</Text>}
+        {ranking.map(({ category, total, share }) => (
+          <Pressable
+            key={category.id}
+            accessibilityRole="button"
+            onPress={() => {
+              setOpenCategory(category.id);
+              router.navigate('/transactions');
+            }}
+            onLongPress={startEditing}
+            delayLongPress={350}
+            style={({ pressed }) => [styles.rankRow, pressed && { opacity: 0.6 }]}>
+            <CategoryIcon icon={category.icon} color={category.color} size={32} />
+            <View style={styles.flex}>
+              <View style={styles.rankTop}>
+                <Text numberOfLines={1} style={[styles.flex, styles.rankName]}>
+                  {category.name}
+                </Text>
+                <Text variant="caption" color="textSecondary" style={TabularNums}>
+                  {Math.round(share * 100)}%
+                </Text>
+                <Text style={[styles.rankAmount, TabularNums]}>{money(total)}</Text>
+              </View>
+              <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
+                <View
+                  style={[
+                    styles.fill,
+                    { width: `${Math.max(share * 100, 1)}%`, backgroundColor: category.color },
+                  ]}
+                />
+              </View>
+            </View>
+          </Pressable>
+        ))}
+      </Surface>
+    ),
+    budgets: (
+      <Surface style={styles.card}>
+        <Text variant="overline" color="textSecondary">
+          {t('stats.budgets', { month: monthLabel })}
+        </Text>
+        {progress.length === 0 && <Text color="textSecondary">{t('stats.noBudgets')}</Text>}
+        {progress.map((b) => (
+          <BudgetRow key={b.id} budget={b} money={money} onLongPress={startEditing} />
+        ))}
+        <Button
+          title={t('stats.addBudget')}
+          icon={<MaterialCommunityIcons name="plus" size={20} color={theme.primary} />}
+          onPress={() => router.push({ pathname: '/budget/[id]', params: { id: 'new' } })}
+        />
+      </Surface>
+    ),
+  };
+
   return (
     <Screen scrolls>
       <ScrollView
@@ -100,115 +232,42 @@ export default function StatsScreen() {
         showsVerticalScrollIndicator={false}>
         <PeriodHeader />
 
-        <View style={styles.tiles}>
-          {tile(
-            t('home.expenses'),
-            totals.expense,
-            theme.expense,
-            change !== null && (
-              <View style={styles.change}>
-                <MaterialCommunityIcons
-                  name={change > 0 ? 'arrow-up' : change < 0 ? 'arrow-down' : 'equal'}
-                  size={12}
-                  color={theme.textSecondary}
-                />
-                <Text variant="caption" color="textSecondary" numberOfLines={2} style={styles.flex}>
-                  {Math.round(change) === 0
-                    ? t('stats.samePrevious')
-                    : t('stats.vsPrevious', { value: `${Math.abs(Math.round(change))}%` })}
-                </Text>
-              </View>
-            ),
-          )}
-          {tile(t('home.income'), totals.income, theme.income)}
-        </View>
-
-        <Surface style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Text variant="overline" color="textSecondary">
-              {t('stats.chartTitle')}
-            </Text>
-            <Text style={[styles.chartValue, TabularNums]}>
-              {selected ? money(selected.value) : money(chartTotal)}
-            </Text>
-            <Text variant="caption" color="textSecondary">
-              {selected
-                ? fullLabel(selected.date)
-                : t(window.bucket === 'day' ? 'stats.averageDay' : 'stats.averageMonth', {
-                    value: money(average),
-                  })}
-            </Text>
-          </View>
-          <BarChart
-            data={bars}
-            color={theme.expense}
-            selectedKey={selectedKey}
-            onSelect={setSelectedKey}
-            accessibilityLabelFor={(d) => {
-              const p = points.find((x) => x.key === d.key)!;
-              return t('stats.barLabel', { label: fullLabel(p.date), value: money(p.value) });
-            }}
-          />
-        </Surface>
-
-        <Surface style={styles.card}>
-          <Text variant="overline" color="textSecondary">
-            {t('stats.byCategory')}
-          </Text>
-          {ranking.length === 0 && <Text color="textSecondary">{t('stats.empty')}</Text>}
-          {ranking.map(({ category, total, share }) => (
+        {editing ? (
+          <StatsEditor layout={layout} onChange={saveLayout} onDone={() => setEditing(false)} />
+        ) : (
+          <>
+            {visibleSections(layout).map((id) => (
+              <Pressable
+                key={id}
+                onLongPress={startEditing}
+                delayLongPress={350}
+                accessibilityHint={t('stats.longPressHint')}>
+                {sections[id]}
+              </Pressable>
+            ))}
             <Pressable
-              key={category.id}
+              onPress={startEditing}
               accessibilityRole="button"
-              onPress={() => {
-                setOpenCategory(category.id);
-                router.navigate('/transactions');
-              }}
-              style={({ pressed }) => [styles.rankRow, pressed && { opacity: 0.6 }]}>
-              <CategoryIcon icon={category.icon} color={category.color} size={32} />
-              <View style={styles.flex}>
-                <View style={styles.rankTop}>
-                  <Text numberOfLines={1} style={[styles.flex, styles.rankName]}>
-                    {category.name}
-                  </Text>
-                  <Text variant="caption" color="textSecondary" style={TabularNums}>
-                    {Math.round(share * 100)}%
-                  </Text>
-                  <Text style={[styles.rankAmount, TabularNums]}>{money(total)}</Text>
-                </View>
-                <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
-                  <View
-                    style={[
-                      styles.fill,
-                      { width: `${Math.max(share * 100, 1)}%`, backgroundColor: category.color },
-                    ]}
-                  />
-                </View>
-              </View>
+              style={({ pressed }) => [styles.customize, pressed && { opacity: 0.6 }]}>
+              <MaterialCommunityIcons name="tune-variant" size={18} color={theme.textSecondary} />
+              <Text color="textSecondary">{t('stats.customize')}</Text>
             </Pressable>
-          ))}
-        </Surface>
-
-        <Surface style={styles.card}>
-          <Text variant="overline" color="textSecondary">
-            {t('stats.budgets', { month: monthLabel })}
-          </Text>
-          {progress.length === 0 && <Text color="textSecondary">{t('stats.noBudgets')}</Text>}
-          {progress.map((b) => (
-            <BudgetRow key={b.id} budget={b} money={money} />
-          ))}
-          <Button
-            title={t('stats.addBudget')}
-            icon={<MaterialCommunityIcons name="plus" size={20} color={theme.primary} />}
-            onPress={() => router.push({ pathname: '/budget/[id]', params: { id: 'new' } })}
-          />
-        </Surface>
+          </>
+        )}
       </ScrollView>
     </Screen>
   );
 }
 
-function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: number) => string }) {
+function BudgetRow({
+  budget,
+  money,
+  onLongPress,
+}: {
+  budget: BudgetProgress;
+  money: (m: number) => string;
+  onLongPress: () => void;
+}) {
   const { t } = useTranslation();
   const theme = useTheme();
   const categories = useCategories('expense', { includeArchived: true });
@@ -242,6 +301,8 @@ function BudgetRow({ budget, money }: { budget: BudgetProgress; money: (m: numbe
     <Pressable
       accessibilityRole="button"
       onPress={() => router.push({ pathname: '/budget/[id]', params: { id: budget.id } })}
+      onLongPress={onLongPress}
+      delayLongPress={350}
       style={({ pressed }) => [styles.budgetRow, pressed && { opacity: 0.6 }]}>
       <View style={styles.rankTop}>
         {category ? (
@@ -293,5 +354,12 @@ const styles = StyleSheet.create({
   track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 6 },
   fill: { height: 6, borderRadius: 3 },
   budgetRow: { gap: 2 },
+  customize: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
+    paddingVertical: Spacing.two,
+  },
   flex: { flex: 1 },
 });
