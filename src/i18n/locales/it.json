@@ -143,5 +143,36 @@
     "addAccount": "Aggiungi un conto",
     "new": "Nuovo trasferimento",
     "section": "Trasferimenti"
+  },
+  "stats": {
+    "title": "Statistiche",
+    "vsPrevious": "{{value}} rispetto al periodo precedente",
+    "samePrevious": "Uguale al periodo precedente",
+    "chartTitle": "Andamento spese",
+    "total": "Totale {{value}}",
+    "averageDay": "media {{value}} al giorno",
+    "averageMonth": "media {{value}} al mese",
+    "byCategory": "Spese per categoria",
+    "empty": "Nessuna spesa in questo periodo",
+    "budgets": "Budget · {{month}}",
+    "noBudgets": "Imposta un limite di spesa mensile, totale o per categoria.",
+    "addBudget": "Aggiungi budget",
+    "globalBudget": "Tutte le spese",
+    "spentOf": "{{spent}} di {{amount}}",
+    "statusOk": "Restano {{amount}}",
+    "statusWarning": "Usato il {{percent}}%",
+    "statusOver": "Superato di {{amount}}",
+    "barLabel": "{{label}}: {{value}}"
+  },
+  "budget": {
+    "new": "Nuovo budget",
+    "edit": "Modifica budget",
+    "category": "Categoria",
+    "global": "Tutte le spese",
+    "amount": "Limite mensile",
+    "delete": "Elimina budget",
+    "deleteConfirm": "Eliminare il budget?",
+    "invalidAmount": "Inserisci un importo maggiore di zero",
+    "replaceHint": "Se esiste già un budget per questa categoria viene aggiornato."
   }
 }

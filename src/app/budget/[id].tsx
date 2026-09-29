@@ -1,0 +1,179 @@
+import * as Haptics from 'expo-haptics';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import { CategoryIcon } from '@/components/transactions/category-icon';
+import { Button } from '@/components/ui/button';
+import { Surface } from '@/components/ui/surface';
+import { Text } from '@/components/ui/text';
+import type { Budget } from '@/db/schema';
+import { useCategories } from '@/features/categories/hooks';
+import { useCurrency } from '@/features/settings/hooks';
+import { budgetActions, useBudget } from '@/features/stats/hooks';
+import { useStackHeader } from '@/hooks/use-stack-header';
+import { useTheme } from '@/hooks/use-theme';
+import { decimalSeparator } from '@/i18n';
+import { withAlpha } from '@/lib/color';
+import { minorToExpression } from '@/lib/expression';
+import { parseAmount } from '@/lib/money';
+import { Radius, Spacing } from '@/theme';
+
+export default function BudgetScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const isNew = id === 'new';
+  const budget = useBudget(isNew ? undefined : id);
+  if (!isNew && !budget) return null;
+  return <BudgetForm key={budget?.id ?? 'new'} budget={budget ?? undefined} />;
+}
+
+function BudgetForm({ budget }: { budget?: Budget }) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+  const currency = useCurrency();
+  const header = useStackHeader(budget ? t('budget.edit') : t('budget.new'));
+  const insets = useSafeAreaInsets();
+  const categories = useCategories('expense');
+  const [categoryId, setCategoryId] = useState<string | null>(budget?.categoryId ?? null);
+  const [amountText, setAmountText] = useState(
+    budget ? minorToExpression(budget.amount, currency).replace(',', decimalSeparator) : '',
+  );
+  const [error, setError] = useState<string>();
+
+  const save = async () => {
+    const amount = parseAmount(amountText, currency);
+    if (!amount || amount <= 0) {
+      setError(t('budget.invalidAmount'));
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      return;
+    }
+    await budgetActions.set({ categoryId, amount });
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    router.back();
+  };
+
+  const remove = () => {
+    if (!budget) return;
+    Alert.alert(t('budget.deleteConfirm'), undefined, [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: async () => {
+          await budgetActions.remove(budget.id);
+          router.back();
+        },
+      },
+    ]);
+  };
+
+  const option = (id: string | null, label: string, icon: string, color: string) => {
+    const selected = categoryId === id;
+    return (
+      <Pressable
+        key={id ?? 'global'}
+        disabled={!!budget}
+        onPress={() => setCategoryId(id)}
+        accessibilityRole="radio"
+        accessibilityState={{ selected, disabled: !!budget }}
+        style={[
+          styles.option,
+          { backgroundColor: selected ? withAlpha(theme.primary, 0.14) : 'transparent' },
+        ]}>
+        <CategoryIcon icon={icon} color={color} size={32} filled={selected} />
+        <Text numberOfLines={1} style={[styles.flex, selected && styles.selected]}>
+          {label}
+        </Text>
+      </Pressable>
+    );
+  };
+
+  return (
+    <>
+      <Stack.Screen options={header} />
+      <ScrollView
+        style={{ backgroundColor: theme.background }}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled">
+        <Surface style={styles.card}>
+          <Text variant="overline" color="textSecondary">
+            {t('budget.amount')}
+          </Text>
+          <View style={styles.amountRow}>
+            <TextInput
+              value={amountText}
+              onChangeText={(v) => {
+                setAmountText(v);
+                setError(undefined);
+              }}
+              keyboardType="decimal-pad"
+              placeholder={`0${decimalSeparator}00`}
+              placeholderTextColor={theme.textSecondary}
+              autoFocus={!budget}
+              style={[styles.input, { color: theme.text, borderColor: theme.border }]}
+            />
+            <Text color="textSecondary">{currency}</Text>
+          </View>
+          {error && <Text style={{ color: theme.expense }}>{error}</Text>}
+        </Surface>
+
+        <Surface style={styles.card}>
+          <Text variant="overline" color="textSecondary">
+            {t('budget.category')}
+          </Text>
+          {budget
+            ? option(
+                categoryId,
+                categories.find((c) => c.id === categoryId)?.name ?? t('budget.global'),
+                categories.find((c) => c.id === categoryId)?.icon ?? 'wallet-outline',
+                categories.find((c) => c.id === categoryId)?.color ?? theme.textSecondary,
+              )
+            : [
+                option(null, t('budget.global'), 'wallet-outline', theme.textSecondary),
+                ...categories.map((c) => option(c.id, c.name, c.icon, c.color)),
+              ]}
+          {!budget && (
+            <Text variant="caption" color="textSecondary">
+              {t('budget.replaceHint')}
+            </Text>
+          )}
+        </Surface>
+
+        {budget && <Button title={t('budget.delete')} color="expense" onPress={remove} />}
+      </ScrollView>
+      {/* Salva sempre visibile: l'elenco delle categorie può essere lungo */}
+      <View
+        style={[
+          styles.footer,
+          { backgroundColor: theme.background, paddingBottom: insets.bottom + Spacing.three },
+        ]}>
+        <Button title={t('common.save')} filled onPress={save} />
+      </View>
+    </>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.six },
+  card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.two },
+  amountRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  input: {
+    flex: 1,
+    fontSize: 22,
+    fontWeight: '600',
+    paddingVertical: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.three,
+    padding: Spacing.two,
+    borderRadius: Radius,
+  },
+  selected: { fontWeight: '600' },
+  footer: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
+  flex: { flex: 1 },
+});

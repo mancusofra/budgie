@@ -143,5 +143,36 @@
     "addAccount": "Add an account",
     "new": "New transfer",
     "section": "Transfers"
+  },
+  "stats": {
+    "title": "Stats",
+    "vsPrevious": "{{value}} vs previous period",
+    "samePrevious": "Same as previous period",
+    "chartTitle": "Spending over time",
+    "total": "Total {{value}}",
+    "averageDay": "avg {{value}} per day",
+    "averageMonth": "avg {{value}} per month",
+    "byCategory": "Spending by category",
+    "empty": "No expenses in this period",
+    "budgets": "Budgets · {{month}}",
+    "noBudgets": "Set a monthly spending limit, overall or per category.",
+    "addBudget": "Add budget",
+    "globalBudget": "All expenses",
+    "spentOf": "{{spent}} of {{amount}}",
+    "statusOk": "{{amount}} left",
+    "statusWarning": "{{percent}}% used",
+    "statusOver": "Over by {{amount}}",
+    "barLabel": "{{label}}: {{value}}"
+  },
+  "budget": {
+    "new": "New budget",
+    "edit": "Edit budget",
+    "category": "Category",
+    "global": "All expenses",
+    "amount": "Monthly limit",
+    "delete": "Delete budget",
+    "deleteConfirm": "Delete this budget?",
+    "invalidAmount": "Enter an amount greater than zero",
+    "replaceHint": "If this category already has a budget, it gets updated."
   }
 }

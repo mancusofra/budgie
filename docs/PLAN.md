@@ -93,10 +93,10 @@ su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore p
 
 ## Fase 5 — Statistiche e budget
 
-- [ ] Tab "Statistiche": grafico a barre spese per giorno/mese, trend vs periodo precedente
-- [ ] Classifica categorie con percentuale
-- [ ] Budget mensile globale e per categoria con barra di avanzamento
-- [ ] Avviso visivo al superamento dell'80% / 100% del budget
+- [x] Tab "Statistiche": grafico a barre spese per giorno/mese, trend vs periodo precedente
+- [x] Classifica categorie con percentuale
+- [x] Budget mensile globale e per categoria con barra di avanzamento
+- [x] Avviso visivo al superamento dell'80% / 100% del budget (icona + etichetta)
 
 ## Fase 6 — Impostazioni, valute, backup
 

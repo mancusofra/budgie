@@ -13,6 +13,8 @@ export const Colors = {
     primary: '#4B63C9',
     expense: '#C4554D',
     income: '#3D8B63',
+    /** Stato "attenzione" (budget oltre l'80%): sempre con icona ed etichetta. */
+    warning: '#B7791F',
   },
   dark: {
     text: '#F2F2F4',
@@ -26,6 +28,7 @@ export const Colors = {
     primary: '#8FA2F0',
     expense: '#E0807A',
     income: '#6CC196',
+    warning: '#E0A955',
   },
 } as const;
 

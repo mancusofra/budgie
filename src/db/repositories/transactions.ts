@@ -219,6 +219,39 @@ export function createTransactionsRepo(db: AppDatabase) {
         .orderBy(desc(total));
     },
 
+    /**
+     * Totali per giorno ('YYYY-MM-DD') o mese ('YYYY-MM') in ora locale, per il
+     * grafico a barre. Solo i bucket con movimenti: quelli vuoti li aggiunge il chiamante.
+     */
+    seriesByBucket(
+      filter: Partial<DateRange> & { accountId?: string; type?: 'expense' | 'income' },
+      bucket: 'day' | 'month',
+    ) {
+      const format = bucket === 'day' ? '%Y-%m-%d' : '%Y-%m';
+      const key = sql<string>`strftime(${format}, ${t.date} / 1000, 'unixepoch', 'localtime')`;
+      return db
+        .select({ key, total: sql<number>`sum(${t.amount})`.mapWith(Number) })
+        .from(t)
+        .where(
+          and(
+            where({ from: filter.from, to: filter.to, type: filter.type ?? 'expense' }),
+            filter.accountId ? eq(t.accountId, filter.accountId) : undefined,
+          ),
+        )
+        .groupBy(key)
+        .orderBy(key);
+    },
+
+    /** Data della prima transazione (per il periodo "Sempre"), se esiste. */
+    firstDate(accountId?: string) {
+      return db
+        .select({ first: sql<number | null>`min(${t.date})` })
+        .from(t)
+        .where(
+          accountId ? or(eq(t.accountId, accountId), eq(t.toAccountId, accountId)) : undefined,
+        );
+    },
+
     /** Entrate e spese totali nel periodo. I trasferimenti non contano. */
     totals(filter: Partial<DateRange> & { accountId?: string } = {}) {
       return db
