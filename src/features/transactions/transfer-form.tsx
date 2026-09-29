@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DateChips } from '@/components/transactions/date-chips';
 import { Button } from '@/components/ui/button';
+import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
 import { Keypad } from '@/components/ui/keypad';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -219,6 +220,8 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
                 setError(undefined);
               }}
               keyboardType="decimal-pad"
+              returnKeyType="done"
+              inputAccessoryViewID={KEYBOARD_DONE_ID}
               placeholder={`0${decimalSeparator}00`}
               placeholderTextColor={theme.textSecondary}
               style={[styles.input, { color: theme.text }]}
@@ -247,6 +250,7 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
         />
         <Button title={t('common.save')} filled onPress={save} disabled={saving} />
       </View>
+      <KeyboardDoneAccessory />
     </SafeAreaView>
   );
 }

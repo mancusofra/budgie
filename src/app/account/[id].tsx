@@ -7,6 +7,7 @@ import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
+import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
 import { ColorPicker, IconPicker } from '@/components/ui/pickers';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
@@ -117,7 +118,8 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
       <ScrollView
         style={{ backgroundColor: theme.background }}
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag">
         <View style={styles.preview}>
           <CategoryIcon icon={icon} color={color} size={72} filled />
           <Text variant="subtitle" numberOfLines={1}>
@@ -171,6 +173,8 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
               placeholder={`0${decimalSeparator}00`}
               placeholderTextColor={theme.textSecondary}
               keyboardType="decimal-pad"
+              returnKeyType="done"
+              inputAccessoryViewID={KEYBOARD_DONE_ID}
               style={[
                 styles.input,
                 styles.flex,
@@ -238,6 +242,7 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
           </Text>
         )}
       </ScrollView>
+      <KeyboardDoneAccessory />
     </>
   );
 }

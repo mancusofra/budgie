@@ -2,11 +2,12 @@ import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Alert, Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
+import { KEYBOARD_DONE_ID, KeyboardDoneAccessory } from '@/components/ui/keyboard-done';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Budget } from '@/db/schema';
@@ -75,7 +76,10 @@ function BudgetForm({ budget }: { budget?: Budget }) {
       <Pressable
         key={id ?? 'global'}
         disabled={!!budget}
-        onPress={() => setCategoryId(id)}
+        onPress={() => {
+          Keyboard.dismiss();
+          setCategoryId(id);
+        }}
         accessibilityRole="radio"
         accessibilityState={{ selected, disabled: !!budget }}
         style={[
@@ -96,7 +100,8 @@ function BudgetForm({ budget }: { budget?: Budget }) {
       <ScrollView
         style={{ backgroundColor: theme.background }}
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag">
         <Surface style={styles.card}>
           <Text variant="overline" color="textSecondary">
             {t('budget.amount')}
@@ -109,9 +114,10 @@ function BudgetForm({ budget }: { budget?: Budget }) {
                 setError(undefined);
               }}
               keyboardType="decimal-pad"
+              returnKeyType="done"
+              inputAccessoryViewID={KEYBOARD_DONE_ID}
               placeholder={`0${decimalSeparator}00`}
               placeholderTextColor={theme.textSecondary}
-              autoFocus={!budget}
               style={[styles.input, { color: theme.text, borderColor: theme.border }]}
             />
             <Text color="textSecondary">{currency}</Text>
@@ -143,6 +149,7 @@ function BudgetForm({ budget }: { budget?: Budget }) {
 
         {budget && <Button title={t('budget.delete')} color="expense" onPress={remove} />}
       </ScrollView>
+      <KeyboardDoneAccessory />
       {/* Salva sempre visibile: l'elenco delle categorie può essere lungo */}
       <View
         style={[

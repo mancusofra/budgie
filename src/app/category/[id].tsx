@@ -96,7 +96,8 @@ function CategoryForm({
       <ScrollView
         style={{ backgroundColor: theme.background }}
         contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag">
         <View style={styles.preview}>
           <CategoryIcon icon={icon} color={color} size={72} filled />
           <Text variant="subtitle" numberOfLines={1}>
@@ -119,6 +120,7 @@ function CategoryForm({
             style={[styles.input, { color: theme.text, borderColor: theme.border }]}
             maxLength={40}
             autoFocus={!category}
+            returnKeyType="done"
           />
           {error && <Text style={{ color: theme.expense }}>{error}</Text>}
           {!category && (
