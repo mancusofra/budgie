@@ -308,6 +308,32 @@ export default function StatsScreen() {
           }
         />
 
+        {/* Tutto nascosto: senza riquadri non ci sarebbe niente da tenere premuto */}
+        {!editing && visible.length === 0 && (
+          <Pressable
+            onLongPress={() => setEditing(true)}
+            delayLongPress={300}
+            accessibilityHint={t('stats.allHiddenHint')}>
+            <Surface style={styles.allHidden}>
+              <MaterialCommunityIcons
+                name="eye-off-outline"
+                size={32}
+                color={theme.textSecondary}
+              />
+              <Text color="textSecondary" style={styles.center}>
+                {t('stats.allHidden')}
+              </Text>
+              <Button
+                title={t('stats.chooseSections')}
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setEditing(true);
+                }}
+              />
+            </Surface>
+          </Pressable>
+        )}
+
         {editing && (
           <Text variant="caption" color="textSecondary" style={styles.center}>
             {t('stats.editHint')}
@@ -428,6 +454,12 @@ const styles = StyleSheet.create({
   doneButton: { alignSelf: 'stretch' },
   doneBackdrop: { borderRadius: Radius + 4 },
   center: { textAlign: 'center' },
+  allHidden: {
+    borderRadius: Radius + 4,
+    padding: Spacing.four,
+    gap: Spacing.three,
+    alignItems: 'center',
+  },
   hiddenCard: { opacity: 0.4 },
   eyeButton: { position: 'absolute', top: Spacing.two, right: Spacing.two },
   eye: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },

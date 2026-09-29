@@ -172,7 +172,10 @@
       "chart": "Spending over time",
       "categories": "Spending by category",
       "budgets": "Budgets"
-    }
+    },
+    "allHidden": "All sections are hidden.",
+    "chooseSections": "Choose sections",
+    "allHiddenHint": "Long press to choose which sections to show"
   },
   "budget": {
     "new": "New budget",

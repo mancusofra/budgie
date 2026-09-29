@@ -172,7 +172,10 @@
       "chart": "Andamento spese",
       "categories": "Spese per categoria",
       "budgets": "Budget"
-    }
+    },
+    "allHidden": "Tutte le sezioni sono nascoste.",
+    "chooseSections": "Scegli le sezioni",
+    "allHiddenHint": "Tieni premuto per scegliere le sezioni da mostrare"
   },
   "budget": {
     "new": "Nuovo budget",
