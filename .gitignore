@@ -24,3 +24,4 @@ coverage/
 # generated native folders
 /ios
 /android
+build-ios/
