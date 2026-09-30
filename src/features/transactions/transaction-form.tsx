@@ -3,13 +3,14 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { DateChips } from '@/components/transactions/date-chips';
 import { Button } from '@/components/ui/button';
 import { Keypad } from '@/components/ui/keypad';
+import { NoteField } from '@/components/ui/note-field';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Category, Frequency } from '@/db/schema';
@@ -80,6 +81,7 @@ export function TransactionForm({ type, initial, onSubmit, onDelete, recurringId
   const [accountId, setAccountId] = useState(initial?.accountId);
   const [categoryId, setCategoryId] = useState(initial?.categoryId ?? undefined);
   const [repeat, setRepeat] = useState<Repeat | null>(null);
+  const [writingNote, setWritingNote] = useState(false);
   const [choosingCategory, setChoosingCategory] = useState(false);
   const [error, setError] = useState<string>();
   const [saving, setSaving] = useState(false);
@@ -235,18 +237,16 @@ export function TransactionForm({ type, initial, onSubmit, onDelete, recurringId
       ) : (
         <View style={styles.form}>
           <View style={styles.noteRow}>
-            <Surface style={[styles.noteBox, styles.flex]}>
-              <MaterialCommunityIcons name="text" size={18} color={theme.textSecondary} />
-              <TextInput
-                value={note}
-                onChangeText={setNote}
-                placeholder={t('transaction.note')}
-                placeholderTextColor={theme.textSecondary}
-                style={[styles.note, { color: theme.text }]}
-                maxLength={200}
-              />
-            </Surface>
-            {!editing && (
+            <NoteField
+              value={note}
+              onChangeText={setNote}
+              placeholder={t('transaction.note')}
+              onFocus={() => setWritingNote(true)}
+              onBlur={() => setWritingNote(false)}
+              style={styles.flex}
+            />
+            {/* Mentre si scrive la nota lascia spazio al pulsante "Fine" */}
+            {!editing && !writingNote && (
               <Pressable
                 onPress={cycleRepeat}
                 accessibilityRole="button"
@@ -334,14 +334,6 @@ const styles = StyleSheet.create({
   display: { alignItems: 'flex-end', minHeight: 96, justifyContent: 'center' },
   amount: { fontSize: 52, lineHeight: 60, fontWeight: '600', letterSpacing: -1 },
   form: { flex: 1, justifyContent: 'flex-end', gap: Spacing.three },
-  noteBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    borderRadius: Radius,
-    paddingHorizontal: Spacing.three,
-  },
-  note: { flex: 1, paddingVertical: Spacing.two + 4, fontSize: 16 },
   noteRow: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
   repeat: {
     flexDirection: 'row',

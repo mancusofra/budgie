@@ -4,7 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
@@ -13,6 +13,7 @@ import { AmountPad } from '@/components/ui/amount-pad';
 import { Button } from '@/components/ui/button';
 import { DateField } from '@/components/ui/date-field';
 import { RowSeparator } from '@/components/ui/nav-row';
+import { NoteField } from '@/components/ui/note-field';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Recurring } from '@/db/schema';
@@ -143,14 +144,12 @@ function RecurringForm({ item }: { item: Recurring }) {
             accessibilityLabel={t('csv.amount')}
           />
           {error && <Text style={{ color: theme.expense }}>{error}</Text>}
-          <TextInput
+          <NoteField
             value={note}
             onChangeText={setNote}
             onFocus={() => setPadOpen(false)}
             placeholder={t('transaction.note')}
-            placeholderTextColor={theme.textSecondary}
-            style={[styles.note, { color: theme.text, borderColor: theme.border }]}
-            maxLength={200}
+            style={{ backgroundColor: theme.background }}
           />
         </Surface>
 
@@ -250,13 +249,6 @@ const styles = StyleSheet.create({
   summary: { flexDirection: 'row', alignItems: 'center', gap: Spacing.three },
   name: { fontWeight: '600', fontSize: 17 },
   card: { borderRadius: Radius + 4, padding: Spacing.three, gap: Spacing.two },
-  note: {
-    borderWidth: StyleSheet.hairlineWidth,
-    borderRadius: Radius,
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.two + 2,
-    fontSize: 16,
-  },
   option: {
     flexDirection: 'row',
     alignItems: 'center',

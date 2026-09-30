@@ -9,7 +9,8 @@
     "save": "Salva",
     "cancel": "Annulla",
     "delete": "Elimina",
-    "undo": "Annulla"
+    "undo": "Annulla",
+    "done": "Fine"
   },
   "period": {
     "day": "Giorno",

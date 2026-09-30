@@ -3,13 +3,14 @@ import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Keyboard, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { DateChips } from '@/components/transactions/date-chips';
 import { Button } from '@/components/ui/button';
 import { AmountField } from '@/components/ui/amount-field';
 import { Keypad } from '@/components/ui/keypad';
+import { NoteField } from '@/components/ui/note-field';
 import { Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import type { Account } from '@/db/schema';
@@ -228,17 +229,7 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
             />
           </Surface>
         )}
-        <Surface style={styles.noteBox}>
-          <MaterialCommunityIcons name="text" size={18} color={theme.textSecondary} />
-          <TextInput
-            value={note}
-            onChangeText={setNote}
-            placeholder={t('transaction.note')}
-            placeholderTextColor={theme.textSecondary}
-            style={[styles.input, styles.flex, { color: theme.text }]}
-            maxLength={200}
-          />
-        </Surface>
+        <NoteField value={note} onChangeText={setNote} placeholder={t('transaction.note')} />
         <DateChips value={date} onChange={setDate} color={color} />
         <Keypad
           onKey={(key: KeypadKey) => {
@@ -281,14 +272,6 @@ const styles = StyleSheet.create({
   amount: { fontSize: 44, lineHeight: 52, fontWeight: '600', letterSpacing: -1 },
   form: { flex: 1, justifyContent: 'flex-end', gap: Spacing.two + 4 },
   inputBox: { borderRadius: Radius, paddingHorizontal: Spacing.three, paddingTop: Spacing.two },
-  noteBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.two,
-    borderRadius: Radius,
-    paddingHorizontal: Spacing.three,
-  },
-  input: { paddingVertical: Spacing.two + 2, fontSize: 16 },
   flex: { flex: 1 },
   inactive: { opacity: 0.45 },
 });
