@@ -36,7 +36,7 @@ export default function CurrencySheet() {
     ? COMMON_CURRENCIES
     : [current, ...COMMON_CURRENCIES];
 
-  const choose = (code: string) => {
+  const choose = async (code: string) => {
     if (code === current) return router.back();
     const apply = async (alsoAccounts: boolean) => {
       await setSetting('currency', code);
@@ -50,6 +50,11 @@ export default function CurrencySheet() {
     };
     const inOld = accounts.filter((a) => a.currency === current);
     if (inOld.length === 0) return apply(false);
+    // Conti ancora vuoti (es. "Contanti" appena creato, in onboarding): nessun
+    // importo da reinterpretare, quindi seguono la nuova valuta senza chiedere
+    const counts = await Promise.all(inOld.map((a) => accountActions.transactionCount(a.id)));
+    const untouched = inOld.every((a, i) => counts[i] === 0 && a.initialBalance === 0);
+    if (untouched) return apply(true);
     Alert.alert(
       t('currency.changeTitle', { code }),
       t('currency.changeMessage', { count: inOld.length, old: current, code }),
