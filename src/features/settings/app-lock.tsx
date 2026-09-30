@@ -92,7 +92,7 @@ export function AppLock() {
       {loaded && (
         <>
           <MaterialCommunityIcons name="lock-outline" size={48} color={theme.textSecondary} />
-          <Text variant="subtitle">Moneta</Text>
+          <Text variant="subtitle">Budgie</Text>
           {unavailable && (
             <Text variant="caption" color="textSecondary" style={styles.center}>
               {t('lock.unavailable')}

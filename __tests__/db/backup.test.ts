@@ -54,7 +54,7 @@ describe('backup', () => {
 
   it('rifiuta file non validi senza toccare i dati', () => {
     expect(() => parseBackup('non è json')).toThrow(InvalidBackupError);
-    expect(() => parseBackup(JSON.stringify({ format: 'altro' }))).toThrow(/Moneta/);
+    expect(() => parseBackup(JSON.stringify({ format: 'altro' }))).toThrow(/Budgie/);
     expect(() =>
       parseBackup(JSON.stringify({ format: 'moneta-backup', version: 99, data: {} })),
     ).toThrow(/più recente/);

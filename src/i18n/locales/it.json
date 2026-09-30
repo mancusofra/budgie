@@ -254,12 +254,12 @@
     "note": "Nota"
   },
   "lock": {
-    "prompt": "Sblocca Moneta",
+    "prompt": "Sblocca Budgie",
     "unlock": "Sblocca",
     "unavailable": "Riconoscimento biometrico non disponibile su questo dispositivo: l'app è stata sbloccata."
   },
   "onboarding": {
-    "welcomeTitle": "Benvenuto in Moneta",
+    "welcomeTitle": "Benvenuto in Budgie",
     "welcomeBody": "Registra una spesa in due tocchi: scegli la categoria, digita l'importo, fatto.",
     "currencyTitle": "La tua valuta",
     "currencyBody": "È quella del tuo dispositivo: puoi cambiarla ora o in qualsiasi momento dalle Impostazioni.",

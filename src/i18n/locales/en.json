@@ -254,12 +254,12 @@
     "note": "Note"
   },
   "lock": {
-    "prompt": "Unlock Moneta",
+    "prompt": "Unlock Budgie",
     "unlock": "Unlock",
     "unavailable": "Biometric authentication isn't available on this device: the app has been unlocked."
   },
   "onboarding": {
-    "welcomeTitle": "Welcome to Moneta",
+    "welcomeTitle": "Welcome to Budgie",
     "welcomeBody": "Log an expense in two taps: pick the category, type the amount, done.",
     "currencyTitle": "Your currency",
     "currencyBody": "It's your device's currency: change it now or anytime from Settings.",

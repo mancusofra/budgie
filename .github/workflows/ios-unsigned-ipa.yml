@@ -37,8 +37,8 @@ jobs:
         run: |
           set -o pipefail
           xcodebuild \
-            -workspace ios/Moneta.xcworkspace \
-            -scheme Moneta \
+            -workspace ios/Budgie.xcworkspace \
+            -scheme Budgie \
             -configuration Release \
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
@@ -51,12 +51,12 @@ jobs:
       - name: Impacchetta il .ipa
         run: |
           mkdir -p Payload
-          cp -R build/Build/Products/Release-iphoneos/Moneta.app Payload/
-          zip -qry Moneta-unsigned.ipa Payload
-          ls -lh Moneta-unsigned.ipa
+          cp -R build/Build/Products/Release-iphoneos/Budgie.app Payload/
+          zip -qry Budgie-unsigned.ipa Payload
+          ls -lh Budgie-unsigned.ipa
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Moneta-unsigned-ipa
-          path: Moneta-unsigned.ipa
+          name: Budgie-unsigned-ipa
+          path: Budgie-unsigned.ipa
           retention-days: 14

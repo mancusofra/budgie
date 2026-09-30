@@ -34,7 +34,7 @@ export function useDataTransfer() {
     async ({ format: kind, from, to }: ExportOptions) => {
       const rows = await repos.transactions.listDetailed({ from, to });
       if (rows.length === 0) return 0;
-      const name = `moneta-${today()}.${kind}`;
+      const name = `budgie-${today()}.${kind}`;
       if (kind === 'json') {
         await shareFile(name, transactionsJson(rows), 'application/json', 'public.json');
         return rows.length;
@@ -69,7 +69,7 @@ export function useDataTransfer() {
   const exportBackup = useCallback(async () => {
     const backup = await createBackup(db);
     await shareFile(
-      `moneta-backup-${today()}.json`,
+      `budgie-backup-${today()}.json`,
       JSON.stringify(backup),
       'application/json',
       'public.json',

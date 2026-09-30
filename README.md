@@ -1,10 +1,10 @@
-# Moneta 💸
+# Budgie 🦜
 
 App mobile (iOS + Android) per la gestione delle spese personali, ispirata a **Monefy**:
 inserimento di una spesa in 2 tap, grafico a ciambella per categoria al centro della home,
 tutto offline-first.
 
-> Stato: **Fase 0 completata** — scheletro dell'app con le 4 tab.
+> Stato: **Fasi 0–7 completate, più le transazioni ricorrenti** — in QA prima del merge.
 > Vedi [`docs/PLAN.md`](docs/PLAN.md) per la roadmap.
 
 ## Funzionalità principali (MVP)
