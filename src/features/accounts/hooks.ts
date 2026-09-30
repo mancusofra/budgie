@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 
 import { repos } from '@/db/client';
-import { useLiveQuery, useLiveQueryOn } from '@/db/live-query';
+import { refreshLiveQueries, useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import { accounts, transactions } from '@/db/schema';
 import type { Account } from '@/db/schema';
 import { useCurrency } from '@/features/settings/hooks';
@@ -36,6 +36,12 @@ export const accountActions = {
   create: repos.accounts.create,
   update: repos.accounts.update,
   remove: (id: string) => repos.accounts.remove(id),
+  /** Transazione sincrona: aggiorna esplicitamente le schermate (vedi materialize). */
+  purge: (id: string) => {
+    const removed = repos.accounts.purge(id);
+    refreshLiveQueries();
+    return removed;
+  },
   setArchived: repos.accounts.setArchived,
   reorder: repos.accounts.reorder,
   transactionCount: (id: string) => repos.accounts.transactionCount(id),

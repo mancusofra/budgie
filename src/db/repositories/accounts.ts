@@ -2,7 +2,7 @@ import { asc, eq, or, sql } from 'drizzle-orm';
 
 import { createId } from '@/lib/id';
 
-import { accounts, transactions, type Account } from '../schema';
+import { accounts, recurring, transactions, type Account } from '../schema';
 import { InUseError } from './errors';
 import type { AppDatabase } from '../types';
 
@@ -103,6 +103,31 @@ export function createAccountsRepo(db: AppDatabase) {
       const count = await this.transactionCount(id);
       if (count > 0) throw new InUseError('Il conto', count);
       await db.delete(a).where(eq(a.id, id));
+    },
+
+    /**
+     * Elimina definitivamente un conto archiviato insieme alle sue transazioni
+     * (anche i trasferimenti da e verso il conto) e alle sue ricorrenze.
+     * Restituisce quante transazioni sono state eliminate.
+     */
+    purge(id: string): number {
+      return db.transaction((tx) => {
+        const account = tx.select().from(a).where(eq(a.id, id)).get();
+        if (!account) return 0;
+        if (!account.archived)
+          throw new Error('Solo un conto archiviato può essere eliminato definitivamente');
+        const involves = (t: typeof transactions | typeof recurring) =>
+          or(eq(t.accountId, id), eq(t.toAccountId, id));
+        // Prima le transazioni: possono riferirsi alle ricorrenze del conto
+        const removed = tx
+          .delete(transactions)
+          .where(involves(transactions))
+          .returning({ id: transactions.id })
+          .all();
+        tx.delete(recurring).where(involves(recurring)).run();
+        tx.delete(a).where(eq(a.id, id)).run();
+        return removed.length;
+      });
     },
 
     async reorder(ids: string[]): Promise<void> {

@@ -167,7 +167,13 @@
     "select": "Conto",
     "toggleSign": "Cambia segno",
     "archiveMessage_one": "Ha 1 transazione: non può essere eliminato, ma lo puoi archiviare. La transazione resta.",
-    "archiveMessage_other": "Ha {{count}} transazioni: non può essere eliminato, ma lo puoi archiviare. Le transazioni restano."
+    "archiveMessage_other": "Ha {{count}} transazioni: non può essere eliminato, ma lo puoi archiviare. Le transazioni restano.",
+    "purge": "Elimina definitivamente",
+    "purgeAction": "Elimina",
+    "purgeConfirm": "Eliminare definitivamente «{{name}}»?",
+    "purgeMessage_one": "Verrà eliminata anche 1 transazione, insieme alle ricorrenze del conto. Non si può annullare.",
+    "purgeMessage_other": "Verranno eliminate anche {{count}} transazioni (compresi i trasferimenti) e le ricorrenze del conto. Non si può annullare.",
+    "purgeEmpty": "Il conto non ha transazioni. Non si può annullare."
   },
   "transfer": {
     "title": "Trasferimento",

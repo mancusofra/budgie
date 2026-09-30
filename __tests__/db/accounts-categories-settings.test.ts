@@ -60,6 +60,50 @@ describe('accountsRepo', () => {
     close();
   });
 
+  it('elimina definitivamente un conto archiviato con transazioni, trasferimenti e ricorrenze', async () => {
+    const { db, repos, close } = createTestDb();
+    await seedDatabase(db, { language: 'it', currency: 'EUR' });
+    const [cash] = await repos.accounts.list();
+    const old = await repos.accounts.create({ name: 'Vecchio', currency: 'EUR' });
+    const [food] = await repos.categories.list({ type: 'expense' });
+    const spend = { type: 'expense' as const, amount: 500, categoryId: food.id };
+    await repos.transactions.create({ ...spend, accountId: old.id });
+    await repos.transactions.create({ ...spend, accountId: cash.id });
+    // Trasferimenti in entrambe le direzioni
+    await repos.transactions.create({
+      type: 'transfer',
+      amount: 100,
+      accountId: cash.id,
+      toAccountId: old.id,
+    });
+    await repos.transactions.create({
+      type: 'transfer',
+      amount: 100,
+      accountId: old.id,
+      toAccountId: cash.id,
+    });
+    await repos.recurring.create({
+      ...spend,
+      accountId: old.id,
+      frequency: 'month',
+      startDate: new Date(2026, 0, 1),
+    });
+    repos.recurring.materialize(new Date(2026, 1, 15));
+
+    // Solo se archiviato
+    expect(() => repos.accounts.purge(old.id)).toThrow();
+    await repos.accounts.setArchived(old.id, true);
+    expect(repos.accounts.purge(old.id)).toBe(5);
+
+    expect(await repos.accounts.getById(old.id)).toBeUndefined();
+    const left = await repos.transactions.list();
+    expect(left).toHaveLength(1);
+    expect(left[0].accountId).toBe(cash.id);
+    expect(await repos.recurring.listDetailed()).toEqual([]);
+    expect(repos.accounts.purge('inesistente')).toBe(0);
+    close();
+  });
+
   it('nasconde i conti archiviati e mantiene l’ordine di inserimento', async () => {
     const { repos, close } = createTestDb();
     const a = await repos.accounts.create({ name: ' Zeta ', currency: 'EUR' });

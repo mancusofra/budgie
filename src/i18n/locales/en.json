@@ -167,7 +167,13 @@
     "select": "Account",
     "toggleSign": "Toggle sign",
     "archiveMessage_one": "It has 1 transaction: it can't be deleted, but you can archive it. The transaction is kept.",
-    "archiveMessage_other": "It has {{count}} transactions: it can't be deleted, but you can archive it. Transactions are kept."
+    "archiveMessage_other": "It has {{count}} transactions: it can't be deleted, but you can archive it. Transactions are kept.",
+    "purge": "Delete permanently",
+    "purgeAction": "Delete",
+    "purgeConfirm": "Permanently delete “{{name}}”?",
+    "purgeMessage_one": "1 transaction will be deleted too, along with the account's recurring transactions. This can't be undone.",
+    "purgeMessage_other": "{{count}} transactions (transfers included) and the account's recurring transactions will be deleted too. This can't be undone.",
+    "purgeEmpty": "The account has no transactions. This can't be undone."
   },
   "transfer": {
     "title": "Transfer",

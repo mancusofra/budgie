@@ -1,7 +1,8 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router, Stack } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 import { ScrollView } from 'react-native-gesture-handler';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
@@ -25,6 +26,25 @@ export default function AccountsScreen() {
   const rows = useAccountsWithBalance({ includeArchived: true });
   const active = rows.filter((r) => !r.account.archived);
   const archived = rows.filter((r) => r.account.archived);
+
+  const confirmPurge = async (id: string, name: string) => {
+    const count = await accountActions.transactionCount(id);
+    Alert.alert(
+      t('accounts.purgeConfirm', { name }),
+      count > 0 ? t('accounts.purgeMessage', { count }) : t('accounts.purgeEmpty'),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        {
+          text: t('accounts.purgeAction'),
+          style: 'destructive',
+          onPress: () => {
+            accountActions.purge(id);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          },
+        },
+      ],
+    );
+  };
 
   const open = (id: string) => router.push({ pathname: '/account/[id]', params: { id } });
   const balanceText = (balance: number, currency: string) =>
@@ -97,6 +117,14 @@ export default function AccountsScreen() {
                       {t('accounts.restore')}
                     </Text>
                   </Pressable>
+                  <Pressable
+                    onPress={() => confirmPurge(account.id, account.name)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('accounts.purge')}
+                    hitSlop={8}
+                    style={styles.purge}>
+                    <MaterialCommunityIcons name="delete-outline" size={22} color={theme.expense} />
+                  </Pressable>
                 </View>
               ))}
             </Surface>
@@ -123,4 +151,5 @@ const styles = StyleSheet.create({
   balance: { fontWeight: '600', ...TabularNums },
   section: { gap: Spacing.two },
   restore: { fontWeight: '600', marginLeft: Spacing.two },
+  purge: { paddingHorizontal: Spacing.two },
 });
