@@ -31,14 +31,17 @@ export function nextOccurrence(r: Recurrence): Date | null {
 }
 
 /**
- * Occorrenze scadute (fino a `now` compreso) ancora da registrare, al massimo
+ * Occorrenze scadute (fino al giorno di `now` compreso) ancora da registrare, al massimo
  * `max` per volta (protegge da date di inizio molto lontane).
  */
 export function dueOccurrences(r: Recurrence, now: Date, max = 500): Date[] {
+  // Conta il giorno, non l'ora: l'affitto del 1° si registra aprendo l'app il 1°
+  // a qualsiasi ora, anche prima dell'orario in cui era stata creata la ricorrenza
+  const today = endOfDay(now);
   const due: Date[] = [];
   for (let n = r.count; due.length < max; n++) {
     const date = occurrenceDate(r, n);
-    if (date > now || (r.endDate && date > endOfDay(r.endDate))) break;
+    if (date > today || (r.endDate && date > endOfDay(r.endDate))) break;
     due.push(date);
   }
   return due;

@@ -51,6 +51,11 @@ describe('dueOccurrences', () => {
     expect(due.map((d) => d.getDate())).toEqual([28, 31, 30]);
   });
 
+  it('il giorno della scadenza conta a qualsiasi ora', () => {
+    // Creata alle 9: aprendo l'app alle 7 dello stesso giorno è già scaduta
+    expect(dueOccurrences(base(), new Date(2026, 0, 31, 7))).toHaveLength(1);
+  });
+
   it('una prima occorrenza futura non è ancora scaduta', () => {
     expect(dueOccurrences(base(), new Date(2026, 0, 30))).toEqual([]);
   });

@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next';
 
 import { repos } from '@/db/client';
-import { useLiveQuery, useLiveQueryOn } from '@/db/live-query';
+import { refreshLiveQueries, useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import { accounts, categories, recurring, type Frequency, type Recurring } from '@/db/schema';
 
 /** Ricorrenze con categoria e conto; si aggiorna anche per nomi e colori. */
@@ -25,7 +25,16 @@ export const recurringActions = {
   create: repos.recurring.create,
   update: repos.recurring.update,
   remove: (id: string) => repos.recurring.remove(id),
-  materialize: (now?: Date) => repos.recurring.materialize(now),
+  /**
+   * Registra le occorrenze scadute. Le scritture avvengono in un'unica
+   * transazione sincrona, che su iOS non sempre notifica le live query:
+   * se ha creato qualcosa aggiorna esplicitamente le schermate aperte.
+   */
+  materialize: (now?: Date) => {
+    const created = repos.recurring.materialize(now);
+    if (created > 0) refreshLiveQueries();
+    return created;
+  },
 };
 
 /** Scelte offerte nell'app (frequenza + intervallo). */
