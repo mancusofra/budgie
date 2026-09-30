@@ -32,7 +32,7 @@
 │  src/db/repositories  Query Drizzle          │  ← unico punto che parla col DB
 │  src/db/schema.ts     Schema + migrazioni    │
 ├─────────────────────────────────────────────┤
-│  expo-sqlite (file locale moneta.db)         │
+│  expo-sqlite (file locale budgie.db)         │
 └─────────────────────────────────────────────┘
 ```
 

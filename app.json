@@ -1,11 +1,11 @@
 {
   "expo": {
     "name": "Budgie",
-    "slug": "moneta",
+    "slug": "budgie",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "moneta",
+    "scheme": "budgie",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": {
@@ -13,7 +13,7 @@
         "dark": "./assets/images/ios-icon-dark.png",
         "tinted": "./assets/images/ios-icon-tinted.png"
       },
-      "bundleIdentifier": "com.mancusofra.moneta",
+      "bundleIdentifier": "com.mancusofra.budgie",
       "supportsTablet": false
     },
     "android": {
@@ -24,7 +24,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.mancusofra.moneta"
+      "package": "com.mancusofra.budgie"
     },
     "web": {
       "output": "static",

@@ -1,6 +1,6 @@
 # Modello dati
 
-Database SQLite locale (`moneta.db`) gestito con Drizzle ORM.
+Database SQLite locale (`budgie.db`) gestito con Drizzle ORM.
 ID: stringhe UUID/cuid generate lato app (utile per un eventuale sync futuro).
 Date: `INTEGER` (timestamp ms UTC). Importi: `INTEGER` in **unità minori** (centesimi).
 

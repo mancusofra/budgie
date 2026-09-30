@@ -9,8 +9,9 @@ import {
 } from './schema';
 import type { AppDatabase } from './types';
 
-/** Identificativo interno del formato: resta 'moneta-backup' per i backup già fatti. */
-export const BACKUP_FORMAT = 'moneta-backup';
+export const BACKUP_FORMAT = 'budgie-backup';
+/** Backup creati quando l'app si chiamava Moneta: stesso contenuto, si ripristinano ancora. */
+const LEGACY_BACKUP_FORMATS = ['moneta-backup'];
 /** 2: aggiunte le ricorrenze (i backup 1 si ripristinano senza). */
 export const BACKUP_VERSION = 2;
 
@@ -72,7 +73,8 @@ export function parseBackup(json: string): Backup {
     throw new InvalidBackupError('Il file non è un JSON valido');
   }
   const b = parsed as Partial<Backup>;
-  if (b?.format !== BACKUP_FORMAT) throw new InvalidBackupError('Non è un backup di Budgie');
+  if (b?.format !== BACKUP_FORMAT && !LEGACY_BACKUP_FORMATS.includes(String(b?.format)))
+    throw new InvalidBackupError('Non è un backup di Budgie');
   if (typeof b.version !== 'number' || b.version > BACKUP_VERSION) {
     throw new InvalidBackupError('Backup creato da una versione più recente dell’app');
   }

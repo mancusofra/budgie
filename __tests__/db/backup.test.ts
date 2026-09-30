@@ -52,14 +52,23 @@ describe('backup', () => {
     target.close();
   });
 
+  it("accetta i backup creati quando l'app si chiamava Moneta", async () => {
+    const { db, close } = await populated();
+    const backup = await createBackup(db);
+    expect(backup.format).toBe('budgie-backup');
+    const legacy = JSON.stringify({ ...backup, format: 'moneta-backup' });
+    expect(parseBackup(legacy).data.transactions).toHaveLength(backup.data.transactions.length);
+    close();
+  });
+
   it('rifiuta file non validi senza toccare i dati', () => {
     expect(() => parseBackup('non è json')).toThrow(InvalidBackupError);
     expect(() => parseBackup(JSON.stringify({ format: 'altro' }))).toThrow(/Budgie/);
     expect(() =>
-      parseBackup(JSON.stringify({ format: 'moneta-backup', version: 99, data: {} })),
+      parseBackup(JSON.stringify({ format: 'budgie-backup', version: 99, data: {} })),
     ).toThrow(/più recente/);
     expect(() =>
-      parseBackup(JSON.stringify({ format: 'moneta-backup', version: 1, data: { accounts: [] } })),
+      parseBackup(JSON.stringify({ format: 'budgie-backup', version: 1, data: { accounts: [] } })),
     ).toThrow(/mancante/);
   });
 });

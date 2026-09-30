@@ -39,7 +39,7 @@ Dettagli e motivazioni in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 ## Struttura del progetto
 
 ```
-moneta/
+budgie/
 ├── src/
 │   ├── app/                    # Schermate (Expo Router, file-based routing)
 │   │   ├── _layout.tsx         # Root layout: provider, tema, DB, i18n
