@@ -23,8 +23,7 @@ export function SnackbarHost() {
     return () => clearTimeout(timer);
   }, [current, hide]);
 
-  if (!current) return null;
-
+  // Il contenitore resta montato: così l'uscita del messaggio può dissolversi
   return (
     <View
       pointerEvents="box-none"
@@ -32,27 +31,29 @@ export function SnackbarHost() {
         styles.wrapper,
         { bottom: insets.bottom + Math.max(FloatingTabBarHeight, 64) + Spacing.three },
       ]}>
-      <Animated.View
-        key={current.id}
-        entering={FadeIn.duration(AnimationMs)}
-        exiting={FadeOut.duration(AnimationMs)}>
-        <Surface style={[styles.bar, { borderColor: theme.border }]}>
-          <Text style={styles.message} numberOfLines={2}>
-            {current.message}
-          </Text>
-          {current.actionLabel && (
-            <Pressable
-              accessibilityRole="button"
-              hitSlop={8}
-              onPress={() => {
-                current.onAction?.();
-                hide(current.id);
-              }}>
-              <Text style={[styles.action, { color: theme.primary }]}>{current.actionLabel}</Text>
-            </Pressable>
-          )}
-        </Surface>
-      </Animated.View>
+      {current && (
+        <Animated.View
+          key={current.id}
+          entering={FadeIn.duration(AnimationMs)}
+          exiting={FadeOut.duration(AnimationMs * 2)}>
+          <Surface style={[styles.bar, { borderColor: theme.border }]}>
+            <Text style={styles.message} numberOfLines={2}>
+              {current.message}
+            </Text>
+            {current.actionLabel && (
+              <Pressable
+                accessibilityRole="button"
+                hitSlop={8}
+                onPress={() => {
+                  current.onAction?.();
+                  hide(current.id);
+                }}>
+                <Text style={[styles.action, { color: theme.primary }]}>{current.actionLabel}</Text>
+              </Pressable>
+            )}
+          </Surface>
+        </Animated.View>
+      )}
     </View>
   );
 }

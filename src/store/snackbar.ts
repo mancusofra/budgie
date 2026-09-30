@@ -19,7 +19,7 @@ let nextId = 1;
 
 export const useSnackbar = create<SnackbarState>()((set, get) => ({
   current: undefined,
-  show: (msg) => set({ current: { duration: 5000, ...msg, id: nextId++ } }),
+  show: (msg) => set({ current: { duration: 4000, ...msg, id: nextId++ } }),
   // Con un id nasconde solo quel messaggio (evita di chiuderne uno più recente)
   hide: (id) => {
     if (id === undefined || get().current?.id === id) set({ current: undefined });
