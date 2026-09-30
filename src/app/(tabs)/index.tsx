@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
@@ -158,13 +158,24 @@ export default function HomeScreen() {
     mode === 'balance' ? 'home.balance' : mode === 'expense' ? 'home.expenses' : 'home.income',
   );
 
+  // All'apertura le posizioni cambiano più volte in pochi istanti (misura dello
+  // spazio, arrivo dei totali): le icone vanno messe al loro posto senza
+  // animazione, che si attiva solo dopo che la disposizione si è assestata
+  const [animateIcons, setAnimateIcons] = useState(false);
+  const measured = area.height > 0;
+  useEffect(() => {
+    if (animateIcons || !measured) return;
+    const timer = setTimeout(() => setAnimateIcons(true), 500);
+    return () => clearTimeout(timer);
+  }, [animateIcons, measured, iconPositions]);
+
   const renderIcon = (c: Category) => {
     const p = iconPositions.get(c.id);
     if (!p) return null;
     return (
       <Animated.View
         key={c.id}
-        layout={iconTransition}
+        layout={animateIcons ? iconTransition : undefined}
         style={[styles.cell, { left: p.x - ICON_SIZE / 2, top: p.y - ICON_SIZE / 2 }]}>
         <Pressable
           accessibilityRole="button"
@@ -189,7 +200,8 @@ export default function HomeScreen() {
 
       <GestureDetector gesture={swipe}>
         <View
-          style={styles.ring}
+          // Invisibile finché non si conosce lo spazio vero (niente salti iniziali)
+          style={[styles.ring, !measured && styles.hidden]}
           collapsable={false}
           onLayout={(e) => {
             const { width: w, height: h } = e.nativeEvent.layout;
@@ -291,6 +303,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   top: { gap: Spacing.three },
   ring: { flex: 1, marginVertical: Spacing.two },
+  hidden: { opacity: 0 },
   cell: { position: 'absolute', width: ICON_SIZE, height: ICON_SIZE },
   centerAmount: { fontSize: 30, lineHeight: 36, fontWeight: '600', letterSpacing: -0.5 },
   centerTotals: { flexDirection: 'row', gap: Spacing.three, marginTop: Spacing.one },
