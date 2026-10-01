@@ -76,11 +76,17 @@ export function ReorderableStack({
   const heights = useSharedValue<Heights>({});
   const [ready, setReady] = useState(false);
 
-  // Elementi aggiunti o tolti: mantiene l'ordine corrente (anche durante un
-  // trascinamento) e accoda i nuovi in fondo
+  // Stessi elementi in un altro ordine (es. l'ordine salvato che arriva dopo il
+  // primo render): vale quello delle props. Elementi aggiunti o tolti: mantiene
+  // l'ordine corrente e accoda i nuovi in fondo
   useEffect(() => {
     const next = signature ? signature.split('|') : [];
-    const current = order.get().filter((k) => next.includes(k));
+    const prev = order.get();
+    if (prev.length === next.length && next.every((k) => prev.includes(k))) {
+      order.set(next);
+      return;
+    }
+    const current = prev.filter((k) => next.includes(k));
     order.set([...current, ...next.filter((k) => !current.includes(k))]);
   }, [signature, order]);
 

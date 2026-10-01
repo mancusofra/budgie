@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
 import { Spacing } from '@/theme';
 
-/** Scelta rapida della data: Oggi, Ieri o calendario (date future escluse). */
+/** Scelta rapida della data: Oggi, Ieri o calendario (anche date future, es. spese programmate). */
 export function DateChips({
   value,
   onChange,
@@ -51,7 +51,6 @@ export function DateChips({
           value={value}
           mode="date"
           display="compact"
-          maximumDate={today}
           onValueChange={(_, d) => onChange(d)}
         />
       ) : (
@@ -62,7 +61,6 @@ export function DateChips({
             DateTimePickerAndroid.open({
               value,
               mode: 'date',
-              maximumDate: new Date(),
               onValueChange: (_, d) => onChange(d),
             })
           }>
