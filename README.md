@@ -105,3 +105,16 @@ npx expo-doctor     # verifica dipendenze/config Expo
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — scelte tecniche e flusso dei dati
 - [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — schema del database
 - [`docs/UI_SPEC.md`](docs/UI_SPEC.md) — schermate e interazioni
+
+## Licenza
+
+Copyright (C) 2026 Francesco Mancuso
+
+Budgie è software libero: puoi ridistribuirlo e/o modificarlo secondo i termini
+della [GNU General Public License versione 3](LICENSE) (GPL-3.0-only), come
+pubblicata dalla Free Software Foundation.
+
+In breve: puoi usare, studiare, modificare e condividere il codice; se distribuisci
+una versione modificata devi renderne disponibile il codice sorgente con la stessa
+licenza. Il programma è fornito **senza alcuna garanzia**: vedi il file
+[`LICENSE`](LICENSE) per i termini completi.
