@@ -25,3 +25,8 @@ coverage/
 /ios
 /android
 build-ios/
+
+# Istruzioni e impostazioni per assistenti IA: restano solo in locale
+CLAUDE.md
+AGENTS.md
+.claude/

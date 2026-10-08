@@ -118,3 +118,9 @@ In breve: puoi usare, studiare, modificare e condividere il codice; se distribui
 una versione modificata devi renderne disponibile il codice sorgente con la stessa
 licenza. Il programma è fornito **senza alcuna garanzia**: vedi il file
 [`LICENSE`](LICENSE) per i termini completi.
+
+**Nome e grafica sono esclusi dalla GPL.** Il nome "Budgie" e il pappagallino
+(icone, schermata di avvio, file in `assets/`) sono rilasciati con licenza
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it): chi
+distribuisce una versione modificata deve usare un nome e un'icona propri. Dettagli in
+[`assets/LICENSE.md`](assets/LICENSE.md).
