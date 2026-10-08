@@ -9,7 +9,7 @@ import { budgetMonthKey, budgetStatus } from '@/lib/budget';
 import { periodRange, shiftPeriod, type Period, type PeriodRange } from '@/lib/period';
 import { chartWindow, fillSeries } from '@/lib/series';
 
-/** Spese per giorno/mese da mostrare nel grafico a barre del periodo. */
+/** Spending per day/month to show in the period's bar chart. */
 export function useExpenseSeries(period: Period, range: PeriodRange, scope: AccountScope) {
   const key = scopeKey(scope);
   const { data: first } = useLiveQuery(repos.transactions.firstDate(scope), [key]);
@@ -29,7 +29,7 @@ export function useExpenseSeries(period: Period, range: PeriodRange, scope: Acco
   return { window, points };
 }
 
-/** Spese del periodo precedente (per il confronto); null per "Sempre". */
+/** Spending of the previous period (for the comparison); null for "All time". */
 export function usePreviousExpense(period: Period, scope: AccountScope): number | null {
   const settings = useSettings();
   const opts = {
@@ -54,10 +54,10 @@ export type BudgetProgress = {
 } & ReturnType<typeof budgetStatus>;
 
 /**
- * Data di riferimento del mese dei budget per il periodo selezionato:
- * il mese stesso (o quello che contiene giorno/settimana/intervallo); per
- * un anno il mese corrente se è l'anno in corso, altrimenti il suo ultimo;
- * per "Sempre" il mese corrente.
+ * Reference date of the budget month for the selected period:
+ * the month itself (or the one containing the day/week/range); for
+ * a year the current month if it's the current year, otherwise its last one;
+ * for "All time" the current month.
  */
 function budgetAnchor(period: Period, range: PeriodRange, now = new Date()): Date {
   switch (period.kind) {
@@ -75,8 +75,8 @@ function budgetAnchor(period: Period, range: PeriodRange, now = new Date()): Dat
 }
 
 /**
- * Budget del mese mostrato (ereditati dal mese precedente se non definiti),
- * con lo speso di quel mese su tutti i conti: ogni mese si riparte da zero.
+ * Budgets of the shown month (inherited from the previous month if not defined),
+ * with that month's spending across all accounts: every month starts from zero.
  */
 export function useBudgetProgress(period: Period, range: PeriodRange, scope: AccountScope) {
   const settings = useSettings();
@@ -90,7 +90,7 @@ export function useBudgetProgress(period: Period, range: PeriodRange, scope: Acc
     [budgets, budgetMonths],
     [monthKey],
   );
-  // Budget nella valuta principale: contano solo i conti in quella valuta
+  // Budgets are in the main currency: only accounts in that currency count
   const { data: stats } = useLiveQuery(repos.transactions.statsByCategory({ ...month, ...scope }), [
     month.from?.getTime(),
     scopeKey(scope),

@@ -12,8 +12,8 @@ const DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
 const COLUMNS = 7;
 
 /**
- * Giorno da cui parte il "mese" (1–28), scelto da una griglia come un
- * calendario. Oltre il 28 non si va: non tutti i mesi hanno 29–31 giorni.
+ * Day the "month" starts on (1–28), chosen from a calendar-like grid.
+ * It stops at 28: not every month has 29–31 days.
  */
 export default function MonthStartSheet() {
   const { t } = useTranslation();

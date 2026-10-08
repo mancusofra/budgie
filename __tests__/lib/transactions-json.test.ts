@@ -16,7 +16,7 @@ const row = (over: Partial<CsvTransaction['transaction']>, extra: Partial<CsvTra
   }) as CsvTransaction;
 
 describe('transactionsJson', () => {
-  it('esporta importi decimali con segno e chiavi fisse', () => {
+  it('exports signed decimal amounts with fixed keys', () => {
     const json = JSON.parse(
       transactionsJson([
         row({ note: 'Pizza' }),
@@ -40,14 +40,14 @@ describe('transactionsJson', () => {
     ]);
   });
 
-  it('rispetta i decimali della valuta', () => {
+  it('respects the currency decimals', () => {
     const [item] = JSON.parse(
       transactionsJson([row({ amount: 1500 }, { account: { name: 'Yen', currency: 'JPY' } })]),
     );
     expect(item.amount).toBe(-1500);
   });
 
-  it('senza transazioni restituisce un array vuoto', () => {
+  it('returns an empty array without transactions', () => {
     expect(JSON.parse(transactionsJson([]))).toEqual([]);
   });
 });

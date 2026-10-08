@@ -4,8 +4,8 @@ import { accounts, categories, transactions } from './schema';
 import type { AppDatabase } from './types';
 
 /**
- * Genera `count` transazioni realistiche negli ultimi `days` giorni sui conti e
- * le categorie attivi (solo per sviluppo, QA e test di prestazioni).
+ * Generates `count` realistic transactions over the last `days` days on the active accounts and
+ * categories (development, QA and performance tests only).
  */
 export async function generateDemoTransactions(
   db: AppDatabase,
@@ -34,7 +34,7 @@ export async function generateDemoTransactions(
     };
   });
 
-  // A blocchi (SQLite limita i parametri per istruzione), in un'unica transazione
+  // In chunks (SQLite limits parameters per statement), in a single transaction
   db.transaction((tx) => {
     for (let i = 0; i < rows.length; i += 100) {
       tx.insert(transactions)

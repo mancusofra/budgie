@@ -13,12 +13,12 @@ const type = (keys: string, currency = 'EUR') =>
   );
 
 describe('applyKey', () => {
-  it('compone numeri e operatori', () => {
+  it('builds numbers and operators', () => {
     expect(type('12,5+3')).toBe('12,5+3');
     expect(type('12<')).toBe('1');
   });
 
-  it('ignora input non validi', () => {
+  it('ignores invalid input', () => {
     expect(type('+')).toBe('');
     expect(type('0005')).toBe('5');
     expect(type('1,2,3')).toBe('1,23');
@@ -49,13 +49,13 @@ describe('evaluate', () => {
     expect(evaluate(expr)).toBe(expected);
   });
 
-  it('usa i decimali della valuta', () => {
+  it('uses the currency decimals', () => {
     expect(evaluate('500×2', 'JPY')).toBe(1000);
   });
 });
 
 describe('hasOperator', () => {
-  it('ignora un operatore finale', () => {
+  it('ignores a trailing operator', () => {
     expect(hasOperator('12')).toBe(false);
     expect(hasOperator('12+')).toBe(false);
     expect(hasOperator('12+3')).toBe(true);

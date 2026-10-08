@@ -9,7 +9,7 @@ import { db } from './client';
 import migrations from './migrations/migrations';
 import { seedDatabase } from './seed';
 
-/** Applica le migrazioni e il seed, poi mostra l'app. `onReady` viene chiamato in entrambi i casi. */
+/** Applies migrations and the seed, then shows the app. `onReady` is called in both cases. */
 export function DatabaseProvider({
   children,
   onReady,

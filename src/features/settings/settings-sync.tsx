@@ -5,12 +5,12 @@ import { applyLanguage } from '@/i18n';
 
 import { useSettings } from './hooks';
 
-/** Applica all'app le preferenze salvate: tema e lingua. */
+/** Applies the saved preferences to the app: theme and language. */
 export function SettingsSync() {
   const { theme = 'system', language = 'system' } = useSettings();
 
   useEffect(() => {
-    // 'unspecified' = segui il sistema
+    // 'unspecified' = follow the system
     Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
   }, [theme]);
 

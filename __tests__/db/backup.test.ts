@@ -34,13 +34,13 @@ async function populated() {
 }
 
 describe('backup', () => {
-  it('esporta e ripristina tutti i dati identici (anche passando da JSON)', async () => {
+  it('exports and restores all data unchanged (also through JSON)', async () => {
     const source = await populated();
     const backup = await createBackup(source.db, new Date(2026, 8, 29));
     const json = JSON.stringify(backup);
 
     const target = createTestDb();
-    await seedDatabase(target.db, { language: 'en', currency: 'USD' }); // dati diversi, da sostituire
+    await seedDatabase(target.db, { language: 'en', currency: 'USD' }); // different data, to be replaced
     restoreBackup(target.db, parseBackup(json));
 
     const again = await createBackup(target.db, new Date(2026, 8, 29));
@@ -52,7 +52,7 @@ describe('backup', () => {
     target.close();
   });
 
-  it("accetta i backup creati quando l'app si chiamava Moneta", async () => {
+  it('accepts backups made when the app was called Moneta', async () => {
     const { db, close } = await populated();
     const backup = await createBackup(db);
     expect(backup.format).toBe('budgie-backup');
@@ -61,14 +61,14 @@ describe('backup', () => {
     close();
   });
 
-  it('rifiuta file non validi senza toccare i dati', () => {
+  it('rejects invalid files without touching the data', () => {
     expect(() => parseBackup('non è json')).toThrow(InvalidBackupError);
     expect(() => parseBackup(JSON.stringify({ format: 'altro' }))).toThrow(/Budgie/);
     expect(() =>
       parseBackup(JSON.stringify({ format: 'budgie-backup', version: 99, data: {} })),
-    ).toThrow(/più recente/);
+    ).toThrow(/newer version/);
     expect(() =>
       parseBackup(JSON.stringify({ format: 'budgie-backup', version: 1, data: { accounts: [] } })),
-    ).toThrow(/mancante/);
+    ).toThrow(/Missing section/);
   });
 });

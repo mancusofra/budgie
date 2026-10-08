@@ -18,7 +18,7 @@ export default function EditTransactionScreen() {
   const updateTransaction = useUpdateTransaction();
   const deleteTransaction = useDeleteTransaction();
 
-  // Eliminata altrove (o id non valido): chiudi
+  // Deleted elsewhere (or invalid id): close
   useEffect(() => {
     if (transaction === null) router.back();
   }, [transaction]);
@@ -46,7 +46,7 @@ export default function EditTransactionScreen() {
       type={transaction.type}
       initial={transaction}
       recurringId={transaction.recurringId}
-      // In modifica "Ripeti" non c'è: repeat è sempre null
+      // No "Repeat" when editing: repeat is always null
       onSubmit={({ repeat: _, ...values }) => updateTransaction(transaction.id, values)}
       onDelete={async () => {
         router.back();

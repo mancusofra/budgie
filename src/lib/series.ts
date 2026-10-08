@@ -13,15 +13,15 @@ export type Bucket = 'day' | 'month';
 
 export type ChartWindow = { from: Date; to: Date; bucket: Bucket };
 
-/** Oltre questo numero di giorni un intervallo personalizzato si mostra per mese. */
+/** Above this many days a custom range is shown by month. */
 const MAX_DAILY_BARS = 62;
 
 /**
- * Intervallo e granularità del grafico per il periodo selezionato:
- * - giorno: gli ultimi 7 giorni fino a quello scelto (una barra sola direbbe poco)
- * - settimana, mese, intervallo: un giorno per barra (mese per intervalli lunghi)
- * - anno: un mese per barra
- * - sempre: un mese per barra dalla prima transazione a oggi
+ * Chart range and granularity for the selected period:
+ * - day: the last 7 days up to the chosen one (a single bar would say little)
+ * - week, month, range: one bar per day (per month for long ranges)
+ * - year: one bar per month
+ * - all: one bar per month from the first transaction to today
  */
 export function chartWindow(
   period: Period,
@@ -56,7 +56,7 @@ export function chartWindow(
 export const bucketKey = (date: Date, bucket: Bucket) =>
   format(date, bucket === 'day' ? 'yyyy-MM-dd' : 'yyyy-MM');
 
-/** Tutti i bucket dell'intervallo [from, to), con i totali (0 dove non ci sono movimenti). */
+/** All buckets of the range [from, to), with totals (0 where there are no transactions). */
 export function fillSeries(
   { from, to, bucket }: ChartWindow,
   rows: { key: string; total: number }[],
@@ -71,7 +71,7 @@ export function fillSeries(
   return out;
 }
 
-/** Variazione percentuale rispetto al valore precedente; null se non confrontabile. */
+/** Percentage change from the previous value; null if not comparable. */
 export function percentChange(current: number, previous: number): number | null {
   if (previous <= 0) return null;
   return ((current - previous) / previous) * 100;

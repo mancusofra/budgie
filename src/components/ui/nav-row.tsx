@@ -14,7 +14,7 @@ type Props = {
   onPress: () => void;
 };
 
-/** Riga di navigazione (impostazioni, liste): icona, titolo, valore e freccia. */
+/** Navigation row (settings, lists): icon, title, value and chevron. */
 export function NavRow({ title, value, leading, onPress }: Props) {
   const theme = useTheme();
   return (

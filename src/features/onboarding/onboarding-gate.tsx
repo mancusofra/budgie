@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 
 import { useSettingsState } from '@/features/settings/hooks';
 
-/** Apre la presentazione iniziale finché non è stata vista (anche dopo un azzeramento). */
+/** Opens the onboarding until it has been seen (also after a reset). */
 export function OnboardingGate() {
   const { settings, loaded } = useSettingsState();
   const shown = useRef(false);

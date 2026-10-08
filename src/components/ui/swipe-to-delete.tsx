@@ -14,19 +14,19 @@ import { scheduleOnRN } from 'react-native-worklets';
 import { useTheme } from '@/hooks/use-theme';
 import { AnimationMs } from '@/theme';
 
-/** Frazione della larghezza oltre la quale il rilascio elimina. */
+/** Fraction of the width past which releasing deletes. */
 const THRESHOLD = 0.5;
-/** Uno scatto veloce elimina anche da più corto (ma almeno da qui). */
+/** A quick flick deletes from a shorter distance too (but at least this one). */
 const FLING_MIN = 0.25;
 const FLING_VELOCITY = 900;
 
 const hapticLight = () => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
 /**
- * Swipe completo a sinistra per eliminare, come in Mail: la riga segue il dito,
- * oltre metà larghezza una leggera vibrazione segnala che al rilascio verrà
- * eliminata; allora esce dallo schermo, si chiude in altezza e chiama onDelete
- * (l'annullamento è a carico del chiamante). Sotto la soglia torna al suo posto.
+ * Full swipe left to delete, as in Mail: the row follows the finger,
+ * past half the width a light vibration signals that releasing will
+ * delete it; then it slides off screen, collapses its height and calls onDelete
+ * (undo is up to the caller). Below the threshold it goes back in place.
  */
 export function SwipeToDelete({
   children,
@@ -38,14 +38,14 @@ export function SwipeToDelete({
   const theme = useTheme();
   const x = useSharedValue(0);
   const width = useSharedValue(0);
-  /** Altezza della riga misurata; durante la chiusura quella animata. */
+  /** Measured row height; the animated one while collapsing. */
   const measured = useSharedValue(0);
   const height = useSharedValue<number | null>(null);
   const armed = useSharedValue(false);
   const removing = useSharedValue(false);
 
   const pan = Gesture.Pan()
-    // Solo movimenti orizzontali verso sinistra: lo scroll verticale resta alla lista
+    // Only horizontal movements to the left: vertical scrolling stays with the list
     .activeOffsetX(-12)
     .failOffsetX(12)
     .failOffsetY([-12, 12])
@@ -67,7 +67,7 @@ export function SwipeToDelete({
         removing.set(true);
         x.set(
           withTiming(-w, { duration: AnimationMs }, () => {
-            // Poi la riga si chiude, e solo alla fine viene davvero eliminata
+            // Then the row collapses, and only at the end is it actually deleted
             height.set(measured.get());
             height.set(withTiming(0, { duration: AnimationMs }, () => scheduleOnRN(onDelete)));
           }),
@@ -98,7 +98,7 @@ export function SwipeToDelete({
       onLayout={(e) => {
         if (removing.get()) return;
         width.set(e.nativeEvent.layout.width);
-        // Altezza di partenza per l'animazione di chiusura
+        // Starting height for the collapse animation
         measured.set(e.nativeEvent.layout.height);
       }}>
       <View style={[StyleSheet.absoluteFill, styles.behind, { backgroundColor: theme.expense }]}>

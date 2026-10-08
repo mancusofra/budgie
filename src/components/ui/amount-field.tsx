@@ -7,7 +7,7 @@ import { Spacing } from '@/theme';
 import { Text } from './text';
 
 type Props = {
-  /** Espressione del tastierino (separatore interno ","). */
+  /** Keypad expression (internal separator ","). */
   expr: string;
   active: boolean;
   onPress: () => void;
@@ -17,7 +17,7 @@ type Props = {
   size?: number;
 };
 
-/** Campo importo che si compila con AmountPad invece che con la tastiera di sistema. */
+/** Amount field filled with AmountPad instead of the system keyboard. */
 export function AmountField({
   expr,
   active,

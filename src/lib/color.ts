@@ -1,4 +1,4 @@
-/** Aggiunge trasparenza a un colore esadecimale (#RGB o #RRGGBB): withAlpha('#FF0000', 0.2). */
+/** Adds transparency to a hex color (#RGB or #RRGGBB): withAlpha('#FF0000', 0.2). */
 export function withAlpha(hex: string, alpha: number): string {
   let h = hex.replace('#', '');
   if (h.length === 3) h = [...h].map((c) => c + c).join('');
@@ -14,7 +14,7 @@ function channels(hex: string): [number, number, number] {
   return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)) as [number, number, number];
 }
 
-/** Colore risultante di `fg` con opacità `alpha` sopra `bg` (entrambi opachi). */
+/** Resulting color of `fg` with opacity `alpha` over `bg` (both opaque). */
 export function blend(fg: string, bg: string, alpha: number): string {
   const [f, b] = [channels(fg), channels(bg)];
   return `#${f
@@ -34,7 +34,7 @@ function luminance(hex: string) {
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
 
-/** Rapporto di contrasto WCAG tra due colori opachi (1–21). */
+/** WCAG contrast ratio between two opaque colors (1–21). */
 export function contrastRatio(a: string, b: string): number {
   const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
   return (hi + 0.05) / (lo + 0.05);

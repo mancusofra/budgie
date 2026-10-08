@@ -17,7 +17,7 @@ import { Text } from './text';
 type Props = Omit<PressableProps, 'style' | 'children'> & {
   title: string;
   color?: ThemeColor;
-  /** Pieno (colore di sfondo) per l'azione principale; altrimenti tonale. */
+  /** Filled (background color) for the main action; otherwise tonal. */
   filled?: boolean;
   icon?: ReactNode;
   style?: StyleProp<ViewStyle>;

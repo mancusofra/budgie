@@ -11,11 +11,11 @@ export type NewAccount = Pick<Account, 'name' | 'currency'> &
 export type AccountPatch = Partial<NewAccount & Pick<Account, 'sortOrder'>>;
 
 /**
- * Saldo = iniziale + entrate − spese − trasferimenti in uscita + trasferimenti in entrata.
- * I trasferimenti in entrata usano to_amount se presente (valute diverse).
+ * Balance = initial + income − expenses − outgoing transfers + incoming transfers.
+ * Incoming transfers use to_amount when present (different currencies).
  *
- * Nomi scritti a mano: Drizzle omette il prefisso di tabella nelle select su una sola
- * tabella, e nella subquery correlata "id" verrebbe risolto su transactions.
+ * Hand-written names: Drizzle omits the table prefix in single-table selects,
+ * and in the correlated subquery "id" would resolve to transactions.
  */
 const balance = sql<number>`"accounts"."initial_balance"
   + coalesce((
@@ -39,7 +39,7 @@ export function createAccountsRepo(db: AppDatabase) {
         .orderBy(asc(a.sortOrder), asc(a.name));
     },
 
-    /** Conti con saldo corrente calcolato dalle transazioni. */
+    /** Accounts with their current balance computed from transactions. */
     listWithBalance({ includeArchived = false }: { includeArchived?: boolean } = {}) {
       return db
         .select({ account: a, balance })
@@ -83,12 +83,12 @@ export function createAccountsRepo(db: AppDatabase) {
       await db.update(a).set({ archived }).where(eq(a.id, id));
     },
 
-    /** Query builder (per useLiveQuery): 0 o 1 riga. */
+    /** Query builder (for useLiveQuery): 0 or 1 row. */
     byId(id: string) {
       return db.select().from(a).where(eq(a.id, id)).limit(1);
     },
 
-    /** Numero di transazioni che coinvolgono il conto (anche come destinazione). */
+    /** Number of transactions involving the account (also as destination). */
     async transactionCount(id: string): Promise<number> {
       const row = await db
         .select({ n: sql<number>`count(*)`.mapWith(Number) })
@@ -98,27 +98,27 @@ export function createAccountsRepo(db: AppDatabase) {
       return row?.n ?? 0;
     },
 
-    /** Elimina un conto senza transazioni; altrimenti InUseError. */
+    /** Deletes an account with no transactions; otherwise InUseError. */
     async remove(id: string): Promise<void> {
       const count = await this.transactionCount(id);
-      if (count > 0) throw new InUseError('Il conto', count);
+      if (count > 0) throw new InUseError('The account', count);
       await db.delete(a).where(eq(a.id, id));
     },
 
     /**
-     * Elimina definitivamente un conto archiviato insieme alle sue transazioni
-     * (anche i trasferimenti da e verso il conto) e alle sue ricorrenze.
-     * Restituisce quante transazioni sono state eliminate.
+     * Permanently deletes an archived account together with its transactions
+     * (including transfers from and to the account) and its recurring rules.
+     * Returns how many transactions were deleted.
      */
     purge(id: string): number {
       return db.transaction((tx) => {
         const account = tx.select().from(a).where(eq(a.id, id)).get();
         if (!account) return 0;
         if (!account.archived)
-          throw new Error('Solo un conto archiviato può essere eliminato definitivamente');
+          throw new Error('Only an archived account can be permanently deleted');
         const involves = (t: typeof transactions | typeof recurring) =>
           or(eq(t.accountId, id), eq(t.toAccountId, id));
-        // Prima le transazioni: possono riferirsi alle ricorrenze del conto
+        // Transactions first: they may reference the account's recurring rules
         const removed = tx
           .delete(transactions)
           .where(involves(transactions))

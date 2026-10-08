@@ -94,5 +94,6 @@
       "prettier --write"
     ],
     "*.{json,md,yml}": "prettier --write"
-  }
+  },
+  "license": "GPL-3.0-only"
 }

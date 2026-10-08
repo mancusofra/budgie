@@ -1,7 +1,7 @@
 import { groupByDay } from '@/lib/group';
 
 describe('groupByDay', () => {
-  it('raggruppa per giorno locale con il totale', () => {
+  it('groups by local day with the total', () => {
     const items = [
       { d: new Date(2026, 8, 28, 20), v: -500 },
       { d: new Date(2026, 8, 28, 8), v: 2000 },
@@ -21,7 +21,7 @@ describe('groupByDay', () => {
     expect(new Set(sections.map((s) => s.key)).size).toBe(3);
   });
 
-  it('lista vuota → nessuna sezione', () => {
+  it('empty list → no sections', () => {
     expect(
       groupByDay(
         [],

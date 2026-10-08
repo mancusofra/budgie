@@ -4,7 +4,7 @@ import { repos } from '@/db/client';
 import { refreshLiveQueries, useLiveQuery, useLiveQueryOn } from '@/db/live-query';
 import { accounts, categories, recurring, type Frequency, type Recurring } from '@/db/schema';
 
-/** Ricorrenze con categoria e conto; si aggiorna anche per nomi e colori. */
+/** Recurring rules with category and account; also updates for names and colors. */
 export function useRecurringList() {
   const { data } = useLiveQueryOn(repos.recurring.listDetailed(), [
     recurring,
@@ -14,7 +14,7 @@ export function useRecurringList() {
   return data ?? [];
 }
 
-/** undefined = in caricamento, null = non trovata. */
+/** undefined = loading, null = not found. */
 export function useRecurring(id: string | undefined): Recurring | undefined | null {
   const { data, updatedAt } = useLiveQuery(repos.recurring.byId(id ?? ''), [id]);
   if (!id) return null;
@@ -26,9 +26,9 @@ export const recurringActions = {
   update: repos.recurring.update,
   remove: (id: string) => repos.recurring.remove(id),
   /**
-   * Registra le occorrenze scadute. Le scritture avvengono in un'unica
-   * transazione sincrona, che su iOS non sempre notifica le live query:
-   * se ha creato qualcosa aggiorna esplicitamente le schermate aperte.
+   * Logs the due occurrences. Writes happen in a single synchronous
+   * transaction, which on iOS doesn't always notify live queries:
+   * if it created anything it refreshes the open screens explicitly.
    */
   materialize: (now?: Date) => {
     const created = repos.recurring.materialize(now);
@@ -37,7 +37,7 @@ export const recurringActions = {
   },
 };
 
-/** Scelte offerte nell'app (frequenza + intervallo). */
+/** Options offered in the app (frequency + interval). */
 export const REPEAT_OPTIONS: { frequency: Frequency; interval: number }[] = [
   { frequency: 'week', interval: 1 },
   { frequency: 'week', interval: 2 },
@@ -45,7 +45,7 @@ export const REPEAT_OPTIONS: { frequency: Frequency; interval: number }[] = [
   { frequency: 'year', interval: 1 },
 ];
 
-/** "Ogni mese", "Ogni 2 settimane"… */
+/** "Every month", "Every 2 weeks"… */
 export function repeatLabel(t: TFunction, frequency: Frequency, interval = 1) {
   return t(`recurring.every.${frequency}`, { count: interval });
 }

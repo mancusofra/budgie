@@ -3,7 +3,7 @@ import type { BaseSQLiteDatabase } from 'drizzle-orm/sqlite-core';
 import type * as schema from './schema';
 
 /**
- * Database Drizzle "sync" con lo schema dell'app. In app è ExpoSQLiteDatabase,
- * nei test better-sqlite3: i repository accettano entrambi.
+ * "Sync" Drizzle database with the app schema. In the app it is ExpoSQLiteDatabase,
+ * better-sqlite3 in tests: the repositories accept both.
  */
 export type AppDatabase = BaseSQLiteDatabase<'sync', any, typeof schema>;

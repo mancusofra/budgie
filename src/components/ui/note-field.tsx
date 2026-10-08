@@ -19,8 +19,8 @@ type Props = {
 };
 
 /**
- * Campo nota su una riga. Mentre si scrive mostra un pulsante "Fine" ben
- * visibile che chiude la tastiera; anche il tasto Invio diventa "Fine".
+ * Single-line note field. While typing it shows a clearly visible "Done"
+ * button that dismisses the keyboard; the Return key becomes "Done" too.
  */
 export function NoteField({ value, onChangeText, placeholder, onFocus, onBlur, style }: Props) {
   const { t } = useTranslation();

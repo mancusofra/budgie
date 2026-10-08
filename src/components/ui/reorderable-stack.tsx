@@ -22,29 +22,29 @@ type Heights = Record<string, number>;
 type Props = {
   items: StackItem[];
   gap: number;
-  /** ScrollView che contiene la pila (per lo scorrimento automatico). */
+  /** ScrollView containing the stack (for auto-scrolling). */
   scrollRef: AnimatedRef<Animated.ScrollView>;
   scrollY: SharedValue<number>;
-  /** Fasce (coordinate schermo) vicino ai bordi in cui la pagina scorre da sola. */
+  /** Bands (screen coordinates) near the edges where the page scrolls by itself. */
   autoScrollEdges: { top: number; bottom: number };
   onDragStart?: () => void;
   onDragEnd?: () => void;
-  /** Nuovo ordine delle chiavi a fine trascinamento. */
+  /** New order of the keys when dragging ends. */
   onReorder: (keys: string[]) => void;
   /**
-   * true (es. già in modifica): basta una pressione breve (0,1 s) per
-   * trascinare. false: serve un tocco lungo (0,3 s), così lo scorrimento
-   * normale della pagina non sposta i riquadri per sbaglio.
+   * true (e.g. already editing): a short press (0.1 s) is enough to
+   * drag. false: a long press (0.3 s) is required, so normal page
+   * scrolling doesn't move the cards by mistake.
    */
   dragImmediately?: boolean;
 };
 
 const LONG_PRESS_MS = 300;
-/** In modifica basta una pressione brevissima prima di trascinare. */
+/** While editing a very short press is enough before dragging. */
 const QUICK_PRESS_MS = 100;
 const AUTO_SCROLL_SPEED = 10;
 
-/** Top di un elemento nell'ordine dato, sommando le altezze precedenti. */
+/** Top of an item in the given order, adding up the previous heights. */
 function topOf(key: string, order: string[], heights: Heights, gap: number) {
   'worklet';
   let y = 0;
@@ -56,8 +56,8 @@ function topOf(key: string, order: string[], heights: Heights, gap: number) {
 }
 
 /**
- * Pila verticale di riquadri di altezza diversa, riordinabile trascinandoli
- * direttamente (tocco lungo, poi su e giù), stile schermata Home di iOS.
+ * Vertical stack of cards of different heights, reordered by dragging them
+ * directly (long press, then up and down), like the iOS home screen.
  */
 export function ReorderableStack({
   items,
@@ -76,9 +76,9 @@ export function ReorderableStack({
   const heights = useSharedValue<Heights>({});
   const [ready, setReady] = useState(false);
 
-  // Stessi elementi in un altro ordine (es. l'ordine salvato che arriva dopo il
-  // primo render): vale quello delle props. Elementi aggiunti o tolti: mantiene
-  // l'ordine corrente e accoda i nuovi in fondo
+  // Same items in another order (e.g. the saved order arriving after the
+  // first render): the props order wins. Items added or removed: keeps
+  // the current order and appends the new ones at the end
   useEffect(() => {
     const next = signature ? signature.split('|') : [];
     const prev = order.get();
@@ -97,8 +97,8 @@ export function ReorderableStack({
     return { height: total };
   });
 
-  // Fonte di verità delle altezze sul thread JS: più onLayout nello stesso
-  // frame farebbero leggere a heights.get() un valore non ancora aggiornato
+  // Source of truth for heights on the JS thread: several onLayout calls in
+  // the same frame would make heights.get() read a stale value
   const measured = useRef<Heights>({});
   const onMeasure = (key: string, e: LayoutChangeEvent) => {
     const h = Math.round(e.nativeEvent.layout.height);
@@ -168,9 +168,9 @@ function Row({
   const autoDir = useSharedValue(0);
 
   /**
-   * Scambia l'elemento trascinato con il vicino quando lo supera a metà, come
-   * sulla schermata Home di iOS: salendo conta il bordo superiore, scendendo
-   * quello inferiore (con riquadri alti il centro richiederebbe troppa strada).
+   * Swaps the dragged item with its neighbor when it passes its middle, as
+   * on the iOS home screen: going up the top edge counts, going down
+   * the bottom one (with tall cards the center would need too much travel).
    */
   const reorder = () => {
     'worklet';
@@ -198,7 +198,7 @@ function Row({
     }
   };
 
-  // Scorrimento automatico mentre si trascina vicino ai bordi
+  // Auto-scroll while dragging near the edges
   useFrameCallback(() => {
     if (!active.get() || autoDir.get() === 0) return;
     scrollTo(scrollRef, 0, Math.max(scrollY.get() + autoDir.get() * AUTO_SCROLL_SPEED, 0), false);

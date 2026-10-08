@@ -10,7 +10,7 @@ import { AnimationMs, FloatingTabBarHeight, Radius, Spacing } from '@/theme';
 import { Surface } from './surface';
 import { Text } from './text';
 
-/** Mostra il messaggio corrente dello store snackbar, sopra la tab bar. */
+/** Shows the current message of the snackbar store, above the tab bar. */
 export function SnackbarHost() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
@@ -23,7 +23,7 @@ export function SnackbarHost() {
     return () => clearTimeout(timer);
   }, [current, hide]);
 
-  // Il contenitore resta montato: così l'uscita del messaggio può dissolversi
+  // The container stays mounted, so the message can fade out when leaving
   return (
     <View
       pointerEvents="box-none"

@@ -2,12 +2,12 @@ import appJson from '../../app.json';
 import { CHANGELOG, releaseFor } from '@/features/about/changelog';
 
 describe('changelog', () => {
-  it('ha la voce della versione in app.json, in cima', () => {
+  it('has the entry for the version in app.json, at the top', () => {
     expect(releaseFor(appJson.expo.version)).toBeDefined();
     expect(CHANGELOG[0].version).toBe(appJson.expo.version);
   });
 
-  it('ogni voce è tradotta in italiano e inglese', () => {
+  it('every entry is translated into Italian and English', () => {
     for (const r of CHANGELOG) {
       expect(r.changes.length).toBeGreaterThan(0);
       for (const c of r.changes) {

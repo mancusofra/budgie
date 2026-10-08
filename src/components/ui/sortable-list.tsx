@@ -19,7 +19,7 @@ type Props<T> = {
   keyExtractor: (item: T) => string;
   rowHeight: number;
   renderItem: (item: T) => ReactNode;
-  /** Nuovo ordine delle chiavi a fine trascinamento. */
+  /** New order of the keys when dragging ends. */
   onReorder: (keys: string[]) => void;
   handleLabel: string;
 };
@@ -27,8 +27,8 @@ type Props<T> = {
 const toPositions = (keys: string[]): Positions => Object.fromEntries(keys.map((k, i) => [k, i]));
 
 /**
- * Lista riordinabile trascinando la maniglia a destra di ogni riga.
- * Righe ad altezza fissa, animate con Reanimated.
+ * List reordered by dragging the handle on the right of each row.
+ * Fixed-height rows, animated with Reanimated.
  */
 export function SortableList<T>({
   data,
@@ -97,10 +97,10 @@ function SortableRow({
   const style = useAnimatedStyle(() => {
     const target = (positions.get()[id] ?? 0) * rowHeight;
     return {
-      // Nessuna animazione: la riga segue il dito, le altre si spostano subito
+      // No animation: the row follows the finger, the others move right away
       top: active.get() ? top.get() : target,
       zIndex: active.get() ? 10 : 0,
-      // Trasparente a riposo (lascia vedere la card), pieno mentre è trascinata
+      // Transparent at rest (shows the card), solid while being dragged
       backgroundColor: active.get() ? activeBackground : 'transparent',
     };
   });
@@ -117,7 +117,7 @@ function SortableRow({
       const next = Math.min(Math.max(Math.round(top.get() / rowHeight), 0), count - 1);
       const current = positions.get()[id];
       if (next !== current) {
-        // Scambia con la riga che occupa la nuova posizione
+        // Swap with the row in the new position
         const updated = { ...positions.get() };
         for (const key in updated) {
           if (updated[key] === next) updated[key] = current;

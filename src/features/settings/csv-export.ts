@@ -21,8 +21,8 @@ type Labels = {
 };
 
 /**
- * CSV delle transazioni: una riga per movimento, importo con segno (spese
- * negative) nel formato decimale indicato. Separatore ";" se il decimale è ",".
+ * Transactions CSV: one row per transaction, signed amount (expenses
+ * negative) in the given decimal format. Separator ";" if the decimal is ",".
  */
 export function transactionsCsv(
   rows: CsvTransaction[],
@@ -49,8 +49,8 @@ export function transactionsCsv(
 }
 
 /**
- * JSON delle transazioni (per altre app o fogli di calcolo): chiavi fisse in
- * inglese, importo decimale con segno come nel CSV, data 'YYYY-MM-DD'.
+ * Transactions JSON (for other apps or spreadsheets): fixed English keys,
+ * signed decimal amount as in the CSV, date 'YYYY-MM-DD'.
  */
 export function transactionsJson(rows: CsvTransaction[]): string {
   const items = rows.map(({ transaction: tx, category, account, toAccount }) => {

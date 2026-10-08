@@ -14,14 +14,14 @@ export function useCategories(
   return data ?? [];
 }
 
-/** undefined = in caricamento, null = non trovata. */
+/** undefined = loading, null = not found. */
 export function useCategory(id: string | undefined): Category | undefined | null {
   const { data, updatedAt } = useLiveQuery(repos.categories.byId(id ?? ''), [id]);
   if (!id) return null;
   return updatedAt ? (data?.[0] ?? null) : undefined;
 }
 
-/** Operazioni di scrittura sulle categorie (stabili: il repo è un singleton). */
+/** Write operations on categories (stable: the repo is a singleton). */
 export const categoryActions = {
   create: repos.categories.create,
   update: repos.categories.update,

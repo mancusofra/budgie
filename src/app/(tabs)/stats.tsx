@@ -49,19 +49,19 @@ export default function StatsScreen() {
   const theme = useTheme();
   const currency = useCurrency();
   const locale = dateLocale(i18n.language);
-  // Importi nella valuta del conto mostrato; i budget nella valuta principale
+  // Amounts in the currency of the account shown; budgets in the main currency
   const money = (minor: number) => formatMoney(minor, displayCurrency, deviceLocale);
   const mainMoney = (minor: number) => formatMoney(minor, currency, deviceLocale);
   const tabBarSpace = useTabBarSpace();
 
-  // Layout personalizzabile (ordine e sezioni nascoste), salvato nelle impostazioni
+  // Customizable layout (order and hidden sections), saved in the settings
   const settings = useSettings();
   const setSetting = useSetSetting();
   const layout = useMemo(() => normalizeStatsLayout(settings.statsLayout), [settings.statsLayout]);
   const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
   const editing = useUIStore((s) => s.editingLayout);
   const setEditing = useUIStore((s) => s.setEditingLayout);
-  // Lasciando la schermata la modifica si chiude sempre (la tab bar deve tornare)
+  // Leaving the screen always ends editing (the tab bar must come back)
   useFocusEffect(useCallback(() => () => setEditing(false), [setEditing]));
   const [dragging, setDragging] = useState(false);
   const scrollRef = useAnimatedRef<Animated.ScrollView>();
@@ -79,7 +79,7 @@ export default function StatsScreen() {
   // Grafico
   const { window, points } = useExpenseSeries(period, range, scope);
   const [selection, setSelectedKey] = useState<string>();
-  // Cambiando periodo la barra selezionata può non esistere più: ignorala
+  // When the period changes the selected bar may no longer exist: ignore it
   const selectedKey = points.some((p) => p.key === selection) ? selection : undefined;
   const bars = points.map((p) => ({
     key: p.key,
@@ -92,7 +92,7 @@ export default function StatsScreen() {
   const chartTotal = points.reduce((sum, p) => sum + p.value, 0);
   const average = points.length > 0 ? Math.round(chartTotal / points.length) : 0;
 
-  // Classifica categorie
+  // Category ranking
   const categories = useCategories('expense', { includeArchived: true });
   const stats = useCategoryStats(range, scope);
   const ranking = useMemo(() => {
@@ -245,8 +245,8 @@ export default function StatsScreen() {
     ),
   };
 
-  // In modifica si vedono tutte le sezioni: prima le visibili, poi le nascoste
-  // (in fondo, così entrando in modifica le visibili non si spostano)
+  // While editing all sections are shown: visible ones first, then hidden ones
+  // (at the bottom, so the visible ones don't move when editing starts)
   const visible = visibleSections(layout);
   const hiddenSections = layout.order.filter((id) => layout.hidden.includes(id));
   const stack = editing ? [...visible, ...hiddenSections] : visible;
@@ -255,8 +255,8 @@ export default function StatsScreen() {
     const isHidden = layout.hidden.includes(id);
     return (
       <View>
-        {/* In modifica il contenuto non risponde ai tocchi (niente navigazione):
-            restano solo il trascinamento, gestito dal contenitore, e l'occhio */}
+        {/* While editing the content doesn't respond to taps (no navigation):
+            only dragging, handled by the container, and the eye remain */}
         <View
           pointerEvents={editing ? 'none' : 'auto'}
           style={editing && isHidden ? styles.hiddenCard : undefined}>
@@ -294,7 +294,7 @@ export default function StatsScreen() {
         scrollEnabled={!dragging}
         contentContainerStyle={[
           styles.content,
-          // In modifica la tab bar lascia il posto al pulsante "Fine"
+          // While editing the tab bar makes room for the "Done" button
           {
             paddingBottom:
               Spacing.four + (editing ? insets.bottom + HiddenTabBarTouchArea + 72 : tabBarSpace),
@@ -324,7 +324,7 @@ export default function StatsScreen() {
           }
         />
 
-        {/* Tutto nascosto: senza riquadri non ci sarebbe niente da tenere premuto */}
+        {/* Everything hidden: with no cards there would be nothing to long-press */}
         {!editing && visible.length === 0 && (
           <Pressable
             onLongPress={() => setEditing(true)}
@@ -357,13 +357,13 @@ export default function StatsScreen() {
         )}
       </Animated.ScrollView>
 
-      {/* "Fine" al posto della tab bar: finché non si preme non si cambia schermata */}
+      {/* "Done" in place of the tab bar: you can't change screen until it's pressed */}
       {editing && (
         <View
           pointerEvents="box-none"
           style={[styles.doneBar, { bottom: insets.bottom + HiddenTabBarTouchArea + Spacing.two }]}>
-          {/* Tonale: su iOS è Liquid Glass tinto; altrove sotto c'è uno sfondo
-              pieno, altrimenti la tinta trasparente sopra i riquadri non si legge */}
+          {/* Tonal: tinted Liquid Glass on iOS; elsewhere there is a solid background
+              underneath, otherwise the transparent tint over the cards is unreadable */}
           <View style={!hasGlass && [styles.doneBackdrop, { backgroundColor: theme.background }]}>
             <Button
               title={t('stats.done')}

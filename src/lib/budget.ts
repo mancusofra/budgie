@@ -4,7 +4,7 @@ import { periodRange } from './period';
 
 export type BudgetLevel = 'ok' | 'warning' | 'over';
 
-/** Soglia oltre cui un budget è "quasi esaurito". */
+/** Ratio above which a budget is "almost used up". */
 export const BUDGET_WARNING_RATIO = 0.8;
 
 export function budgetStatus(spent: number, amount: number) {
@@ -13,7 +13,7 @@ export function budgetStatus(spent: number, amount: number) {
   return { ratio, level, remaining: amount - spent };
 }
 
-/** Chiave del mese contabile che contiene la data ('YYYY-MM' del suo inizio). */
+/** Key of the accounting month containing the date ('YYYY-MM' of its start). */
 export function budgetMonthKey(date: Date, monthStartDay = 1): string {
   const { from } = periodRange({ kind: 'month', anchor: date }, { monthStartDay });
   return format(from!, 'yyyy-MM');

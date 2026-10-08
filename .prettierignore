@@ -6,3 +6,4 @@ ios/
 android/
 src/db/migrations/
 package-lock.json
+LICENSE

@@ -1,31 +1,35 @@
-# Modello dati
+# Data model
 
-Database SQLite locale (`budgie.db`) gestito con Drizzle ORM.
-ID: stringhe UUID/cuid generate lato app (utile per un eventuale sync futuro).
-Date: `INTEGER` (timestamp ms UTC). Importi: `INTEGER` in **unità minori** (centesimi).
+Local SQLite database (`budgie.db`) managed with Drizzle ORM. The source of truth is
+[`src/db/schema.ts`](../src/db/schema.ts); migrations live in `src/db/migrations`.
 
-## Diagramma
+- **IDs:** strings generated on the device (handy for a possible future sync).
+- **Dates:** `INTEGER` timestamps in milliseconds.
+- **Amounts:** `INTEGER` in **minor units** (cents), always positive; the sign depends on the type.
+
+## Diagram
 
 ```
 accounts 1 ──< transactions >── 1 categories
-    │                                  │
-    └──< transactions (to_account) ────┘ (solo per i trasferimenti)
+    │   └──< transactions (to_account, transfers only)
+    └──< recurring >── 1 categories
+                └──< transactions (recurring_id)
 
-categories 1 ──< budgets
-settings (chiave/valore)
+categories 1 ──< budgets          budget_months (months with their own budgets)
+settings (key/value)
 ```
 
-## Tabelle
+## Tables
 
 ### `accounts`
 
-| Colonna         | Tipo                       | Note                 |
+| Column          | Type                       | Notes                |
 | --------------- | -------------------------- | -------------------- |
 | id              | TEXT PK                    |                      |
-| name            | TEXT NOT NULL              | "Contanti", "Carta"… |
-| currency        | TEXT NOT NULL              | ISO 4217, es. `EUR`  |
-| initial_balance | INTEGER NOT NULL DEFAULT 0 | centesimi            |
-| icon            | TEXT                       | nome icona           |
+| name            | TEXT NOT NULL              | "Cash", "Card"…      |
+| currency        | TEXT NOT NULL              | ISO 4217, e.g. `EUR` |
+| initial_balance | INTEGER NOT NULL DEFAULT 0 | minor units          |
+| icon            | TEXT                       | icon name            |
 | color           | TEXT                       | hex                  |
 | sort_order      | INTEGER NOT NULL DEFAULT 0 |                      |
 | archived        | INTEGER NOT NULL DEFAULT 0 | boolean              |
@@ -33,7 +37,7 @@ settings (chiave/valore)
 
 ### `categories`
 
-| Colonna    | Tipo                       | Note                  |
+| Column     | Type                       | Notes                 |
 | ---------- | -------------------------- | --------------------- |
 | id         | TEXT PK                    |                       |
 | name       | TEXT NOT NULL              |                       |
@@ -46,103 +50,85 @@ settings (chiave/valore)
 
 ### `transactions`
 
-| Colonna       | Tipo                        | Note                                        |
-| ------------- | --------------------------- | ------------------------------------------- |
-| id            | TEXT PK                     |                                             |
-| type          | TEXT NOT NULL               | `expense` \| `income` \| `transfer`         |
-| amount        | INTEGER NOT NULL            | sempre positivo, il segno dipende da `type` |
-| account_id    | TEXT NOT NULL FK → accounts | conto di origine                            |
-| to_account_id | TEXT FK → accounts          | solo per `transfer`                         |
-| to_amount     | INTEGER                     | per trasferimenti tra valute diverse        |
-| category_id   | TEXT FK → categories        | NULL per `transfer`                         |
-| date          | INTEGER NOT NULL            | data della transazione                      |
-| note          | TEXT                        |                                             |
-| created_at    | INTEGER NOT NULL            |                                             |
-| updated_at    | INTEGER NOT NULL            |                                             |
+| Column        | Type                        | Notes                                      |
+| ------------- | --------------------------- | ------------------------------------------ |
+| id            | TEXT PK                     |                                            |
+| type          | TEXT NOT NULL               | `expense` \| `income` \| `transfer`        |
+| amount        | INTEGER NOT NULL            | always positive                            |
+| account_id    | TEXT NOT NULL FK → accounts | source account                             |
+| to_account_id | TEXT FK → accounts          | `transfer` only                            |
+| to_amount     | INTEGER                     | amount received, for different currencies  |
+| category_id   | TEXT FK → categories        | NULL for `transfer`                        |
+| date          | INTEGER NOT NULL            | date of the transaction (may be in future) |
+| note          | TEXT                        |                                            |
+| recurring_id  | TEXT FK → recurring         | set when generated by a recurring rule     |
+| created_at    | INTEGER NOT NULL            |                                            |
+| updated_at    | INTEGER NOT NULL            |                                            |
 
-Indici: `(date)`, `(category_id, date)`, `(account_id, date)`.
+Indexes: `(date)`, `(category_id, date)`, `(account_id, date)`.
 
-### `budgets`
+### `recurring`
 
-| Colonna     | Tipo                 | Note                        |
-| ----------- | -------------------- | --------------------------- |
-| id          | TEXT PK              |                             |
-| category_id | TEXT FK → categories | NULL = budget globale       |
-| amount      | INTEGER NOT NULL     |                             |
-| period      | TEXT NOT NULL        | `month` \| `week` \| `year` |
-| created_at  | INTEGER NOT NULL     |                             |
+A rule that generates a transaction at every occurrence. Occurrence _n_ falls on
+`start_date + n × interval × frequency`, always computed from the start (so "monthly from the 31st"
+lands on Feb 28/29 and back on Mar 31).
+
+| Column                                                                | Type                       | Notes                                      |
+| --------------------------------------------------------------------- | -------------------------- | ------------------------------------------ |
+| id                                                                    | TEXT PK                    |                                            |
+| type, amount, account_id, category_id, to_account_id, to_amount, note | as in `transactions`       | template for each occurrence               |
+| frequency                                                             | TEXT NOT NULL              | `day` \| `week` \| `month` \| `year`       |
+| interval                                                              | INTEGER NOT NULL DEFAULT 1 | every _n_ periods                          |
+| start_date                                                            | INTEGER NOT NULL           | first occurrence                           |
+| end_date                                                              | INTEGER                    | last day (inclusive); NULL = no end        |
+| count                                                                 | INTEGER NOT NULL DEFAULT 0 | occurrences already logged as transactions |
+| paused                                                                | INTEGER NOT NULL DEFAULT 0 | no occurrences while paused, no catch-up   |
+| created_at, updated_at                                                | INTEGER NOT NULL           |                                            |
+
+### `budgets` and `budget_months`
+
+Monthly budgets with inheritance: a month uses the budgets of the latest month (equal or earlier)
+listed in `budget_months`. The first change to a month copies the inherited budgets into it, so
+past months stay as they were.
+
+| `budgets` column | Type                 | Notes                             |
+| ---------------- | -------------------- | --------------------------------- |
+| id               | TEXT PK              |                                   |
+| category_id      | TEXT FK → categories | NULL = overall budget             |
+| amount           | INTEGER NOT NULL     | monthly limit                     |
+| period           | TEXT NOT NULL        | `month` (other values reserved)   |
+| month            | TEXT NOT NULL        | `YYYY-MM` of the accounting month |
+| created_at       | INTEGER NOT NULL     |                                   |
+
+`budget_months`: `month` (TEXT PK, `YYYY-MM`), `created_at`.
 
 ### `settings`
 
-| Colonna | Tipo          | Note                                                              |
-| ------- | ------------- | ----------------------------------------------------------------- |
-| key     | TEXT PK       | `currency`, `theme`, `language`, `week_start`, `month_start_day`… |
-| value   | TEXT NOT NULL | JSON serializzato                                                 |
+| Column | Type          | Notes                                                                                    |
+| ------ | ------------- | ---------------------------------------------------------------------------------------- |
+| key    | TEXT PK       | `currency`, `theme`, `language`, `weekStart`, `monthStartDay`, `appLock`, `statsLayout`… |
+| value  | TEXT NOT NULL | serialized JSON                                                                          |
 
-## Categorie di default (seed)
+## Default categories (seed)
 
-**Spese:** Cibo, Casa, Trasporti, Auto, Bollette, Salute, Svago, Ristoranti, Abbigliamento,
-Regali, Sport, Animali, Igiene, Comunicazioni, Taxi, Altro.
+Created in the device language (English or Italian).
 
-**Entrate:** Stipendio, Risparmi, Regali, Altro.
+**Expenses:** Food, House, Transport, Car, Bills, Health, Entertainment, Eating out, Clothes, Gifts,
+Sports, Pets, Toiletry, Communications, Taxi, Other.
 
-## Query principali
+**Income:** Salary, Savings, Gifts, Other.
 
-- **Spese per categoria nel periodo** (ciambella):
-  `SELECT category_id, SUM(amount) FROM transactions WHERE type='expense' AND date BETWEEN ? AND ? [AND account_id=?] GROUP BY category_id`
-- **Saldo del periodo:** somma entrate − somma spese
-- **Saldo conto:** `initial_balance + entrate − spese − trasferimenti in uscita + trasferimenti in entrata`
-- **Totali giornalieri** per la lista: `GROUP BY date(date/1000, 'unixepoch', 'localtime')`
+## Main queries
 
-## Bozza schema Drizzle
+- **Spending by category in a period** (donut): sum of `amount` for `expense` grouped by
+  `category_id`, filtered by date range and accounts.
+- **Period balance:** income − expenses (transfers excluded).
+- **Account balance:** `initial_balance + income − expenses − outgoing transfers + incoming
+transfers` (incoming transfers use `to_amount` when present).
+- **Chart series:** totals per day or month with `strftime(…, 'localtime')`.
 
-```ts
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+## Backup format
 
-export const accounts = sqliteTable('accounts', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  currency: text('currency').notNull(),
-  initialBalance: integer('initial_balance').notNull().default(0),
-  icon: text('icon'),
-  color: text('color'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-});
-
-export const categories = sqliteTable('categories', {
-  id: text('id').primaryKey(),
-  name: text('name').notNull(),
-  type: text('type', { enum: ['expense', 'income'] }).notNull(),
-  icon: text('icon').notNull(),
-  color: text('color').notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
-  archived: integer('archived', { mode: 'boolean' }).notNull().default(false),
-  createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-});
-
-export const transactions = sqliteTable(
-  'transactions',
-  {
-    id: text('id').primaryKey(),
-    type: text('type', { enum: ['expense', 'income', 'transfer'] }).notNull(),
-    amount: integer('amount').notNull(),
-    accountId: text('account_id')
-      .notNull()
-      .references(() => accounts.id),
-    toAccountId: text('to_account_id').references(() => accounts.id),
-    toAmount: integer('to_amount'),
-    categoryId: text('category_id').references(() => categories.id),
-    date: integer('date', { mode: 'timestamp_ms' }).notNull(),
-    note: text('note'),
-    createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
-    updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-  },
-  (t) => [
-    index('tx_date_idx').on(t.date),
-    index('tx_category_date_idx').on(t.categoryId, t.date),
-    index('tx_account_date_idx').on(t.accountId, t.date),
-  ],
-);
-```
+A JSON file `{ format: "budgie-backup", version: 2, exportedAt, data: { <table>: rows[] } }` with
+every table; restore replaces all data in a single transaction. Version 1 backups (no recurring
+rules) and backups made when the app was called Moneta (`moneta-backup`) are still accepted.

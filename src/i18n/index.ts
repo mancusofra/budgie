@@ -20,13 +20,13 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-/** Locale per Intl (formato numeri/valuta), es. "it-IT". */
+/** Locale for Intl (number/currency format), e.g. "it-IT". */
 export const deviceLocale = device?.languageTag ?? deviceLanguage;
 
-/** Separatore decimale del dispositivo ("," o "."), per tastierino e display. */
+/** Device decimal separator ("," or "."), for the keypad and display. */
 export const decimalSeparator = device?.decimalSeparator ?? ',';
 
-/** Lingua dell'app: quella scelta nelle impostazioni o quella del dispositivo. */
+/** App language: the one chosen in Settings or the device language. */
 export function applyLanguage(preference: 'system' | Language = 'system') {
   const language = preference === 'system' ? deviceLanguage : preference;
   if (i18n.language !== language) i18n.changeLanguage(language);

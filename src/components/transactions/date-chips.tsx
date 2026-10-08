@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
 import { Spacing } from '@/theme';
 
-/** Scelta rapida della data: Oggi, Ieri o calendario (anche date future, es. spese programmate). */
+/** Quick date choice: Today, Yesterday or calendar (future dates too, e.g. scheduled expenses). */
 export function DateChips({
   value,
   onChange,

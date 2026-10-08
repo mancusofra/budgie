@@ -16,7 +16,7 @@ import { formatMoney } from '@/lib/money';
 import { nextOccurrence } from '@/lib/recurrence';
 import { Radius, Spacing, TabularNums } from '@/theme';
 
-/** Elenco delle ricorrenze con frequenza e prossima scadenza. */
+/** List of recurring rules with frequency and next due date. */
 export default function RecurringListScreen() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();

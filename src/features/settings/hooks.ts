@@ -10,7 +10,7 @@ export function useSettings(): Partial<SettingsMap> {
   return useSettingsState().settings;
 }
 
-/** Impostazioni più `loaded`: utile per inizializzare form con i valori salvati. */
+/** Settings plus `loaded`: useful to initialize forms with the saved values. */
 export function useSettingsState() {
   const { data, updatedAt } = useLiveQuery(repos.settings.rows());
   const settings = useMemo(() => parseSettings(data ?? []), [data]);
@@ -21,7 +21,7 @@ export function useCurrency(): string {
   return useSettings().currency ?? 'EUR';
 }
 
-/** Cancella tutti i dati e ricrea quelli di default (solo sviluppo). */
+/** Deletes all data and recreates the defaults (development only). */
 export function useResetDatabase() {
   return useCallback(() => {
     const locale = getLocales()[0];

@@ -25,12 +25,12 @@ const rentInput = (accountId: string, categoryId: string) => ({
 });
 
 describe('recurringRepo', () => {
-  it('registra le occorrenze scadute una volta sola', async () => {
+  it('logs due occurrences only once', async () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
 
     expect(repos.recurring.materialize(new Date(2026, 2, 15))).toBe(3);
-    // Già registrate: una seconda esecuzione non duplica
+    // Already logged: a second run doesn't duplicate
     expect(repos.recurring.materialize(new Date(2026, 2, 15))).toBe(0);
     expect(repos.recurring.materialize(new Date(2026, 3, 1, 10))).toBe(1);
 
@@ -43,7 +43,7 @@ describe('recurringRepo', () => {
     close();
   });
 
-  it('valida come una transazione e controlla intervallo e fine', async () => {
+  it('validates like a transaction and checks interval and end date', async () => {
     const { repos, cash, rent, close } = await setup();
     await expect(
       repos.recurring.create({ ...rentInput(cash.id, rent), amount: 0 }),
@@ -57,12 +57,12 @@ describe('recurringRepo', () => {
     close();
   });
 
-  it('modifica solo il futuro e riparte se cambia il calendario', async () => {
+  it('changes only the future and restarts if the schedule changes', async () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
     repos.recurring.materialize(new Date(2026, 1, 15));
 
-    // Come fa la schermata di modifica: tutti i campi, calendario invariato
+    // As the edit screen does: all fields, schedule unchanged
     await repos.recurring.update(r.id, {
       amount: 75000,
       frequency: 'month',
@@ -72,7 +72,7 @@ describe('recurringRepo', () => {
     expect(repos.recurring.materialize(new Date(2026, 1, 15))).toBe(0);
     expect((await repos.recurring.getById(r.id))!.count).toBe(2);
 
-    // Nuova prossima data: il conteggio riparte da lì
+    // New next date: the count restarts from there
     await repos.recurring.update(r.id, { startDate: new Date(2026, 2, 5, 9) });
     expect((await repos.recurring.getById(r.id))!.count).toBe(0);
     repos.recurring.materialize(new Date(2026, 2, 10));
@@ -82,7 +82,7 @@ describe('recurringRepo', () => {
     close();
   });
 
-  it('in pausa non registra e alla ripresa non recupera il periodo saltato', async () => {
+  it('logs nothing while paused and does not catch up when resumed', async () => {
     const { repos, cash, salary, close } = await setup();
     const r = await repos.recurring.create({
       type: 'income',
@@ -97,11 +97,11 @@ describe('recurringRepo', () => {
     expect(repos.recurring.materialize(new Date(2026, 4, 1))).toBe(0);
 
     await repos.recurring.update(r.id, { paused: false }, new Date(2026, 4, 1));
-    expect(repos.recurring.materialize(new Date(2026, 4, 28))).toBe(1); // solo il 27 maggio
+    expect(repos.recurring.materialize(new Date(2026, 4, 28))).toBe(1); // only May 27
     close();
   });
 
-  it('eliminandola le transazioni restano', async () => {
+  it('deleting it keeps the transactions', async () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
     repos.recurring.materialize(new Date(2026, 1, 1, 12));
@@ -113,7 +113,7 @@ describe('recurringRepo', () => {
     close();
   });
 
-  it('elenco con categoria e conto', async () => {
+  it('list with category and account', async () => {
     const { repos, cash, rent, close } = await setup();
     await repos.recurring.create(rentInput(cash.id, rent));
     const [row] = await repos.recurring.listDetailed();
@@ -122,7 +122,7 @@ describe('recurringRepo', () => {
     close();
   });
 
-  it('backup, ripristino (anche di backup v1) e azzeramento', async () => {
+  it('backup, restore (version 1 backups too) and reset', async () => {
     const { db, repos, cash, rent, close } = await setup();
     await repos.recurring.create({ ...rentInput(cash.id, rent), endDate: new Date(2026, 11, 31) });
     repos.recurring.materialize(new Date(2026, 1, 1, 12));

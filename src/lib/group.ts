@@ -1,17 +1,17 @@
 import { startOfDay } from 'date-fns';
 
 export type DaySection<T> = {
-  /** Timestamp di inizio giornata (chiave stabile). */
+  /** Start-of-day timestamp (stable key). */
   key: string;
   day: Date;
-  /** Somma dei valori con segno del giorno (entrate − spese). */
+  /** Sum of the day's signed values (income − expenses). */
   total: number;
   data: T[];
 };
 
 /**
- * Raggruppa elementi già ordinati per data (dal più recente) in sezioni per
- * giorno locale, con il totale di ciascun giorno.
+ * Groups items already sorted by date (newest first) into sections per
+ * local day, with each day's total.
  */
 export function groupByDay<T>(
   items: T[],

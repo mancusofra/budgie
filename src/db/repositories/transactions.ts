@@ -23,9 +23,9 @@ export type TransactionFilter = Partial<DateRange> &
   };
 
 export type DetailedFilter = TransactionFilter & {
-  /** Testo cercato nella nota e nel nome della categoria (senza distinzione maiuscole). */
+  /** Text searched in the note and category name (case-insensitive). */
   search?: string;
-  /** Numero massimo di righe (le più recenti). */
+  /** Maximum number of rows (the most recent ones). */
   limit?: number;
 };
 
@@ -48,30 +48,29 @@ export class InvalidTransactionError extends Error {
 
 export function validateTransaction(tx: NewTransaction) {
   if (!Number.isInteger(tx.amount) || tx.amount <= 0) {
-    throw new InvalidTransactionError("L'importo deve essere un intero positivo in centesimi");
+    throw new InvalidTransactionError('The amount must be a positive integer in minor units');
   }
   if (tx.type === 'transfer') {
     if (!tx.toAccountId)
-      throw new InvalidTransactionError('Un trasferimento richiede un conto di destinazione');
+      throw new InvalidTransactionError('A transfer requires a destination account');
     if (tx.toAccountId === tx.accountId) {
-      throw new InvalidTransactionError('Conto di origine e destinazione coincidono');
+      throw new InvalidTransactionError('Source and destination accounts are the same');
     }
-    if (tx.categoryId) throw new InvalidTransactionError('Un trasferimento non ha categoria');
+    if (tx.categoryId) throw new InvalidTransactionError('A transfer has no category');
     if (tx.toAmount != null && (!Number.isInteger(tx.toAmount) || tx.toAmount <= 0)) {
-      throw new InvalidTransactionError("L'importo accreditato deve essere un intero positivo");
+      throw new InvalidTransactionError('The received amount must be a positive integer');
     }
   } else {
-    if (!tx.categoryId)
-      throw new InvalidTransactionError('Spese ed entrate richiedono una categoria');
+    if (!tx.categoryId) throw new InvalidTransactionError('Expenses and income require a category');
     if (tx.toAccountId || tx.toAmount != null) {
-      throw new InvalidTransactionError('Solo i trasferimenti hanno un conto di destinazione');
+      throw new InvalidTransactionError('Only transfers have a destination account');
     }
   }
 }
 
 /**
- * Condizione sui conti. Con `includeIncoming` conta anche il conto di
- * destinazione dei trasferimenti (per la lista); per totali e statistiche no.
+ * Condition on accounts. With `includeIncoming` the destination account of
+ * transfers counts too (for the list); not for totals and stats.
  */
 function accountCondition(scope: AccountScope, includeIncoming: boolean) {
   const t = transactions;
@@ -126,7 +125,7 @@ export function createTransactionsRepo(db: AppDatabase) {
 
     async update(id: string, patch: TransactionPatch): Promise<Transaction> {
       const current = await db.select().from(t).where(eq(t.id, id)).get();
-      if (!current) throw new InvalidTransactionError(`Transazione ${id} non trovata`);
+      if (!current) throw new InvalidTransactionError(`Transaction ${id} not found`);
 
       const next: Transaction = { ...current, ...patch, id, updatedAt: new Date() } as Transaction;
       if (patch.note !== undefined) next.note = patch.note?.trim() || null;
@@ -145,7 +144,7 @@ export function createTransactionsRepo(db: AppDatabase) {
       await db.delete(t).where(eq(t.id, id));
     },
 
-    /** Reinserisce una transazione cancellata (per "Annulla"), con lo stesso id. */
+    /** Re-inserts a deleted transaction (for "Undo"), with the same id. */
     async restore(row: Transaction): Promise<void> {
       await db.insert(t).values(row).onConflictDoNothing();
     },
@@ -154,14 +153,14 @@ export function createTransactionsRepo(db: AppDatabase) {
       return db.select().from(t).where(eq(t.id, id)).get();
     },
 
-    /** Come getById ma come query builder (per useLiveQuery): 0 o 1 riga. */
+    /** Like getById but as a query builder (for useLiveQuery): 0 or 1 row. */
     byId(id: string) {
       return db.select().from(t).where(eq(t.id, id)).limit(1);
     },
 
     /**
-     * Transazioni con categoria e conti (per la lista), dalla più recente.
-     * Query builder: usabile con await o useLiveQuery.
+     * Transactions with category and accounts (for the list), newest first.
+     * Query builder: usable with await or useLiveQuery.
      */
     listDetailed(filter: DetailedFilter = {}) {
       const toAccount = alias(accounts, 'to_account');
@@ -193,12 +192,12 @@ export function createTransactionsRepo(db: AppDatabase) {
         .limit(filter.limit ?? -1);
     },
 
-    /** Transazioni filtrate, dalla più recente. */
+    /** Filtered transactions, newest first. */
     list(filter: TransactionFilter = {}) {
       return db.select().from(t).where(where(filter)).orderBy(desc(t.date), desc(t.createdAt));
     },
 
-    /** Totale per categoria nel periodo (per la ciambella), dal più alto. */
+    /** Total per category in the period (for the donut), highest first. */
     sumByCategory(
       filter: Partial<DateRange> & AccountScope & { type?: 'expense' | 'income' } = {},
     ) {
@@ -217,8 +216,8 @@ export function createTransactionsRepo(db: AppDatabase) {
     },
 
     /**
-     * Totale e numero di movimenti per categoria e tipo (spese ed entrate),
-     * dal totale più alto. I trasferimenti sono esclusi.
+     * Total and number of transactions per category and type (expenses and income),
+     * highest total first. Transfers are excluded.
      */
     statsByCategory(filter: Partial<DateRange> & AccountScope = {}) {
       const total = sql<number>`sum(${t.amount})`.mapWith(Number);
@@ -242,8 +241,8 @@ export function createTransactionsRepo(db: AppDatabase) {
     },
 
     /**
-     * Totali per giorno ('YYYY-MM-DD') o mese ('YYYY-MM') in ora locale, per il
-     * grafico a barre. Solo i bucket con movimenti: quelli vuoti li aggiunge il chiamante.
+     * Totals per day ('YYYY-MM-DD') or month ('YYYY-MM') in local time, for the
+     * bar chart. Only buckets with transactions: the caller adds the empty ones.
      */
     seriesByBucket(
       filter: Partial<DateRange> & AccountScope & { type?: 'expense' | 'income' },
@@ -264,7 +263,7 @@ export function createTransactionsRepo(db: AppDatabase) {
         .orderBy(key);
     },
 
-    /** Data della prima transazione (per il periodo "Sempre"), se esiste. */
+    /** Date of the first transaction (for the "All time" period), if any. */
     firstDate(scope: AccountScope = {}) {
       return db
         .select({ first: sql<number | null>`min(${t.date})` })
@@ -272,7 +271,7 @@ export function createTransactionsRepo(db: AppDatabase) {
         .where(accountCondition(scope, true));
     },
 
-    /** Entrate e spese totali nel periodo. I trasferimenti non contano. */
+    /** Total income and expenses in the period. Transfers don't count. */
     totals(filter: Partial<DateRange> & AccountScope = {}) {
       return db
         .select({

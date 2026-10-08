@@ -1,4 +1,4 @@
-/** Genera un UUID v4. Usa crypto.randomUUID quando disponibile. */
+/** Generates a v4 UUID, using crypto.randomUUID when available. */
 export function createId(): string {
   const cryptoApi = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
   if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();

@@ -1,144 +1,135 @@
-# Piano di sviluppo
+# Roadmap
 
-Roadmap in fasi incrementali. Ogni fase termina con un'app funzionante e testabile
-su dispositivo (Expo Go o development build). Le stime assumono 1 sviluppatore part-time.
+Incremental phases. Each phase ends with a working app that can be tested on a device (Expo Go
+or a development build).
 
-| Fase | Obiettivo                                  | Stima       |
-| ---- | ------------------------------------------ | ----------- |
-| 0    | Setup progetto e tooling                   | 1–2 giorni  |
-| 1    | Database e modello dati                    | 2–3 giorni  |
-| 2    | Home + inserimento rapido (cuore dell'app) | 1 settimana |
-| 3    | Lista transazioni, modifica, periodi       | 4–5 giorni  |
-| 4    | Categorie e conti                          | 4–5 giorni  |
-| 5    | Statistiche e budget                       | 1 settimana |
-| 6    | Impostazioni, valute, backup/CSV           | 4–5 giorni  |
-| 7    | Rifinitura, accessibilità, test            | 1 settimana |
-| 8    | Build e pubblicazione store                | 3–5 giorni  |
-| 9    | Post-MVP (opzionale)                       | —           |
+| Phase | Goal                                    | Status      |
+| ----- | --------------------------------------- | ----------- |
+| 0     | Project setup and tooling               | done        |
+| 1     | Database and data model                 | done        |
+| 2     | Home screen + quick entry (core of app) | done        |
+| 3     | Transactions list, editing, periods     | done        |
+| 4     | Categories and accounts                 | done        |
+| 5     | Stats and budgets                       | done        |
+| 6     | Settings, currencies, backup/export     | done        |
+| 7     | Polish, accessibility, tests            | mostly done |
+| 8     | Store builds and release                | to do       |
+| 9     | Post-MVP (optional)                     | in progress |
 
 ---
 
-## Fase 0 — Setup progetto
+## Phase 0 — Project setup
 
-- [x] Creare il progetto Expo con template TypeScript + Expo Router
-  ```bash
-  npx create-expo-app@latest . --template default
-  ```
-  Spostare la cartella `app/` in `src/app/` (Expo Router la supporta nativamente).
-- [x] Rimuovere il codice demo del template
-- [x] Configurare alias `@/*` → `src/*` in `tsconfig.json`
+- [x] Expo project with the TypeScript + Expo Router template, routes in `src/app/`
+- [x] Template demo code removed
+- [x] `@/*` → `src/*` alias in `tsconfig.json`
 - [x] ESLint (`eslint-config-expo`) + Prettier + `lint-staged` / `husky` pre-commit
-- [x] Installare le dipendenze core:
-  ```bash
-  npx expo install expo-sqlite react-native-reanimated react-native-gesture-handler \
-    react-native-svg react-native-safe-area-context expo-localization expo-haptics \
-    expo-file-system expo-sharing expo-document-picker
-  npm i drizzle-orm zustand date-fns i18next react-i18next
-  npm i -D drizzle-kit babel-plugin-inline-import jest-expo @testing-library/react-native
-  ```
-- [x] Configurare `app.json`: nome, `slug`, `bundleIdentifier` (iOS), `package` (Android), icona, splash
-- [x] Attivare la CI GitHub Actions (lint + typecheck + test) — già predisposta in `.github/workflows/ci.yml`
-- [ ] Configurare EAS: `npx eas-cli init` e `eas build:configure`
+- [x] Core dependencies (expo-sqlite, Reanimated, Gesture Handler, react-native-svg, Drizzle,
+      Zustand, date-fns, i18next…)
+- [x] `app.json`: name, `slug`, `bundleIdentifier` (iOS), `package` (Android), icon, splash
+- [x] GitHub Actions CI (lint + typecheck + tests)
+- [ ] EAS configuration (`eas init`, `eas build:configure`)
 
-**Definition of done:** `npx expo start` apre una schermata vuota con le 4 tab; la CI è verde.
+## Phase 1 — Database and data model
 
-## Fase 1 — Database e modello dati
+- [x] Drizzle schema in `src/db/schema.ts` (see [`DATA_MODEL.md`](DATA_MODEL.md))
+- [x] `drizzle.config.ts` (driver `expo`) and first migration
+- [x] `src/db/client.ts`: open the DB + migrations in the root layout
+- [x] `src/db/seed.ts`: default categories (expense and income) and a "Cash" account
+- [x] Typed repositories: `transactions`, `categories`, `accounts`
+- [x] Money helpers in `src/lib/money.ts`: amounts stored as **integers in minor units**
+- [x] Unit tests for repositories and helpers (in-memory SQLite)
 
-- [x] Definire lo schema Drizzle in `src/db/schema.ts` (vedi [`DATA_MODEL.md`](DATA_MODEL.md))
-- [x] Configurare `drizzle.config.ts` (driver `expo`) e generare la prima migrazione
-- [x] `src/db/client.ts`: apertura DB + `useMigrations` nel root layout
-- [x] `src/db/seed.ts`: categorie di default (spesa ed entrata) e un conto "Contanti"
-- [x] Repository tipizzati: `transactions`, `categories`, `accounts`
-- [x] Utility denaro in `src/lib/money.ts`: importi salvati come **interi in centesimi** (mai float)
-- [x] Unit test per repository e utility (SQLite in-memory o mock)
+## Phase 2 — Home screen and quick entry ⭐
 
-**DoD:** al primo avvio il DB viene creato e popolato; i test dei repository passano.
+The feature that defines the experience: it has to be very fast.
 
-## Fase 2 — Home e inserimento rapido ⭐
+- [x] Home: donut chart of spending by category for the current period
+- [x] Balance (income − expenses) in the middle of the donut
+- [x] Category icons around the chart: tapping one opens entry with that category preselected
+- [x] Two large buttons at the bottom: **− Expense** (red) and **+ Income** (green)
+- [x] Entry modal: custom keypad with `+ − × ÷`, category grid, account, date, optional note
+- [ ] Save with haptic feedback and animation (haptics done, animation to do)
+- [x] Period selector at the top (swipe left/right to change day/week/month…)
+- [x] Reactive live queries so the home screen updates by itself
 
-È la feature che definisce l'esperienza "tipo Monefy": deve essere velocissima.
+## Phase 3 — Transactions list and periods
 
-- [x] Home: grafico a ciambella con le spese per categoria del periodo corrente
-- [x] Al centro della ciambella: saldo (entrate − spese) del periodo
-- [x] Icone categoria attorno/sotto al grafico: tap su una categoria → apre direttamente l'inserimento con quella categoria preselezionata
-- [x] Due grandi pulsanti in basso: **− Spesa** (rosso) e **+ Entrata** (verde)
-- [x] Schermata/modale di inserimento:
-  - [x] Tastierino numerico custom (con operazioni `+ − × ÷` come Monefy)
-  - [x] Selettore categoria a griglia
-  - [x] Selettore conto, data (default oggi), nota opzionale
-  - [ ] Salvataggio con feedback aptico e animazione (aptico fatto, animazione da fare)
-- [x] Selettore periodo in alto (swipe sinistra/destra per cambiare giorno/settimana/mese…)
-- [x] Hook reattivo `useLiveQuery` (Drizzle) per aggiornare la home automaticamente
+- [x] "Transactions" tab grouped by category, search results grouped by day
+- [x] Tap a category on the home screen → list opened on that category
+- [x] Edit / delete (full swipe to delete with "Undo" in a snackbar)
+- [x] Search by note and category
+- [x] Periods: day, week, month, year, all time, custom range
+- [x] "First day of the week" and "month starts on day" settings (for people paid on the 27th)
 
-**DoD:** si inserisce una spesa in ≤ 3 tap e la ciambella si aggiorna in tempo reale.
+## Phase 4 — Categories and accounts
 
-## Fase 3 — Lista transazioni e periodi
+- [x] Categories: name, icon, color, type (expense/income), drag & drop reordering
+- [x] Archive a category in use, delete one that is not
+- [x] Accounts: name, currency, initial balance, icon, color; archive, delete, permanently delete
+      an archived account with its transactions
+- [x] Transfers between accounts (not counted as expense/income), with received amount for
+      different currencies
+- [x] Global filter "all accounts" / single account
+- [x] With accounts in different currencies "All accounts" sums only those in the main currency
+      (exchange rates: phase 9)
 
-- [x] Tab "Transazioni": lista raggruppata per giorno con totale giornaliero (`SectionList`; `FlashList` se servirà per le prestazioni)
-- [x] Tap su categoria nella home → lista filtrata per quella categoria
-- [x] Dettaglio / modifica / eliminazione (swipe-to-delete con undo tramite snackbar)
-- [x] Ricerca per nota e filtro per categoria (filtro per conto: con la gestione conti, Fase 4)
-- [x] Periodi: giorno, settimana, mese, anno, tutto, intervallo personalizzato
-- [x] Impostazione "primo giorno della settimana" e "giorno di inizio mese" (per chi riceve lo stipendio il 27)
+## Phase 5 — Stats and budgets
 
-## Fase 4 — Categorie e conti
+- [x] "Stats" tab: spending bar chart by day/month, trend vs previous period
+- [x] Category ranking with percentages
+- [x] Monthly overall and per-category budgets with progress bars, inherited month to month
+- [x] Visual warning at 80% / 100% of the budget (icon + label)
+- [x] Sections can be reordered and hidden
 
-- [x] CRUD categorie: nome, icona (set di icone vettoriali), colore, tipo (spesa/entrata)
-- [x] Riordino categorie con drag & drop (anche per i conti)
-- [x] Archiviazione categoria (non cancellazione se ha transazioni); eliminazione se non usata
-- [x] CRUD conti: nome, valuta, saldo iniziale, icona, colore; archiviazione/eliminazione
-- [x] Trasferimenti tra conti (non contano come spesa/entrata), con importo accreditato per valute diverse
-- [x] Filtro globale "tutti i conti" / conto singolo
-- [x] Totali con conti in valute diverse: "Tutti i conti" somma solo quelli nella valuta principale (conversione con tassi di cambio: Fase 9)
+## Phase 6 — Settings, currencies, backup
 
-## Fase 5 — Statistiche e budget
+- [x] Main currency, number format by locale
+- [x] Theme: system / light / dark
+- [x] Language: automatic / English / Italian (i18next, strings in `src/i18n/locales`)
+- [x] CSV or JSON export by date range (via `expo-sharing`; `;` and decimal comma for Italian)
+- [x] Full backup (JSON) and restore
+- [x] App lock with biometrics (`expo-local-authentication`)
+- [x] Version number and release notes at the bottom of Settings
 
-- [x] Tab "Statistiche": grafico a barre spese per giorno/mese, trend vs periodo precedente
-- [x] Classifica categorie con percentuale
-- [x] Budget mensile globale e per categoria con barra di avanzamento
-- [x] Avviso visivo al superamento dell'80% / 100% del budget (icona + etichetta)
+## Phase 7 — Polish and quality
 
-## Fase 6 — Impostazioni, valute, backup
+- [x] Accessibility: screen reader labels, headings, AA contrast checked by a test, dynamic type
+      (tested at 2×)
+- [x] Empty states and a 3-screen onboarding
+- [x] Performance with 10,000+ transactions: SQL indexes, batched live query notifications, paged
+      category lists, demo data generator in the developer menu
+- [ ] Maestro E2E tests for the main flows (add, edit, delete, change period)
+- [x] Unit test coverage ≥ 70% on `lib/`, `db/`, `features/` (threshold enforced in CI)
+- [ ] Crash reporting (Sentry or similar), to be decided given the no-cloud promise
 
-- [x] Valuta principale, formato numeri secondo locale (con "Tutti i conti" solo i conti nella valuta principale)
-- [x] Tema: sistema / chiaro / scuro
-- [x] Lingua: automatica / IT / EN (i18next, testi in `src/i18n/locales`)
-- [x] Esportazione CSV o JSON con intervallo di date (con `expo-sharing`; `;` e virgola decimale per l'italiano)
-- [x] Backup completo (JSON) e ripristino (`File.pickFileAsync` di expo-file-system)
-- [x] Blocco app con riconoscimento biometrico (`expo-local-authentication`) — Face ID non provabile in Expo Go su iOS
+## Phase 8 — Builds and release
 
-## Fase 7 — Rifinitura e qualità
-
-- [x] Accessibilità: label per screen reader, intestazioni, contrasto AA verificato da test, font dinamici (provati a 2×)
-- [x] Empty state e onboarding di 3 schermate (riappare dopo "Azzera dati")
-- [x] Performance: test con 10.000+ transazioni, indici SQL (notifiche delle live query raggruppate, lista per categoria a pagine, dati demo in Sviluppo)
-- [ ] Test E2E con Maestro per i flussi principali (aggiungi spesa, modifica, elimina, cambio periodo)
-- [x] Copertura unit test ≥ 70% su `lib/`, `db/`, `features/` (74% righe; soglia in CI)
-- [ ] Sentry (`@sentry/react-native`) per crash reporting
-
-## Fase 8 — Build e pubblicazione
-
-- [ ] Icona e splash definitivi, screenshot per gli store
+- [x] Final icon and launch screen
+- [ ] Store screenshots
 - [ ] `eas build --platform all --profile production`
-- [ ] TestFlight (iOS) e Internal testing (Google Play)
-- [ ] Privacy policy (anche se i dati restano sul dispositivo è richiesta)
-- [ ] `eas submit` su App Store e Google Play
-- [ ] OTA update con `expo-updates` per fix rapidi
+- [ ] TestFlight (iOS) and internal testing (Google Play)
+- [ ] Privacy policy (required even though data stays on the device)
+- [ ] `eas submit` to the App Store and Google Play
+- [ ] OTA updates with `expo-updates` for quick fixes
 
-## Fase 9 — Post-MVP (idee)
+## Phase 9 — Post-MVP (ideas)
 
-- [x] Transazioni ricorrenti (abbonamenti, affitto, stipendio): anticipate prima del QA; promemoria con notifica ancora da fare
-- Sync cloud opzionale tra dispositivi (Supabase o iCloud/Google Drive per i backup)
-- Widget home screen iOS/Android per inserimento rapido
-- Tassi di cambio automatici
-- Allegare foto dello scontrino
-- Tag multipli oltre alla categoria
+- [x] Recurring transactions (subscriptions, rent, salary); reminders with notifications still
+      to do
+- [ ] Automatic backup to Google Drive, then optional sync between devices
+- [ ] Web version / PWA
+- [ ] Home screen widgets on iOS/Android for quick entry
+- [ ] Automatic exchange rates
+- [ ] Receipt photos
+- [ ] Multiple tags besides the category
 
 ---
 
-## Convenzioni di lavoro
+## Working conventions
 
-- **Branch:** `main` protetto; feature branch `feat/<nome>`, `fix/<nome>`
-- **Commit:** [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `chore:`…)
-- **PR:** una per task della checklist, CI verde obbligatoria
-- **Issue:** ogni fase diventa una milestone su GitHub, ogni checkbox un'issue
+- **Branches:** `main` is protected; feature branches `feat/<name>`, `fix/<name>`.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`,
+  `chore:`…).
+- **Pull requests:** green CI required, reviewed by the maintainer (see
+  [CONTRIBUTING.md](../CONTRIBUTING.md)).

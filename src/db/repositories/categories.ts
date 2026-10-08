@@ -53,17 +53,17 @@ export function createCategoriesRepo(db: AppDatabase) {
         .where(eq(c.id, id));
     },
 
-    /** Le categorie con transazioni non si cancellano: si archiviano. */
+    /** Categories with transactions are not deleted: they are archived. */
     async setArchived(id: string, archived: boolean): Promise<void> {
       await db.update(c).set({ archived }).where(eq(c.id, id));
     },
 
-    /** Query builder (per useLiveQuery): 0 o 1 riga. */
+    /** Query builder (for useLiveQuery): 0 or 1 row. */
     byId(id: string) {
       return db.select().from(c).where(eq(c.id, id)).limit(1);
     },
 
-    /** Numero di transazioni che usano la categoria. */
+    /** Number of transactions using the category. */
     async transactionCount(id: string): Promise<number> {
       const row = await db
         .select({ n: sql<number>`count(*)`.mapWith(Number) })
@@ -73,17 +73,17 @@ export function createCategoriesRepo(db: AppDatabase) {
       return row?.n ?? 0;
     },
 
-    /** Elimina una categoria senza transazioni (e i suoi budget); altrimenti InUseError. */
+    /** Deletes a category with no transactions (and its budgets); otherwise InUseError. */
     async remove(id: string): Promise<void> {
       const count = await this.transactionCount(id);
-      if (count > 0) throw new InUseError('La categoria', count);
+      if (count > 0) throw new InUseError('The category', count);
       db.transaction((tx) => {
         tx.delete(budgets).where(eq(budgets.categoryId, id)).run();
         tx.delete(c).where(eq(c.id, id)).run();
       });
     },
 
-    /** Salva il nuovo ordine: `ids` nell'ordine desiderato. */
+    /** Saves the new order: `ids` in the desired order. */
     async reorder(ids: string[]): Promise<void> {
       db.transaction((tx) => {
         ids.forEach((id, sortOrder) => tx.update(c).set({ sortOrder }).where(eq(c.id, id)).run());

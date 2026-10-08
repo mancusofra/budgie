@@ -34,7 +34,7 @@ export default function BudgetScreen() {
     <BudgetForm
       key={budget?.id ?? 'new'}
       budget={budget ?? undefined}
-      // Mese a cui si applica la modifica (quello mostrato in Statistiche)
+      // Month the change applies to (the one shown in Stats)
       month={month ?? budgetMonthKey(new Date(), monthStartDay)}
     />
   );
@@ -53,7 +53,7 @@ function BudgetForm({ budget, month }: { budget?: Budget; month: string }) {
   });
   const [categoryId, setCategoryId] = useState<string | null>(budget?.categoryId ?? null);
   const [expr, setExpr] = useState(budget ? minorToExpression(budget.amount, currency) : '');
-  // Tastierino dell'app (con la conferma integrata): aperto subito per un nuovo budget
+  // The app's keypad (with built-in confirm): open right away for a new budget
   const [padOpen, setPadOpen] = useState(!budget);
   const [error, setError] = useState<string>();
 
@@ -165,8 +165,8 @@ function BudgetForm({ budget, month }: { budget?: Budget; month: string }) {
 
         {budget && <Button title={t('budget.delete')} color="expense" onPress={remove} />}
       </ScrollView>
-      {/* In fondo, sempre visibile: il tastierino (con la conferma integrata)
-          mentre si scrive l'importo, altrimenti Salva */}
+      {/* At the bottom, always visible: the keypad (with built-in confirm)
+          while typing the amount, otherwise Save */}
       <View
         style={[
           styles.footer,

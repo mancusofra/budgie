@@ -21,15 +21,15 @@ const KEY_HEIGHT = 50;
 
 type Props = {
   onKey: (key: KeypadKey) => void;
-  /** Tasto di conferma, integrato nel tastierino. */
+  /** Confirm key, built into the keypad. */
   onDone: () => void;
   labels: { backspace: string; comma: string; done: string };
   decimalSeparator?: string;
 };
 
 /**
- * Tastierino per inserire un importo, con la conferma dentro la griglia
- * (al posto della tastiera di sistema, che su iOS non ha un tasto per chiudersi).
+ * Keypad to enter an amount, with the confirm key inside the grid
+ * (instead of the system keyboard, which on iOS has no key to dismiss it).
  */
 export function AmountPad({ onKey, onDone, labels, decimalSeparator = ',' }: Props) {
   const theme = useTheme();

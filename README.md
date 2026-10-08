@@ -1,107 +1,107 @@
-# Budgie 🦜
+<p align="center">
+  <img src="assets/images/icon.png" width="96" alt="" />
+</p>
 
-App mobile (iOS + Android) per la gestione delle spese personali, ispirata a **Monefy**:
-inserimento di una spesa in 2 tap, grafico a ciambella per categoria al centro della home,
-tutto offline-first.
+<h1 align="center">Budgie</h1>
 
-> Stato: **Fasi 0–7 completate, più le transazioni ricorrenti** — in QA prima del merge.
-> Vedi [`docs/PLAN.md`](docs/PLAN.md) per la roadmap.
+<p align="center">
+  A simple, fast personal expense tracker: log a purchase in two taps,<br />
+  everything stays on your phone, no account needed.
+</p>
 
-## Funzionalità principali (MVP)
+<p align="center">
+  <img src="docs/screenshots/home.png" width="190" alt="Home screen with the donut chart by category" />
+  <img src="docs/screenshots/transactions.png" width="190" alt="Transactions grouped by category" />
+  <img src="docs/screenshots/stats.png" width="190" alt="Stats with spending by category" />
+  <img src="docs/screenshots/settings.png" width="190" alt="Settings" />
+</p>
 
-- ➕ / ➖ Aggiunta rapida di spese ed entrate con tastierino numerico dedicato
-- 🍩 Home con grafico a ciambella per categoria e saldo del periodo
-- 📅 Filtro per periodo: giorno, settimana, mese, anno, intervallo personalizzato
-- 🏷️ Categorie personalizzabili (icona + colore)
-- 💳 Più conti (contanti, carta, banca) con trasferimenti tra conti
-- 📋 Lista transazioni raggruppate per giorno, modifica e cancellazione
-- 🌍 Multi-valuta (valuta principale + valuta per conto)
-- 🌙 Tema chiaro / scuro, lingua IT / EN
-- 💾 Backup / ripristino locale ed esportazione CSV
+> **Status: beta (0.2.0).** Budgie is being tested on iOS and Android and is not in the app stores
+> yet.
 
-## Stack tecnologico
+## Features
 
-| Ambito          | Scelta                                                                 |
-| --------------- | ---------------------------------------------------------------------- |
-| Framework       | [Expo](https://expo.dev) (React Native) + TypeScript                   |
-| Navigazione     | Expo Router (file-based)                                               |
-| Database locale | `expo-sqlite` + [Drizzle ORM](https://orm.drizzle.team)                |
-| Stato UI        | Zustand                                                                |
-| Grafici         | `react-native-svg` + `victory-native` (o `react-native-gifted-charts`) |
-| Animazioni      | `react-native-reanimated` + `react-native-gesture-handler`             |
-| i18n            | `i18next` + `react-i18next` + `expo-localization`                      |
-| Date            | `date-fns`                                                             |
-| Test            | Jest + React Native Testing Library, Maestro per E2E                   |
-| Build / release | EAS Build + EAS Submit                                                 |
+- **Quick entry**: tap a category around the donut, type the amount, done. The keypad also does
+  arithmetic (`12+3×2`).
+- **Donut home screen** with spending by category and the balance of the period.
+- **Periods**: day, week, month, year, all time or a custom range; configurable first day of the
+  week and first day of the month (for people paid on the 27th).
+- **Multiple accounts**, including different currencies, with transfers.
+- **Custom categories** (icon, color, order) that can be archived.
+- **Recurring transactions**: rent, subscriptions and salary are logged automatically.
+- **Stats** with trend, comparison with the previous period, ranking by category and monthly
+  **budgets** with warnings; sections can be reordered.
+- **Your data stays yours**: everything is stored on the device. JSON backup and restore, CSV or
+  JSON export by date range, biometric lock.
+- Light and dark theme, English and Italian, accessibility (screen readers, large text, AA
+  contrast).
 
-Dettagli e motivazioni in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+## Tech stack
 
-## Struttura del progetto
+[Expo](https://expo.dev) SDK 57 (React Native) with TypeScript and Expo Router · local SQLite with
+[Drizzle ORM](https://orm.drizzle.team) · Zustand · Reanimated and Gesture Handler · charts on
+`react-native-svg` · i18next · Jest and React Native Testing Library.
 
-```
-budgie/
-├── src/
-│   ├── app/                    # Schermate (Expo Router, file-based routing)
-│   │   ├── _layout.tsx         # Root layout: provider, tema, DB, i18n
-│   │   ├── (tabs)/             # Tab principali
-│   │   │   ├── index.tsx       # Home: ciambella + bottoni +/-
-│   │   │   ├── transactions.tsx
-│   │   │   ├── stats.tsx
-│   │   │   └── settings.tsx
-│   │   ├── transaction/        # [id].tsx, new.tsx (modal)
-│   │   ├── category/           # gestione categorie
-│   │   └── account/            # gestione conti
-│   ├── components/
-│   │   ├── ui/                 # Button, Text, Card, Sheet, Keypad…
-│   │   ├── charts/             # DonutChart, BarChart
-│   │   └── transactions/       # TransactionRow, DayGroupHeader…
-│   ├── features/               # Logica di dominio per feature (hooks, servizi)
-│   │   ├── transactions/
-│   │   ├── categories/
-│   │   ├── accounts/
-│   │   ├── budgets/
-│   │   ├── stats/
-│   │   └── settings/
-│   ├── db/
-│   │   ├── schema.ts           # Schema Drizzle
-│   │   ├── client.ts           # Connessione SQLite
-│   │   ├── seed.ts             # Categorie/conti di default
-│   │   ├── migrations/         # Generate da drizzle-kit
-│   │   └── repositories/       # Query tipizzate per entità
-│   ├── store/                  # Zustand (periodo selezionato, filtri, preferenze)
-│   ├── hooks/                  # Hook generici (useTheme, useCurrency…)
-│   ├── lib/                    # Utility pure: money, date, csv, id
-│   ├── i18n/                   # Setup i18next + locales/it.json, en.json
-│   ├── theme/                  # Colori, spaziature, tipografia
-│   └── types/                  # Tipi condivisi
-├── assets/                     # Icone app, splash, font
-├── __tests__/                  # Unit test
-├── e2e/                        # Flussi Maestro
-├── docs/                       # Piano, architettura, modello dati
-└── .github/workflows/          # CI
-```
+More: [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md),
+[UI spec](docs/UI_SPEC.md), [roadmap](docs/PLAN.md).
 
-## Avvio
+## Running it locally
 
-Requisiti: Node.js 22 (es. `nvm install 22`) e l'app **Expo Go** sul telefono.
+You need [Node.js 22](https://nodejs.org) and the **Expo Go** app on your phone (or an Android
+emulator / iOS simulator).
 
 ```bash
+git clone https://github.com/mancusofra/budgie.git
+cd budgie
 npm install
-npx expo start      # scansiona il QR code con Expo Go
+npx expo start        # then scan the QR code with Expo Go
 ```
 
-Comandi utili:
+The same checks run in CI:
 
 ```bash
-npm run lint        # ESLint
-npm run typecheck   # TypeScript
-npm test            # Jest
-npx expo-doctor     # verifica dipendenze/config Expo
+npm run lint
+npm run typecheck
+npm test              # or npm run test:coverage
+npx expo-doctor
 ```
 
-## Documentazione
+## Project structure
 
-- [`docs/PLAN.md`](docs/PLAN.md) — roadmap per fasi con checklist
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — scelte tecniche e flusso dei dati
-- [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — schema del database
-- [`docs/UI_SPEC.md`](docs/UI_SPEC.md) — schermate e interazioni
+```
+src/
+├── app/          screens and navigation (Expo Router)
+├── components/   UI components, charts, transaction rows
+├── features/     logic by area: transactions, accounts, categories, stats, recurring…
+├── db/           Drizzle schema, migrations, repositories, backup
+├── lib/          pure functions: money, periods, recurrence, CSV, colors
+├── i18n/         translations (en, it)
+├── store/        UI state (Zustand)
+└── theme/        colors and sizes
+__tests__/        tests (Jest)
+docs/             documentation and screenshots
+```
+
+## Contributing
+
+Bug reports and ideas are welcome: please read [CONTRIBUTING.md](CONTRIBUTING.md). Changes are
+accepted only through pull requests, which are reviewed by the maintainer before being merged.
+For security issues see [SECURITY.md](SECURITY.md).
+
+## License
+
+Copyright (C) 2026 Francesco Mancuso
+
+Budgie is free software: you can redistribute it and/or modify it under the terms of the
+[GNU General Public License version 3](LICENSE) (GPL-3.0-only) as published by the Free Software
+Foundation.
+
+In short: you may use, study, modify and share the code; if you distribute a modified version you
+must make its source code available under the same license. Budgie comes with **no warranty**; see
+[`LICENSE`](LICENSE) for the full terms.
+
+**The name and artwork are not covered by the GPL.** The name "Budgie" and the budgie mascot
+(icons, launch screen, files in `assets/`) are licensed under
+[CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/): anyone distributing a
+modified version must use their own name and icon. Details in
+[`assets/LICENSE.md`](assets/LICENSE.md).

@@ -19,7 +19,7 @@ import { Radius, Spacing } from '@/theme';
 
 type RangeKind = 'all' | 'month' | 'year' | 'custom';
 
-/** Pannello di esportazione delle transazioni: formato (CSV/JSON) e intervallo. */
+/** Transactions export sheet: format (CSV/JSON) and range. */
 export default function ExportSheet() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -42,7 +42,7 @@ export default function ExportSheet() {
       case 'year':
         return periodRange({ kind: rangeKind, anchor: now }, opts);
       case 'custom': {
-        // "Al" è un giorno incluso: l'intervallo si chiude a inizio del giorno dopo
+        // "To" is an inclusive day: the range ends at the start of the next day
         const [a, b] = [from, to].sort((x, y) => x.getTime() - y.getTime());
         return { from: startOfDay(a), to: addDays(startOfDay(b), 1) };
       }

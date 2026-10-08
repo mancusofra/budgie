@@ -2,14 +2,14 @@ import * as LocalAuthentication from 'expo-local-authentication';
 
 import { authenticate } from '@/features/settings/app-lock';
 
-// app-lock importa gli hook delle impostazioni: niente DB nativo nei test
+// app-lock imports the settings hooks: no native DB in tests
 jest.mock('@/db/client', () => ({ db: {}, repos: {}, expoDb: {} }));
 jest.mock('expo-local-authentication', () => ({ authenticateAsync: jest.fn() }));
 
 const auth = LocalAuthentication.authenticateAsync as jest.Mock;
 
 describe('authenticate', () => {
-  it('ok quando il riconoscimento riesce', async () => {
+  it('ok when authentication succeeds', async () => {
     auth.mockResolvedValueOnce({ success: true });
     expect(await authenticate('Sblocca', 'Annulla')).toBe('ok');
     expect(auth).toHaveBeenLastCalledWith({ promptMessage: 'Sblocca', cancelLabel: 'Annulla' });
@@ -23,12 +23,12 @@ describe('authenticate', () => {
     },
   );
 
-  it("failed se l'utente annulla o non viene riconosciuto", async () => {
+  it('failed if the user cancels or is not recognized', async () => {
     auth.mockResolvedValueOnce({ success: false, error: 'user_cancel' });
     expect(await authenticate('', '')).toBe('failed');
   });
 
-  it('unavailable se il modulo nativo lancia un errore', async () => {
+  it('unavailable if the native module throws', async () => {
     auth.mockRejectedValueOnce(new Error('missing native module'));
     expect(await authenticate('', '')).toBe('unavailable');
   });

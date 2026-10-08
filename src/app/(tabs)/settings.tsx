@@ -39,7 +39,7 @@ export default function SettingsScreen() {
     }
   };
 
-  // Attivare o disattivare il blocco richiede la conferma biometrica
+  // Turning the lock on or off requires biometric confirmation
   const toggleLock = async (value: boolean) => {
     const result = await authenticate(t('lock.prompt'), t('common.cancel'));
     if (result === 'ok') return setSetting('appLock', value);
@@ -326,7 +326,7 @@ const styles = StyleSheet.create({
   },
   section: { gap: Spacing.two },
   listCard: { borderRadius: Radius + 4, paddingHorizontal: Spacing.three },
-  // Stesse misure di NavRow, per allineare righe e blocchi nella stessa card
+  // Same sizes as NavRow, to align rows and blocks in the same card
   row: {
     flexDirection: 'row',
     alignItems: 'center',

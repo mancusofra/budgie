@@ -1,4 +1,4 @@
-/** Colori sobri tra cui scegliere per categorie e conti (coerenti con la palette di default). */
+/** Muted colors to choose from for categories and accounts (consistent with the default palette). */
 export const PICKER_COLORS = [
   '#6E9E7B',
   '#5E9A77',
@@ -18,7 +18,7 @@ export const PICKER_COLORS = [
   '#8E8E93',
 ] as const;
 
-/** Icone (MaterialCommunityIcons) proposte per le categorie. */
+/** Icons (MaterialCommunityIcons) offered for categories. */
 export const CATEGORY_ICONS = [
   'food-apple',
   'cart',
@@ -66,7 +66,7 @@ export const CATEGORY_ICONS = [
   'dots-horizontal',
 ] as const;
 
-/** Icone proposte per i conti. */
+/** Icons offered for accounts. */
 export const ACCOUNT_ICONS = [
   'cash',
   'wallet',

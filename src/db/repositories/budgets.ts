@@ -12,10 +12,10 @@ export class InvalidBudgetError extends Error {
 type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
 
 /**
- * Budget mensili con ereditarietà: i budget di un mese sono quelli dell'ultimo
- * mese (uguale o precedente) in cui sono stati definiti o modificati. La prima
- * modifica di un mese copia in quel mese i budget ereditati e poi la applica,
- * così i mesi passati restano come erano. Mesi come 'YYYY-MM'.
+ * Monthly budgets with inheritance: a month's budgets are those of the latest
+ * month (same or earlier) in which they were defined or changed. The first
+ * change to a month copies the inherited budgets into it and then applies it,
+ * so past months stay as they were. Months as 'YYYY-MM'.
  */
 export function createBudgetsRepo(db: AppDatabase) {
   const b = budgets;
@@ -23,7 +23,7 @@ export function createBudgetsRepo(db: AppDatabase) {
   const sameCategory = (categoryId: string | null) =>
     categoryId ? eq(b.categoryId, categoryId) : isNull(b.categoryId);
 
-  /** Crea la definizione del mese copiando quella ereditata, se non esiste già. */
+  /** Creates the month's definition by copying the inherited one, if it doesn't exist yet. */
   const ensureMonth = (tx: Tx, month: string) => {
     if (tx.select().from(m).where(eq(m.month, month)).get()) return;
     const prev = tx
@@ -44,8 +44,8 @@ export function createBudgetsRepo(db: AppDatabase) {
 
   return {
     /**
-     * Budget validi per il mese: prima quello globale, poi per categoria.
-     * Query builder (per le live query: dipende da budgets e budget_months).
+     * Budgets in effect for the month: the overall one first, then per category.
+     * Query builder (for live queries: depends on budgets and budget_months).
      */
     effective(month: string) {
       const source = sql`(select max(${m.month}) from ${m} where ${m.month} <= ${month})`;
@@ -56,7 +56,7 @@ export function createBudgetsRepo(db: AppDatabase) {
         .orderBy(sql`${b.categoryId} is not null`, asc(b.createdAt));
     },
 
-    /** Mese da cui provengono i budget di `month` (undefined se nessuno). */
+    /** Month the budgets of `month` come from (undefined if none). */
     async sourceMonth(month: string): Promise<string | undefined> {
       const row = await db
         .select({ month: m.month })
@@ -72,10 +72,10 @@ export function createBudgetsRepo(db: AppDatabase) {
       return db.select().from(b).where(eq(b.id, id)).limit(1);
     },
 
-    /** Imposta il budget di una categoria (o globale con `null`) per il mese. */
+    /** Sets the budget of a category (or the overall one with `null`) for the month. */
     async set(input: { month: string; categoryId: string | null; amount: number }): Promise<void> {
       if (!Number.isInteger(input.amount) || input.amount <= 0) {
-        throw new InvalidBudgetError("L'importo deve essere un intero positivo in centesimi");
+        throw new InvalidBudgetError('The amount must be a positive integer in minor units');
       }
       db.transaction((tx) => {
         ensureMonth(tx, input.month);
@@ -97,7 +97,7 @@ export function createBudgetsRepo(db: AppDatabase) {
       });
     },
 
-    /** Toglie il budget di una categoria (o globale) dal mese e da quelli che lo ereditano. */
+    /** Removes a category (or overall) budget from the month and from those inheriting it. */
     async remove(input: { month: string; categoryId: string | null }): Promise<void> {
       db.transaction((tx) => {
         ensureMonth(tx, input.month);

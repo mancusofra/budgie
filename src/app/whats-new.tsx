@@ -9,7 +9,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { dateLocale } from '@/i18n';
 import { Spacing } from '@/theme';
 
-/** Novità della versione installata rispetto alla precedente. */
+/** What's new in the installed version compared with the previous one. */
 export default function WhatsNewSheet() {
   const { t, i18n } = useTranslation();
   const theme = useTheme();

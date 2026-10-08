@@ -5,7 +5,7 @@ export type SnackbarMessage = {
   message: string;
   actionLabel?: string;
   onAction?: () => void;
-  /** Durata in ms prima che sparisca. */
+  /** Duration in ms before it disappears. */
   duration: number;
 };
 
@@ -20,7 +20,7 @@ let nextId = 1;
 export const useSnackbar = create<SnackbarState>()((set, get) => ({
   current: undefined,
   show: (msg) => set({ current: { duration: 4000, ...msg, id: nextId++ } }),
-  // Con un id nasconde solo quel messaggio (evita di chiuderne uno più recente)
+  // With an id it hides only that message (avoids closing a newer one)
   hide: (id) => {
     if (id === undefined || get().current?.id === id) set({ current: undefined });
   },

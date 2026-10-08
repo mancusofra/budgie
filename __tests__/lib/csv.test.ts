@@ -2,7 +2,7 @@ import { transactionsCsv } from '@/features/settings/csv-export';
 import { toCsv } from '@/lib/csv';
 
 describe('toCsv', () => {
-  it('mette tra virgolette solo le celle che servono, con BOM e CRLF', () => {
+  it('quotes only the cells that need it, with BOM and CRLF', () => {
     expect(toCsv([['a', 'b;c', 'say "hi"', 'x\ny']], ';')).toBe('﻿a;"b;c";"say ""hi""";"x\ny"\r\n');
     expect(toCsv([['1,5', 'ok']], ',')).toBe('﻿"1,5",ok\r\n');
   });
@@ -47,7 +47,7 @@ describe('transactionsCsv', () => {
     },
   ];
 
-  it('formato italiano: separatore ; e virgola decimale, spese negative', () => {
+  it('Italian format: ; separator and decimal comma, negative expenses', () => {
     expect(transactionsCsv(rows, labels, ',')).toBe(
       '﻿Data;Tipo;Categoria;Conto;Verso;Importo;Valuta;Nota\r\n' +
         '2026-09-03;Spesa;Cibo;Contanti;;-12,50;EUR;"pizza; birra"\r\n' +
@@ -55,7 +55,7 @@ describe('transactionsCsv', () => {
     );
   });
 
-  it('formato inglese: separatore , e punto decimale', () => {
+  it('English format: , separator and decimal point', () => {
     expect(transactionsCsv(rows.slice(0, 1), labels, '.').split('\r\n')[1]).toBe(
       '2026-09-03,Spesa,Cibo,Contanti,,-12.50,EUR,pizza; birra',
     );

@@ -13,7 +13,7 @@ export function useAccounts(): Account[] {
   return data ?? [];
 }
 
-/** Conti con saldo corrente; si aggiorna anche quando cambiano le transazioni. */
+/** Accounts with their current balance; also updates when transactions change. */
 export function useAccountsWithBalance({
   includeArchived = false,
 }: { includeArchived?: boolean } = {}) {
@@ -25,7 +25,7 @@ export function useAccountsWithBalance({
   return data ?? [];
 }
 
-/** undefined = in caricamento, null = non trovato. */
+/** undefined = loading, null = not found. */
 export function useAccount(id: string | undefined): Account | undefined | null {
   const { data, updatedAt } = useLiveQuery(repos.accounts.byId(id ?? ''), [id]);
   if (!id) return null;
@@ -36,7 +36,7 @@ export const accountActions = {
   create: repos.accounts.create,
   update: repos.accounts.update,
   remove: (id: string) => repos.accounts.remove(id),
-  /** Transazione sincrona: aggiorna esplicitamente le schermate (vedi materialize). */
+  /** Synchronous transaction: refreshes the screens explicitly (see materialize). */
   purge: (id: string) => {
     const removed = repos.accounts.purge(id);
     refreshLiveQueries();
@@ -48,8 +48,8 @@ export const accountActions = {
 };
 
 /**
- * Ambito dei conti per totali e liste, secondo il filtro conto e la valuta
- * principale (vedi resolveAccountScope).
+ * Account scope for totals and lists, based on the account filter and the
+ * main currency (see resolveAccountScope).
  */
 export function useAccountScope(): ResolvedScope & { mainScope: AccountScope } {
   const accountFilter = useUIStore((s) => s.accountFilter);
@@ -58,7 +58,7 @@ export function useAccountScope(): ResolvedScope & { mainScope: AccountScope } {
   return useMemo(
     () => ({
       ...resolveAccountScope(accountFilter, data ?? [], mainCurrency),
-      // Conti nella valuta principale, indipendentemente dal filtro (es. budget)
+      // Accounts in the main currency, regardless of the filter (e.g. budgets)
       mainScope: resolveAccountScope('all', data ?? [], mainCurrency).scope,
     }),
     [accountFilter, data, mainCurrency],

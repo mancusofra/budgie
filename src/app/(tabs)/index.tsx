@@ -52,7 +52,7 @@ const NEXT_MODE: Record<CenterMode, CenterMode> = {
 };
 const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
-// Spostamento breve e lineare, senza rimbalzo
+// Short, linear movement, no bounce
 const iconTransition = LinearTransition.duration(AnimationMs);
 
 export default function HomeScreen() {
@@ -66,9 +66,9 @@ export default function HomeScreen() {
   const [mode, setMode] = useState<CenterMode>('balance');
   const chartType = mode === 'income' ? 'income' : 'expense';
 
-  // Attorno alla ciambella ci sono le categorie del tipo mostrato (spese o entrate)
+  // Around the donut are the categories of the type shown (expenses or income)
   const allCategories = useCategories(chartType, { includeArchived: true });
-  // Attorno alla ciambella solo le attive; gli spicchi includono anche le archiviate
+  // Only active categories around the donut; slices also include archived ones
   const ringCategories = useMemo(() => allCategories.filter((c) => !c.archived), [allCategories]);
   const categoryTotals = useCategoryTotals(range, chartType, scope);
   const totals = usePeriodTotals(range, scope);
@@ -79,7 +79,7 @@ export default function HomeScreen() {
     [area],
   );
 
-  // Spicchi nell'ordine delle categorie, così le icone mantengono un ordine stabile
+  // Slices in category order, so the icons keep a stable order
   const segments = useMemo(() => {
     const totalById = new Map(categoryTotals.map((r) => [r.categoryId ?? 'none', r.total]));
     return allCategories
@@ -89,7 +89,7 @@ export default function HomeScreen() {
   const arcs = useMemo(() => donutArcs(segments), [segments]);
   const spent = useMemo(() => new Set(segments.map((s) => s.key)), [segments]);
 
-  // Ogni icona con uno spicchio si posiziona sopra il centro del proprio spicchio
+  // Each icon with a slice is placed over the center of its own slice
   const iconPositions = useMemo(() => {
     const minSep = (ICON_SIZE + Spacing.one) / (2 * Math.PI * Math.max(geometry.orbitRadius, 1));
     const angles = placeIcons(
@@ -113,9 +113,9 @@ export default function HomeScreen() {
   const donutThickness = Math.max(14, geometry.donutSize * 0.075);
   const setOpenCategory = useUIStore((s) => s.setOpenCategory);
 
-  // Tap sull'anello = lista con quella categoria aperta; tap al centro = cambia vista.
-  // Coordinate assolute (pageX/Y) confrontate con la posizione del grafico:
-  // locationX/Y sono relative all'elemento toccato (es. il testo al centro).
+  // Tap on the ring = list opened on that category; tap in the center = switch view.
+  // Absolute coordinates (pageX/Y) compared with the chart position:
+  // locationX/Y are relative to the touched element (e.g. the text in the center).
   const donutRef = useRef<View>(null);
   const onDonutPress = (e: GestureResponderEvent) => {
     const { pageX, pageY } = e.nativeEvent;
@@ -158,9 +158,9 @@ export default function HomeScreen() {
     mode === 'balance' ? 'home.balance' : mode === 'expense' ? 'home.expenses' : 'home.income',
   );
 
-  // All'apertura le posizioni cambiano più volte in pochi istanti (misura dello
-  // spazio, arrivo dei totali): le icone vanno messe al loro posto senza
-  // animazione, che si attiva solo dopo che la disposizione si è assestata
+  // On opening, positions change several times in a few moments (measuring the
+  // space, totals arriving): icons are put in place without animation,
+  // which is enabled only once the layout has settled
   const [animateIcons, setAnimateIcons] = useState(false);
   const measured = area.height > 0;
   useEffect(() => {
@@ -200,7 +200,7 @@ export default function HomeScreen() {
 
       <GestureDetector gesture={swipe}>
         <View
-          // Invisibile finché non si conosce lo spazio vero (niente salti iniziali)
+          // Invisible until the real space is known (no initial jumps)
           style={[styles.ring, !measured && styles.hidden]}
           collapsable={false}
           onLayout={(e) => {

@@ -1,8 +1,8 @@
 import { Platform } from 'react-native';
 
 /**
- * Contrasto WCAG AA (≥ 4,5:1) per testo normale: accenti su sfondo, superfici
- * e sui loro fondi tenui (16%). Verificato da __tests__/lib/contrast.test.ts.
+ * WCAG AA contrast (≥ 4.5:1) for normal text: accents on the background, surfaces
+ * and their light tints (16%). Checked by __tests__/lib/contrast.test.ts.
  */
 export const Colors = {
   light: {
@@ -17,13 +17,13 @@ export const Colors = {
     primary: '#3E58C5',
     expense: '#A83F38',
     income: '#306E4E',
-    /** Stato "attenzione" (budget oltre l'80%): sempre con icona ed etichetta. */
+    /** "Warning" state (budget above 80%): always with an icon and a label. */
     warning: '#865817',
   },
   dark: {
     text: '#F2F2F4',
     textSecondary: '#9A9AA1',
-    /** Scuro: gli accenti chiari del tema scuro con il bianco non sono leggibili. */
+    /** Dark: white is not readable on the light accents of the dark theme. */
     textOnColor: '#0E0E10',
     background: '#0E0E10',
     surface: '#1C1C1F',
@@ -51,12 +51,12 @@ export const Spacing = {
 
 export const Radius = 12;
 
-/** Durata unica delle animazioni dell'app (ms). */
+/** Single duration for the app's animations (ms). */
 export const AnimationMs = 250;
 
 /**
- * Cifre a larghezza fissa per gli importi. Solo iOS: su Android `tabular-nums`
- * fa misurare male il testo e taglia l'ultimo carattere (es. "$765.0").
+ * Fixed-width digits for amounts. iOS only: on Android `tabular-nums`
+ * makes text measure wrong and cuts the last character (e.g. "$765.0").
  */
 export const TabularNums = Platform.select({
   ios: { fontVariant: ['tabular-nums' as const] },
@@ -64,14 +64,14 @@ export const TabularNums = Platform.select({
 });
 
 /**
- * Altezza della tab bar nativa quando fluttua sopra il contenuto (iOS 26,
- * "Liquid Glass"), esclusa l'area sicura. Su Android la barra non si sovrappone.
+ * Height of the native tab bar when it floats over the content (iOS 26,
+ * "Liquid Glass"), excluding the safe area. On Android the bar doesn't overlap.
  */
 export const FloatingTabBarHeight = Platform.select({ ios: 50, default: 0 });
 
 /**
- * Su Android la tab bar nativa, anche nascosta, continua a intercettare i tocchi
- * nella sua zona in basso: ciò che la sostituisce va posizionato sopra.
+ * On Android the native tab bar, even hidden, keeps catching touches in
+ * its area at the bottom: whatever replaces it must be placed above it.
  */
 export const HiddenTabBarTouchArea = Platform.select({ android: 80, default: 0 });
 

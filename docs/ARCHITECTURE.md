@@ -1,87 +1,85 @@
-# Architettura
+# Architecture
 
-## Principi
+## Principles
 
-1. **Offline-first e privacy:** tutti i dati restano sul dispositivo in SQLite. Nessun account richiesto.
-2. **Velocità di inserimento:** la home è ottimizzata per aggiungere una spesa in pochi tap.
-3. **Un solo codebase:** iOS e Android da React Native con Expo, senza codice nativo custom (fino a prova contraria).
-4. **Tipi end-to-end:** schema DB → repository → hook → componenti, tutto TypeScript.
+1. **Offline-first and private:** all data stays on the device in SQLite. No account required.
+2. **Fast entry:** the home screen is optimized for logging an expense in a couple of taps.
+3. **One codebase:** iOS and Android from React Native with Expo, with no custom native code.
+4. **End-to-end types:** DB schema → repositories → hooks → components, all in TypeScript.
 
-## Perché queste scelte
+## Why these choices
 
-| Scelta                             | Motivazione                                                                                  | Alternative scartate                                                         |
-| ---------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| **Expo** (managed + dev build)     | Build cloud con EAS, OTA update, niente Xcode/Android Studio obbligatori all'inizio          | React Native CLI "bare": più configurazione                                  |
-| **Expo Router**                    | Routing file-based, deep link gratis, modali semplici                                        | React Navigation "puro" (Expo Router lo usa sotto)                           |
-| **expo-sqlite + Drizzle**          | SQL vero per aggregazioni (somme per categoria/periodo), migrazioni, `useLiveQuery` reattivo | WatermelonDB (più complesso), AsyncStorage/MMKV (non adatti ad aggregazioni) |
-| **Zustand**                        | Stato UI leggero (periodo selezionato, filtri); i dati veri stanno nel DB                    | Redux Toolkit (troppo per questo caso)                                       |
-| **Importi in centesimi (INTEGER)** | Evita errori di arrotondamento dei float                                                     | `REAL` / float                                                               |
-| **victory-native / gifted-charts** | Ciambella e barre animate, basati su Skia/SVG                                                | Recharts (solo web)                                                          |
+| Choice                               | Reason                                                                         | Alternatives considered                                                     |
+| ------------------------------------ | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------- |
+| **Expo** (managed + dev build)       | Cloud builds, OTA updates, no Xcode/Android Studio needed to get started       | Bare React Native CLI: more configuration                                   |
+| **Expo Router**                      | File-based routing, free deep links, simple modals and sheets                  | Plain React Navigation (Expo Router uses it under the hood)                 |
+| **expo-sqlite + Drizzle**            | Real SQL for aggregations (sums by category/period), migrations, typed queries | WatermelonDB (more complex), AsyncStorage/MMKV (not suited to aggregations) |
+| **Zustand**                          | Light UI state (selected period, filters); the real data lives in the DB       | Redux Toolkit (too much for this case)                                      |
+| **Amounts in minor units (INTEGER)** | Avoids floating-point rounding errors                                          | `REAL` / float                                                              |
+| **Charts on `react-native-svg`**     | Hand-drawn donut and bars: light, accessible, animated with Reanimated         | victory-native, gifted-charts (heavier, less control)                       |
 
-## Livelli
+## Layers
 
 ```
-┌─────────────────────────────────────────────┐
-│  src/app/*          Schermate (Expo Router) │  ← solo composizione UI
-├─────────────────────────────────────────────┤
-│  src/components/*   Componenti riutilizzabili│  ← presentazionali, senza accesso al DB
-├─────────────────────────────────────────────┤
-│  src/features/*     Hook di dominio          │  ← useExpensesByCategory, useAddTransaction…
-│  src/store/*        Stato UI (Zustand)       │
-├─────────────────────────────────────────────┤
-│  src/db/repositories  Query Drizzle          │  ← unico punto che parla col DB
-│  src/db/schema.ts     Schema + migrazioni    │
-├─────────────────────────────────────────────┤
-│  expo-sqlite (file locale budgie.db)         │
-└─────────────────────────────────────────────┘
+┌──────────────────────────────────────────────┐
+│  src/app/*          Screens (Expo Router)    │  ← UI composition only
+├──────────────────────────────────────────────┤
+│  src/components/*   Reusable components      │  ← presentational, no DB access
+├──────────────────────────────────────────────┤
+│  src/features/*     Domain hooks             │  ← useCategoryTotals, useAddTransaction…
+│  src/store/*        UI state (Zustand)       │
+├──────────────────────────────────────────────┤
+│  src/db/repositories  Drizzle queries        │  ← the only place that talks to the DB
+│  src/db/schema.ts     Schema + migrations    │
+├──────────────────────────────────────────────┤
+│  expo-sqlite (local file budgie.db)          │
+└──────────────────────────────────────────────┘
 ```
 
-Regole:
+Rules:
 
-- Le schermate **non** importano da `db/` direttamente, ma usano gli hook in `features/`.
-- `lib/` contiene solo funzioni pure (facili da testare): formattazione denaro, calcolo periodi, CSV.
-- I componenti in `components/ui` non conoscono il dominio (niente "transaction" lì dentro).
+- Screens do **not** import from `db/` directly; they use the hooks in `features/`.
+- `lib/` contains only pure functions (easy to test): money formatting, periods, recurrence, CSV.
+- Components in `components/ui` know nothing about the domain (no "transaction" in there).
 
-## Flusso dei dati — esempio "aggiungi spesa"
+## Data flow — example "add an expense"
 
-1. L'utente preme **−** in home → `router.push('/transaction/new?type=expense')`
-2. Il tastierino aggiorna uno stato locale (stringa espressione → valutata in centesimi da `lib/money.ts`)
-3. Salva → `useAddTransaction()` → `transactionsRepo.create()` → INSERT in SQLite
-4. La home usa `useLiveQuery` su `transactionsRepo.sumByCategory(period)` → si ri-renderizza da sola
-5. `router.back()` + feedback aptico
+1. The user taps **−** on the home screen → `router.push('/transaction/new?type=expense')`.
+2. The keypad updates local state (an expression string, evaluated to minor units by
+   `lib/expression.ts`).
+3. Save → `useAddTransaction()` → `transactions.create()` → INSERT into SQLite.
+4. Screens use live queries (`db/live-query.ts`): SQLite change notifications are batched and the
+   affected queries re-run, so the home screen updates by itself.
+5. `router.back()` + haptic feedback.
 
-## Stato globale (Zustand)
+## Live queries
 
-```ts
-type UIState = {
-  period: {
-    kind: 'day' | 'week' | 'month' | 'year' | 'all' | 'custom';
-    anchor: Date;
-    from?: Date;
-    to?: Date;
-  };
-  accountFilter: string | 'all';
-  setPeriod(p: UIState['period']): void;
-  shiftPeriod(direction: -1 | 1): void;
-  setAccountFilter(id: string | 'all'): void;
-};
-```
+Drizzle's `useLiveQuery` is replaced by `db/live-query.ts`, which keeps the same API and adds:
 
-Le preferenze (tema, valuta, lingua) sono salvate nella tabella `settings` del DB e caricate
-all'avvio in uno store dedicato.
+- `useLiveQueryOn(query, tables)` to re-run a query when any of several tables changes (joins);
+- batching of SQLite notifications (one per row), so bulk writes trigger a single refresh;
+- `refreshLiveQueries()` after operations that SQLite does not report (e.g. `DELETE` without
+  `WHERE` on reset and restore, synchronous transactions).
+
+## Global UI state (Zustand)
+
+`store/ui.ts` holds the selected period (`day | week | month | year | all | custom`), the account
+filter and transient UI flags. Preferences (theme, currency, language, first day of the
+week/month, stats layout…) are stored in the `settings` table and read through live queries.
 
 ## Testing
 
-| Livello      | Strumento   | Cosa                                         |
-| ------------ | ----------- | -------------------------------------------- |
-| Unit         | Jest        | `lib/`, calcolo periodi, parsing tastierino  |
-| Integrazione | Jest + RNTL | hook `features/` e componenti con DB di test |
-| E2E          | Maestro     | flussi utente su simulatore/emulatore        |
+| Level       | Tool        | What                                                    |
+| ----------- | ----------- | ------------------------------------------------------- |
+| Unit        | Jest        | `lib/`: periods, keypad expressions, recurrence, colors |
+| Integration | Jest + RNTL | repositories and `features/` hooks on in-memory SQLite  |
+| E2E         | Maestro     | user flows on an emulator (planned)                     |
 
-## Build e ambienti
+The CI fails if coverage of `lib/`, `db/` and `features/` drops below 70% (lines).
 
-Profili EAS in `eas.json`:
+## Builds and environments
 
-- `development` — development client, per debug su dispositivo
-- `preview` — APK/IPA interni per tester
-- `production` — build per gli store
+- **Development**: Expo Go or a development build, with `npx expo start`.
+- **iOS beta**: the `.github/workflows/ios-unsigned-ipa.yml` workflow builds an unsigned `.ipa`
+  (manual run or `ios-build-*` tag) that can be sideloaded with a free Apple ID.
+- **Stores**: EAS Build / EAS Submit (phase 8; `eas.json` profiles not created yet).

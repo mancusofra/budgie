@@ -1,6 +1,6 @@
 /**
- * Hook delle feature eseguiti davvero su un DB SQLite in memoria: si sostituisce
- * solo il client (expo-sqlite non gira in Node) e le notifiche di modifica.
+ * Feature hooks running for real on an in-memory SQLite DB: only the client
+ * (expo-sqlite doesn't run in Node) and change notifications are replaced.
  */
 import { act, renderHook } from '@testing-library/react-native';
 
@@ -61,7 +61,7 @@ jest.mock('@/db/client', () => {
 });
 jest.mock('expo-sqlite', () => ({ addDatabaseChangeListener: () => ({ remove() {} }) }));
 
-/** Dopo una scrittura: riesegue le live query e attende i risultati. */
+/** After a write: re-runs the live queries and waits for the results. */
 async function settle(action?: () => unknown) {
   await act(async () => {
     await action?.();
@@ -92,8 +92,8 @@ beforeAll(async () => {
   billsId = cats.find((c) => c.name === 'Bollette')!.id;
 });
 
-describe('impostazioni', () => {
-  it('legge e scrive le impostazioni', async () => {
+describe('settings', () => {
+  it('reads and writes settings', async () => {
     const { result } = await render(() => ({
       state: useSettingsState(),
       settings: useSettings(),
@@ -108,8 +108,8 @@ describe('impostazioni', () => {
   });
 });
 
-describe('transazioni', () => {
-  it('aggiunge, aggiorna ed elimina aggiornando totali e liste', async () => {
+describe('transactions', () => {
+  it('adds, updates and deletes, updating totals and lists', async () => {
     const { result } = await render(() => ({
       add: useAddTransaction(),
       update: useUpdateTransaction(),
@@ -163,19 +163,19 @@ describe('transazioni', () => {
     await settle(() => result.current.update(first.id, { amount: 1500 }));
     expect(result.current.totals.expense).toBe(7300);
 
-    // Nell'app si elimina la riga aggiornata (quella mostrata in lista)
+    // In the app the updated row is deleted (the one shown in the list)
     const updated = (await repos.transactions.getById(first.id))!;
     await settle(() => result.current.remove(updated));
     expect(result.current.totals.expense).toBe(5800);
     const snack = useSnackbar.getState().current!;
     expect(snack.actionLabel).toBeTruthy();
 
-    // "Annulla" reinserisce la transazione
+    // "Undo" re-inserts the transaction
     await settle(() => snack.onAction?.());
     expect(result.current.totals.expense).toBe(7300);
   });
 
-  it('useTransaction distingue caricamento e non trovata', async () => {
+  it('useTransaction tells loading and not found apart', async () => {
     const [tx] = await repos.transactions.list();
     const { result } = await render(() => ({
       found: useTransaction(tx.id),
@@ -185,7 +185,7 @@ describe('transazioni', () => {
     expect(result.current.missing).toBeNull();
   });
 
-  it('useSelectedPeriod usa il periodo dello store', async () => {
+  it('useSelectedPeriod uses the period from the store', async () => {
     useUIStore.setState({ period: month });
     const { result } = await render(() => useSelectedPeriod());
     expect(result.current.range).toEqual(range);
@@ -193,8 +193,8 @@ describe('transazioni', () => {
   });
 });
 
-describe('conti e categorie', () => {
-  it('saldi, ambito per valuta e azioni', async () => {
+describe('accounts and categories', () => {
+  it('balances, scope by currency and actions', async () => {
     const { result } = await render(() => ({
       accounts: useAccounts(),
       balances: useAccountsWithBalance(),
@@ -207,7 +207,7 @@ describe('conti e categorie', () => {
     expect(result.current.cash?.id).toBe(cashId);
     expect(result.current.none).toBeNull();
 
-    // Un conto in un'altra valuta resta fuori da "Tutti i conti"
+    // An account in another currency stays out of "All accounts"
     let usdId = '';
     await settle(async () => {
       usdId = (await accountActions.create({ name: 'USD', currency: 'USD' })).id;
@@ -219,7 +219,7 @@ describe('conti e categorie', () => {
     expect(result.current.accounts).toHaveLength(1);
   });
 
-  it('crea, archivia e trova categorie', async () => {
+  it('creates, archives and finds categories', async () => {
     const { result } = await render(() => ({
       expense: useCategories('expense'),
       all: useCategories(undefined, { includeArchived: true }),
@@ -247,8 +247,8 @@ describe('conti e categorie', () => {
   });
 });
 
-describe('statistiche e budget', () => {
-  it('serie, periodo precedente e avanzamento dei budget', async () => {
+describe('stats and budgets', () => {
+  it('series, previous period and budget progress', async () => {
     const monthKey = budgetMonthKey(month.anchor, 1);
     await budgetActions.set({ month: monthKey, categoryId: foodId, amount: 2000 });
     await budgetActions.set({ month: monthKey, categoryId: null, amount: 10000 });
@@ -283,8 +283,8 @@ describe('statistiche e budget', () => {
   });
 });
 
-describe('ricorrenze', () => {
-  it('crea, elenca, registra e modifica', async () => {
+describe('recurring', () => {
+  it('creates, lists, logs and edits', async () => {
     const { result } = await render(() => ({
       list: useRecurringList(),
       none: useRecurring(undefined),
@@ -317,7 +317,7 @@ describe('ricorrenze', () => {
     expect(result.current.list).toHaveLength(0);
   });
 
-  it('etichette delle frequenze', async () => {
+  it('frequency labels', async () => {
     const { result } = await render(() => useTranslation().t);
     expect(REPEAT_OPTIONS.map((o) => repeatLabel(result.current, o.frequency, o.interval))).toEqual(
       ['Every week', 'Every 2 weeks', 'Every month', 'Every year'],
@@ -325,8 +325,8 @@ describe('ricorrenze', () => {
   });
 });
 
-describe('azzeramento', () => {
-  it('cancella tutto e aggiorna le schermate aperte', async () => {
+describe('reset', () => {
+  it('deletes everything and updates the open screens', async () => {
     const { result } = await render(() => ({
       reset: useResetDatabase(),
       list: useTransactionList({}),

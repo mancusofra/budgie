@@ -1,11 +1,11 @@
 /**
- * Gli importi sono sempre interi in unità minori (es. centesimi), mai float.
- * Queste funzioni convertono da/verso la rappresentazione per l'utente.
+ * Amounts are always integers in minor units (e.g. cents), never floats.
+ * These functions convert to and from the representation shown to the user.
  */
 
 const decimalsCache = new Map<string, number>();
 
-/** Numero di decimali della valuta (EUR → 2, JPY → 0). */
+/** Number of decimals of the currency (EUR → 2, JPY → 0). */
 export function currencyDecimals(currency: string): number {
   let decimals = decimalsCache.get(currency);
   if (decimals === undefined) {
@@ -18,8 +18,8 @@ export function currencyDecimals(currency: string): number {
 }
 
 /**
- * Converte un importo digitato dall'utente in unità minori.
- * Accetta sia "," che "." come separatore decimale. Restituisce null se non valido.
+ * Converts an amount typed by the user into minor units.
+ * Accepts both "," and "." as decimal separator. Returns null if invalid.
  *
  * parseAmount('12,5', 'EUR') → 1250
  */
@@ -37,12 +37,12 @@ export function parseAmount(input: string, currency = 'EUR'): number | null {
   return sign ? -minor : minor;
 }
 
-/** Converte unità minori in numero decimale (solo per visualizzazione, mai per calcoli). */
+/** Converts minor units to a decimal number (for display only, never for calculations). */
 export function fromMinor(minor: number, currency = 'EUR'): number {
   return minor / 10 ** currencyDecimals(currency);
 }
 
-/** Formatta un importo in unità minori secondo la locale: formatMoney(123456, 'EUR', 'it-IT') → "1.234,56 €". */
+/** Formats an amount in minor units for the locale: formatMoney(123456, 'EUR', 'it-IT') → "1.234,56 €". */
 export function formatMoney(minor: number, currency = 'EUR', locale?: string): string {
   return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(
     fromMinor(minor, currency),

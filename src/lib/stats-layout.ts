@@ -1,4 +1,4 @@
-/** Sezioni della schermata Statistiche, nell'ordine predefinito. */
+/** Sections of the Stats screen, in the default order. */
 export const STATS_SECTIONS = ['summary', 'chart', 'categories', 'budgets'] as const;
 
 export type StatsSection = (typeof STATS_SECTIONS)[number];
@@ -9,8 +9,8 @@ const isSection = (s: unknown): s is StatsSection =>
   typeof s === 'string' && (STATS_SECTIONS as readonly string[]).includes(s);
 
 /**
- * Layout salvato reso valido: sezioni sconosciute scartate, duplicati rimossi,
- * sezioni nuove (aggiunte in versioni successive) in fondo e visibili.
+ * Saved layout made valid: unknown sections dropped, duplicates removed,
+ * new sections (added in later versions) appended at the end and visible.
  */
 export function normalizeStatsLayout(saved?: Partial<StatsLayout> | null): StatsLayout {
   const order = [...new Set((saved?.order ?? []).filter(isSection))];

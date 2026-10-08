@@ -12,14 +12,14 @@ import { Spacing } from '@/theme';
 
 type LanguagePreference = SettingsMap['language'];
 
-/** Pannello per scegliere la lingua dell'app. */
+/** Sheet to choose the app language. */
 export default function LanguageSheet() {
   const { t } = useTranslation();
   const theme = useTheme();
   const current = useSettings().language ?? 'system';
   const setSetting = useSetSetting();
 
-  // I nomi delle lingue restano nella propria lingua, come nelle impostazioni di sistema
+  // Language names stay in their own language, as in the system settings
   const options: { value: LanguagePreference; label: string; hint?: string }[] = [
     { value: 'system', label: t('settings.languageSystem'), hint: t('language.systemHint') },
     { value: 'it', label: 'Italiano' },
@@ -60,7 +60,7 @@ export default function LanguageSheet() {
               name="check"
               size={20}
               color={theme.primary}
-              // Nascosta ma presente, per l'allineamento (color 'transparent' su Android non vale)
+              // Hidden but present, for alignment (color 'transparent' doesn't work on Android)
               style={{ opacity: selected ? 1 : 0 }}
             />
           </Pressable>

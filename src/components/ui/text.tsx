@@ -8,7 +8,7 @@ export type TextProps = RNTextProps & {
   color?: ThemeColor;
 };
 
-/** Varianti annunciate come intestazioni dallo screen reader (navigazione per sezioni). */
+/** Variants announced as headings by screen readers (navigation by section). */
 const HEADERS = new Set<TextProps['variant']>(['title', 'subtitle', 'overline']);
 
 export function Text({ style, variant = 'body', color = 'text', ...rest }: TextProps) {
