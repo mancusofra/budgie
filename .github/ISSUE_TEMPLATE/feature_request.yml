@@ -1,19 +1,19 @@
-name: Proponi un'idea
-description: Una funzionalità nuova o un miglioramento
+name: Feature request
+description: A new feature or an improvement
 labels: [idea]
 body:
   - type: textarea
     id: problem
     attributes:
-      label: Che problema risolve
-      description: Racconta la situazione in cui ti servirebbe.
+      label: What problem does it solve
+      description: Describe the situation where you would need it.
     validations:
       required: true
   - type: textarea
     id: proposal
     attributes:
-      label: Come la immagini
+      label: How you imagine it
   - type: textarea
     id: alternatives
     attributes:
-      label: Alternative considerate
+      label: Alternatives considered

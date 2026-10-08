@@ -1,15 +1,15 @@
-## Cosa cambia
+## What changes
 
-<!-- Descrivi la modifica e il motivo. Collega la issue, se c'è: "Closes #123" -->
+<!-- Describe the change and why. Link the issue if there is one: "Closes #123" -->
 
-## Come l'hai provata
+## How you tested it
 
-<!-- Dispositivo/emulatore, passi seguiti, screenshot per le modifiche visive -->
+<!-- Device/emulator, steps, screenshots for visual changes -->
 
 ## Checklist
 
-- [ ] `npm run lint`, `npm run typecheck` e `npm test` passano
-- [ ] Ho aggiunto o aggiornato i test per la logica nuova
-- [ ] Testi nuovi tradotti in `src/i18n/locales/it.json` ed `en.json`
-- [ ] Se ho cambiato `src/db/schema.ts`, ho aggiunto una migrazione (senza modificare quelle esistenti)
-- [ ] Accetto che il mio contributo sia rilasciato con la licenza GPL-3.0-only del progetto
+- [ ] `npm run lint`, `npm run typecheck` and `npm test` pass
+- [ ] I added or updated tests for new logic
+- [ ] New strings are translated in `src/i18n/locales/en.json` and `it.json`
+- [ ] If I changed `src/db/schema.ts`, I added a migration (without editing existing ones)
+- [ ] I agree that my contribution is released under the project's GPL-3.0-only license

@@ -1,31 +1,28 @@
-# Licenza della grafica e del marchio Budgie
+# License for the Budgie artwork and name
 
-Copyright (C) 2026 Francesco Mancuso. Tutti i diritti non espressamente concessi
-sono riservati.
+Copyright (C) 2026 Francesco Mancuso. All rights not expressly granted are reserved.
 
-## A cosa si applica
+## What this covers
 
-- il nome **"Budgie"** usato come nome dell'app;
-- il **pappagallino con la moneta** in tutte le sue versioni: icone, schermata di
-  avvio, favicon, anteprime e sorgenti vettoriali;
-- i file in [`assets/budgie/`](budgie/) e [`assets/images/`](images/).
+- the name **"Budgie"** used as the name of the app;
+- the **budgie holding a coin** mascot in all its versions: icons, launch screen, favicon, previews
+  and vector sources;
+- the files in [`assets/budgie/`](budgie/) and [`assets/images/`](images/).
 
-Questi elementi **non** sono coperti dalla GPL-3.0 che si applica al codice
-sorgente del progetto.
+These are **not** covered by the GPL-3.0 that applies to the source code of the project.
 
-## Cosa è consentito
+## What you may do
 
-La grafica è rilasciata con licenza
-[Creative Commons Attribuzione - Non commerciale - Non opere derivate 4.0 Internazionale
-(CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.it):
-puoi mostrarla e condividerla così com'è, citando l'autore, per scopi non
-commerciali (ad esempio parlando del progetto o compilandolo per uso personale).
+The artwork is licensed under
+[Creative Commons Attribution-NonCommercial-NoDerivatives 4.0 International (CC BY-NC-ND 4.0)](https://creativecommons.org/licenses/by-nc-nd/4.0/):
+you may display and share it unchanged, with credit to the author, for non-commercial purposes
+(for example when talking about the project or building it for personal use).
 
-Non puoi modificarla, usarla per scopi commerciali, né usare il nome o l'icona per
-identificare un'app diversa o una versione modificata di Budgie.
+You may not modify it, use it commercially, or use the name or icon to identify a different app or
+a modified version of Budgie.
 
-## Se distribuisci una versione modificata
+## If you distribute a modified version
 
-Il codice è tuo da modificare secondo la GPL-3.0, ma prima di distribuire una
-versione modificata (anche gratuita) devi **sostituire nome e icona** con altri
-tuoi, così che nessuno la confonda con l'app originale.
+You are free to modify the code under the GPL-3.0, but before distributing a modified version (even
+for free) you must **replace the name and icon** with your own, so that nobody mistakes it for the
+original app.

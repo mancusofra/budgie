@@ -1,51 +1,49 @@
-# Contribuire a Budgie
+# Contributing to Budgie
 
-Grazie dell'interesse! Budgie è un progetto personale aperto: il codice è pubblico e i contributi
-sono benvenuti, ma ogni modifica viene **rivista e approvata dal maintainer** prima di entrare.
+Thanks for your interest! Budgie is an open personal project: the code is public and contributions
+are welcome, but every change is **reviewed and approved by the maintainer** before it is merged.
 
-## Prima di scrivere codice
+## Before writing code
 
-- **Bug**: apri una issue con il modello "Segnala un bug".
-- **Idee e funzionalità nuove**: apri prima una issue "Proponi un'idea" e aspetta un riscontro:
-  non tutte le proposte rientrano negli obiettivi dell'app (semplice, offline, senza account) e
-  così eviti lavoro che potrebbe non essere accettato.
-- **Sicurezza**: segui [SECURITY.md](SECURITY.md), non aprire issue pubbliche.
+- **Bugs**: open an issue with the "Bug report" form.
+- **Ideas and new features**: open a "Feature request" issue first and wait for feedback. Not every
+  proposal fits the goals of the app (simple, offline, no account), and this avoids work that may
+  not be accepted.
+- **Security**: follow [SECURITY.md](SECURITY.md); do not open public issues.
 
-## Flusso di lavoro
+## Workflow
 
-1. Fai un **fork** del repository e crea un branch dal `main`:
-   `feat/<nome>` per le funzionalità, `fix/<nome>` per le correzioni.
-2. Installa e avvia: `npm install`, poi `npx expo start` (vedi il [README](README.md)).
-3. Fai le modifiche con commit piccoli e descrittivi in stile
+1. **Fork** the repository and create a branch from `main`: `feat/<name>` for features,
+   `fix/<name>` for fixes.
+2. Install and run it: `npm install`, then `npx expo start` (see the [README](README.md)).
+3. Make your changes in small, descriptive commits following
    [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:`…).
-4. Prima di aprire la PR controlla che passino:
+4. Before opening the pull request, make sure these pass:
    ```bash
    npm run lint
    npm run typecheck
    npm test
    ```
-5. Apri una **Pull Request verso `main`** compilando il modello. La CI parte dopo l'approvazione
-   del maintainer; potrebbero esserti chieste modifiche prima del merge.
+5. Open a **pull request against `main`** and fill in the template. CI runs once the maintainer
+   approves it; you may be asked for changes before the merge.
 
-## Linee guida
+## Guidelines
 
-- Segui lo stile del codice esistente; Prettier ed ESLint girano anche al commit.
-- Logica nuova = test nuovi (`__tests__/`). Il database si prova su SQLite in memoria
+- Follow the existing code style; Prettier and ESLint also run on commit.
+- New logic needs new tests (`__tests__/`). Database code is tested on in-memory SQLite
   (`test-utils/db.ts`).
-- Ogni testo visibile va in `src/i18n/locales/it.json` **ed** `en.json`.
-- Database: modifica `src/db/schema.ts` e genera una nuova migrazione con `npm run db:generate`;
-  non modificare mai migrazioni esistenti.
-- Expo cambia spesso: prima di usare un'API controlla la documentazione della versione in uso
-  (SDK 57).
-- Interfaccia: animazioni sobrie (250 ms), contrasto AA (c'è un test), etichette per lo screen
-  reader.
+- Every user-visible string goes in `src/i18n/locales/en.json` **and** `it.json`.
+- Database: change `src/db/schema.ts` and generate a new migration with `npm run db:generate`;
+  never edit existing migrations.
+- Expo changes often: check the docs for the SDK in use (57) before relying on an API.
+- UI: subtle animations (250 ms), AA contrast (there is a test for it), labels for screen readers.
 
-## Licenza dei contributi
+## License of contributions
 
-Inviando una Pull Request accetti che il tuo contributo sia rilasciato con la licenza del
-progetto, la [GPL-3.0-only](LICENSE). Nome e grafica di Budgie hanno una licenza a parte
-([assets/LICENSE.md](assets/LICENSE.md)): non proporre modifiche all'icona o al marchio.
+By submitting a pull request you agree that your contribution is released under the project
+license, [GPL-3.0-only](LICENSE). The Budgie name and artwork have a separate license
+([assets/LICENSE.md](assets/LICENSE.md)): please don't propose changes to the icon or brand.
 
-## Comportamento
+## Conduct
 
-Partecipando accetti il [Codice di condotta](CODE_OF_CONDUCT.md).
+By participating you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

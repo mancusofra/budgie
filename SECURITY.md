@@ -1,18 +1,17 @@
-# Sicurezza
+# Security
 
-Budgie salva tutti i dati sul dispositivo e non ha server: le vulnerabilità più probabili
-riguardano il backup e il ripristino, l'esportazione dei file o il blocco con riconoscimento
-biometrico.
+Budgie stores all data on the device and has no servers: the most likely vulnerabilities involve
+backup and restore, file export or the biometric lock.
 
-## Come segnalare una vulnerabilità
+## Reporting a vulnerability
 
-**Non aprire una issue pubblica.** Usa la segnalazione privata di GitHub:
+**Do not open a public issue.** Use GitHub's private reporting:
 [Security → Report a vulnerability](https://github.com/mancusofra/budgie/security/advisories/new).
 
-Indica la versione di Budgie (in fondo alle Impostazioni), il dispositivo e i passi per
-riprodurre il problema. Riceverai una risposta appena possibile; una volta corretto il problema
-la segnalazione verrà resa pubblica, citandoti se lo desideri.
+Include the Budgie version (at the bottom of Settings), the device and the steps to reproduce the
+problem. You will get an answer as soon as possible; once the issue is fixed the report will be
+published, crediting you if you wish.
 
-## Versioni supportate
+## Supported versions
 
-Viene corretta solo l'ultima versione pubblicata.
+Only the latest released version receives fixes.

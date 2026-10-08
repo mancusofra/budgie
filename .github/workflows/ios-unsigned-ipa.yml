@@ -1,11 +1,11 @@
-# Compila un .ipa iOS NON firmato (da firmare e installare con un Apple ID
-# gratuito tramite un tool di sideload). Nessun Mac né account Apple Developer.
+# Builds an UNSIGNED iOS .ipa (to be signed and installed with a free Apple ID
+# through a sideloading tool). No Mac or Apple Developer account needed.
 #
-# Avvio: pubblicare un tag "ios-build-*" sul commit da compilare, es.
+# To run it: push an "ios-build-*" tag on the commit to build, e.g.
 #   git tag ios-build-1 && git push origin ios-build-1
-# (oppure "Run workflow" dalla pagina Actions, quando il file è su main).
-# Il .ipa si scarica dagli artifact dell'esecuzione.
-name: iOS IPA (non firmato)
+# (or "Run workflow" from the Actions page).
+# The .ipa can be downloaded from the run artifacts.
+name: iOS IPA (unsigned)
 
 on:
   push:
@@ -30,10 +30,10 @@ jobs:
 
       - run: npm ci
 
-      # Genera il progetto nativo iOS (ios/ non è nel repository)
+      # Generate the native iOS project (ios/ is not in the repository)
       - run: npx expo prebuild --platform ios --clean
 
-      - name: Compila (Release, senza firma)
+      - name: Build (Release, unsigned)
         run: |
           set -o pipefail
           xcodebuild \
@@ -48,7 +48,7 @@ jobs:
             CODE_SIGN_IDENTITY="" \
             build | tail -n 200
 
-      - name: Impacchetta il .ipa
+      - name: Package the .ipa
         run: |
           mkdir -p Payload
           cp -R build/Build/Products/Release-iphoneos/Budgie.app Payload/
