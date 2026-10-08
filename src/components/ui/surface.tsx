@@ -5,24 +5,24 @@ import { View, type StyleProp, type ViewStyle } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { withAlpha } from '@/lib/color';
 
-/** Liquid Glass disponibile (iOS 26+). Calcolato una volta: non cambia a runtime. */
+/** Liquid Glass available (iOS 26+). Computed once: it doesn't change at runtime. */
 export const hasGlass = isLiquidGlassAvailable();
 
 type Props = {
   children?: ReactNode;
   style?: StyleProp<ViewStyle>;
-  /** Colore d'accento: tinta del vetro su iOS, sfondo tenue altrove. */
+  /** Accent color: glass tint on iOS, light background elsewhere. */
   tint?: string;
-  /** Reagisce al tocco (solo vetro). */
+  /** Reacts to touch (glass only). */
   interactive?: boolean;
-  /** 'clear' = vetro più trasparente, per elementi sopra contenuti colorati. */
+  /** 'clear' = more transparent glass, for elements over colorful content. */
   variant?: 'regular' | 'clear';
   pointerEvents?: ViewStyle['pointerEvents'];
 };
 
 /**
- * Superficie di base della UI: Liquid Glass su iOS 26, altrimenti un
- * riempimento tenue (neutro o leggermente tinto).
+ * Base UI surface: Liquid Glass on iOS 26, otherwise a
+ * light fill (neutral or slightly tinted).
  */
 export function Surface({ children, style, tint, interactive, variant = 'regular' }: Props) {
   const theme = useTheme();

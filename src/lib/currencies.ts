@@ -1,4 +1,4 @@
-/** Valute proposte nella scelta del conto (ISO 4217). */
+/** Currencies offered when choosing an account currency (ISO 4217). */
 export const COMMON_CURRENCIES = [
   'EUR',
   'USD',

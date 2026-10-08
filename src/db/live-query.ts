@@ -4,9 +4,9 @@ import { addDatabaseChangeListener } from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 
 /**
- * Le notifiche di SQLite arrivano una per riga: un ripristino o un inserimento
- * in blocco ne genera migliaia. Le raccogliamo qui e rieseguiamo ogni query
- * una volta sola a raffica finita (o ogni MAX_WAIT_MS se la raffica continua).
+ * SQLite notifications arrive one per row: a restore or a bulk insert
+ * produces thousands of them. They are collected here and each query re-runs
+ * once when the burst is over (or every MAX_WAIT_MS if it keeps going).
  */
 const QUIET_MS = 50;
 const MAX_WAIT_MS = 500;
@@ -55,8 +55,8 @@ function subscribe(subscriber: Subscriber) {
 }
 
 /**
- * Riesegue tutte le live query. Serve dopo un DELETE senza WHERE (azzeramento,
- * ripristino): SQLite lo esegue con la "truncate optimization", che non notifica.
+ * Re-runs every live query. Needed after a DELETE without WHERE (reset,
+ * restore): SQLite runs it with the "truncate optimization", which doesn't notify.
  */
 export function refreshLiveQueries() {
   clearTimeout(timer);
@@ -94,7 +94,7 @@ function useLive<T>(
       cancelled = true;
       unsubscribe();
     };
-    // La query viene ricreata a ogni render: si riesegue solo quando cambiano le deps
+    // The query is recreated on every render: it re-runs only when deps change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 
@@ -102,8 +102,8 @@ function useLive<T>(
 }
 
 /**
- * Sostituto di useLiveQuery di Drizzle (stessa firma): si aggiorna quando
- * cambia la tabella del FROM, con le notifiche raggruppate.
+ * Replacement for Drizzle's useLiveQuery (same signature): updates when the
+ * FROM table changes, with batched notifications.
  */
 export function useLiveQuery<T extends PromiseLike<unknown>>(
   query: T,
@@ -115,9 +115,9 @@ export function useLiveQuery<T extends PromiseLike<unknown>>(
 }
 
 /**
- * Come useLiveQuery, ma si riesegue quando cambia una qualsiasi delle tabelle
- * indicate (Drizzle ascolta solo la tabella del FROM, quindi ignora join e
- * subquery: es. saldi dei conti o nomi di categoria).
+ * Like useLiveQuery, but re-runs when any of the given tables changes
+ * (Drizzle only listens to the FROM table, so it ignores joins and
+ * subqueries: e.g. account balances or category names).
  */
 export function useLiveQueryOn<T>(
   query: PromiseLike<T>,

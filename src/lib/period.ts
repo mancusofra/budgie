@@ -16,20 +16,20 @@ export type PeriodKind = 'day' | 'week' | 'month' | 'year' | 'all' | 'custom';
 
 export type Period =
   | { kind: Exclude<PeriodKind, 'custom'>; anchor: Date }
-  /** Intervallo scelto dall'utente: `from` e `to` sono giorni inclusi. */
+  /** Range chosen by the user: `from` and `to` are inclusive days. */
   | { kind: 'custom'; anchor: Date; from: Date; to: Date };
 
 export type PeriodOptions = {
-  /** 0 = domenica, 1 = lunedì */
+  /** 0 = Sunday, 1 = Monday */
   weekStartsOn?: 0 | 1;
-  /** Giorno del mese da cui parte il "mese" (1–28), es. 27 per chi riceve lo stipendio il 27. */
+  /** Day of the month the "month" starts on (1–28), e.g. 27 for people paid on the 27th. */
   monthStartDay?: number;
 };
 
-/** Intervallo semiaperto [from, to). Per "all" entrambi undefined. */
+/** Half-open range [from, to). Both undefined for "all". */
 export type PeriodRange = { from?: Date; to?: Date };
 
-/** Inizio del "mese" che contiene la data, tenendo conto del giorno di inizio. */
+/** Start of the "month" containing the date, taking the start day into account. */
 function startOfCustomMonth(date: Date, startDay: number): Date {
   const day = Math.min(Math.max(Math.round(startDay), 1), 28);
   const monthOffset = date.getDate() >= day ? 0 : -1;
@@ -83,7 +83,7 @@ export function shiftPeriod(period: Period, direction: -1 | 1): Period {
     case 'year':
       return { kind: 'year', anchor: addYears(anchor, direction) };
     case 'custom': {
-      // Sposta di un intervallo della stessa lunghezza
+      // Shift by a range of the same length
       const days = (differenceInCalendarDays(period.to, period.from) + 1) * direction;
       return customPeriod(addDays(period.from, days), addDays(period.to, days));
     }
@@ -107,7 +107,7 @@ function formatSpan(first: Date, last: Date, locale: Locale | undefined, now: Da
   return `${start} – ${end}`;
 }
 
-/** Etichetta del periodo: "Settembre 2026", "22 – 28 set", "Lun 28 settembre"… */
+/** Period label: "September 2026", "22 – 28 Sep", "Mon 28 September"… */
 export function formatPeriod(
   period: Period,
   { locale, now = new Date(), allLabel = 'All', ...opts }: FormatOptions = {},
@@ -119,7 +119,7 @@ export function formatPeriod(
     case 'day':
       return capitalize(f(from!, isSameYear(from!, now) ? 'EEE d MMMM' : 'EEE d MMMM yyyy'));
     case 'month':
-      // Con un giorno di inizio diverso dal primo il "mese" è un intervallo
+      // With a start day other than the 1st, the "month" is a range
       if ((opts.monthStartDay ?? 1) !== 1) return formatSpan(from!, addDays(to!, -1), locale, now);
       return capitalize(f(from!, 'LLLL yyyy'));
     case 'year':

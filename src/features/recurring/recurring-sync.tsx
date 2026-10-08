@@ -3,7 +3,7 @@ import { AppState } from 'react-native';
 
 import { recurringActions } from './hooks';
 
-/** Registra le ricorrenze scadute all'avvio e ogni volta che l'app torna in primo piano. */
+/** Logs due recurring transactions at launch and whenever the app returns to the foreground. */
 export function RecurringSync() {
   useEffect(() => {
     const run = () => {

@@ -15,7 +15,7 @@ jest.mock('expo-sqlite', () => ({
 
 const emit = (tableName: string) => mockListeners.forEach((l) => l({ tableName }));
 
-/** Query finta che conta quante volte viene eseguita. */
+/** Fake query that counts how many times it runs. */
 function countingQuery() {
   let runs = 0;
   const query: PromiseLike<number> & { readonly runs: number } = {
@@ -34,13 +34,13 @@ describe('useLiveQueryOn', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('raggruppa una raffica di notifiche in una sola riesecuzione', async () => {
+  it('batches a burst of notifications into a single re-run', async () => {
     const query = countingQuery();
     const { result, unmount } = await renderHook(() => useLiveQueryOn(query, [transactions]));
     await act(async () => {});
     expect(query.runs).toBe(1);
 
-    // Un inserimento in blocco: una notifica per riga
+    // A bulk insert: one notification per row
     await act(async () => {
       for (let i = 0; i < 1000; i++) emit('transactions');
       jest.advanceTimersByTime(100);
@@ -51,7 +51,7 @@ describe('useLiveQueryOn', () => {
     expect(mockListeners.size).toBe(0);
   });
 
-  it('ignora le tabelle non osservate', async () => {
+  it('ignores tables that are not watched', async () => {
     const query = countingQuery();
     const { unmount } = await renderHook(() => useLiveQueryOn(query, [transactions]));
     await act(async () => {
@@ -62,11 +62,11 @@ describe('useLiveQueryOn', () => {
     await unmount();
   });
 
-  it('durante una raffica lunga aggiorna comunque ogni tanto', async () => {
+  it('during a long burst it still updates every now and then', async () => {
     const query = countingQuery();
     const { unmount } = await renderHook(() => useLiveQueryOn(query, [transactions, accounts]));
     await act(async () => {
-      // Una notifica ogni 20 ms per 1,2 s: senza tetto non si aggiornerebbe mai
+      // One notification every 20 ms for 1.2 s: without a cap it would never update
       for (let i = 0; i < 60; i++) {
         emit(i % 2 ? 'accounts' : 'transactions');
         jest.advanceTimersByTime(20);

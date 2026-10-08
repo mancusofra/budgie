@@ -11,18 +11,18 @@ import { InvalidTransactionError, validateTransaction, type NewTransaction } fro
 export type NewRecurring = Omit<NewTransaction, 'date'> & {
   frequency: Frequency;
   interval?: number;
-  /** Prima occorrenza. */
+  /** First occurrence. */
   startDate: Date;
   endDate?: Date | null;
 };
 
 export type RecurringPatch = Partial<Omit<NewRecurring, 'type'>> & { paused?: boolean };
 
-/** Confronto per valore: le date per istante, il resto con ===. */
+/** Compares by value: dates by instant, everything else with ===. */
 const sameValue = (a: unknown, b: unknown) =>
   a instanceof Date && b instanceof Date ? a.getTime() === b.getTime() : a === b;
 
-/** Le occorrenze ripartono da capo se cambia uno di questi campi. */
+/** Occurrences start over if one of these fields changes. */
 const SCHEDULE_KEYS = ['frequency', 'interval', 'startDate'] as const;
 
 export function createRecurringRepo(db: AppDatabase) {
@@ -31,10 +31,10 @@ export function createRecurringRepo(db: AppDatabase) {
   const validate = (input: NewRecurring) => {
     validateTransaction({ ...input, date: input.startDate });
     if (input.interval !== undefined && (!Number.isInteger(input.interval) || input.interval < 1)) {
-      throw new InvalidTransactionError("L'intervallo deve essere un intero ≥ 1");
+      throw new InvalidTransactionError('The interval must be an integer ≥ 1');
     }
     if (input.endDate && input.endDate < input.startDate) {
-      throw new InvalidTransactionError('La fine precede la prima occorrenza');
+      throw new InvalidTransactionError('The end date is before the first occurrence');
     }
   };
 
@@ -65,26 +65,26 @@ export function createRecurringRepo(db: AppDatabase) {
     },
 
     /**
-     * Modifica le occorrenze future (quelle già registrate restano come sono).
-     * Cambiando frequenza, intervallo o data d'inizio il calendario riparte da
-     * `startDate`, che diventa la prossima occorrenza.
+     * Changes future occurrences (those already logged stay as they are).
+     * Changing frequency, interval or start date restarts the schedule from
+     * `startDate`, which becomes the next occurrence.
      */
     async update(id: string, patch: RecurringPatch, now = new Date()): Promise<Recurring> {
       const current = await db.select().from(r).where(eq(r.id, id)).get();
-      if (!current) throw new InvalidTransactionError(`Ricorrenza ${id} non trovata`);
+      if (!current) throw new InvalidTransactionError(`Recurring rule ${id} not found`);
       const next = { ...current, ...patch, updatedAt: now } as Recurring;
       if (patch.note !== undefined) next.note = patch.note?.trim() || null;
       if (SCHEDULE_KEYS.some((k) => patch[k] !== undefined && !sameValue(patch[k], current[k]))) {
         next.count = 0;
       }
-      // Alla ripresa non si recuperano le occorrenze del periodo di pausa
+      // When resuming, occurrences of the paused period are not caught up
       if (current.paused && patch.paused === false) next.count = countFrom(next, now);
       validate({ ...next, startDate: next.startDate });
       await db.update(r).set(next).where(eq(r.id, id));
       return next;
     },
 
-    /** Elimina la ricorrenza; le transazioni già registrate restano. */
+    /** Deletes the rule; transactions already logged are kept. */
     async remove(id: string): Promise<void> {
       await db
         .update(transactions)
@@ -97,12 +97,12 @@ export function createRecurringRepo(db: AppDatabase) {
       return db.select().from(r).where(eq(r.id, id)).get();
     },
 
-    /** Query builder (per useLiveQuery): 0 o 1 riga. */
+    /** Query builder (for useLiveQuery): 0 or 1 row. */
     byId(id: string) {
       return db.select().from(r).where(eq(r.id, id)).limit(1);
     },
 
-    /** Ricorrenze con categoria e conti, per l'elenco. */
+    /** Recurring rules with category and accounts, for the list. */
     listDetailed() {
       const toAccount = alias(accounts, 'to_account');
       return db
@@ -120,8 +120,8 @@ export function createRecurringRepo(db: AppDatabase) {
     },
 
     /**
-     * Registra come transazioni le occorrenze scadute fino a `now`, in
-     * un'unica transazione. Restituisce quante ne ha create.
+     * Logs the occurrences due up to `now` as transactions, in a single
+     * transaction. Returns how many were created.
      */
     materialize(now = new Date()): number {
       let created = 0;

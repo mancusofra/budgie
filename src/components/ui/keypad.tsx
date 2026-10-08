@@ -18,9 +18,9 @@ const ROWS: KeypadKey[][] = [
 
 type Props = {
   onKey: (key: KeypadKey) => void;
-  /** Etichette per screen reader dei tasti non numerici. */
+  /** Screen reader labels for the non-numeric keys. */
   labels: Partial<Record<KeypadKey, string>>;
-  /** Simbolo mostrato sul tasto decimale (il tasto emette sempre ","). */
+  /** Symbol shown on the decimal key (the key always emits ","). */
   decimalSeparator?: string;
 };
 

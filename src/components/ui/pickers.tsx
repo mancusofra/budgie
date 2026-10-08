@@ -8,7 +8,7 @@ import { Spacing } from '@/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-/** Griglia di colori: il selezionato ha un anello. */
+/** Color grid: the selected one has a ring. */
 export function ColorPicker({
   colors,
   value,
@@ -39,7 +39,7 @@ export function ColorPicker({
   );
 }
 
-/** Griglia di icone tinte col colore scelto. */
+/** Grid of icons tinted with the chosen color. */
 export function IconPicker({
   icons,
   value,

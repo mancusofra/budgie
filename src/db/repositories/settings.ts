@@ -9,16 +9,16 @@ export type SettingsMap = {
   currency: string;
   theme: 'system' | 'light' | 'dark';
   language: 'system' | 'it' | 'en';
-  /** 0 = domenica, 1 = lunedì */
+  /** 0 = Sunday, 1 = Monday */
   weekStart: 0 | 1;
-  /** Giorno del mese da cui parte il "mese" (1–28). */
+  /** Day of the month the "month" starts on (1–28). */
   monthStartDay: number;
   seedVersion: number;
-  /** Blocco dell'app con riconoscimento biometrico all'apertura. */
+  /** Lock the app with biometrics when it opens. */
   appLock: boolean;
-  /** Presentazione iniziale già vista. */
+  /** Onboarding already seen. */
   onboardingDone: boolean;
-  /** Ordine e sezioni nascoste della schermata Statistiche. */
+  /** Order and hidden sections of the Stats screen. */
   statsLayout: StatsLayout;
 };
 
@@ -49,7 +49,7 @@ export function createSettingsRepo(db: AppDatabase) {
       return parseSettings(await db.select().from(s));
     },
 
-    /** Righe grezze (query builder, per useLiveQuery); convertire con parseSettings. */
+    /** Raw rows (query builder, for useLiveQuery); convert with parseSettings. */
     rows() {
       return db.select().from(s);
     },

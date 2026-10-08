@@ -1,10 +1,10 @@
-/** Tentativo di eliminare un elemento ancora usato da transazioni (va archiviato). */
+/** Attempt to delete an item still used by transactions (it should be archived). */
 export class InUseError extends Error {
   name = 'InUseError';
   constructor(
     what: string,
     readonly count: number,
   ) {
-    super(`${what} è usato da ${count} transazioni`);
+    super(`${what} is used by ${count} transactions`);
   }
 }

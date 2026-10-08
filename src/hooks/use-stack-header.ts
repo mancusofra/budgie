@@ -1,6 +1,6 @@
 import { useTheme } from './use-theme';
 
-/** Opzioni dell'header nativo per le schermate di gestione (sobrio, senza ombra). */
+/** Native header options for the management screens (plain, no shadow). */
 export function useStackHeader(title: string) {
   const theme = useTheme();
   return {

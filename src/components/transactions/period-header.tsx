@@ -12,8 +12,8 @@ import { Spacing } from '@/theme';
 const PERIOD_KINDS: Exclude<PeriodKind, 'custom'>[] = ['day', 'week', 'month', 'year', 'all'];
 
 /**
- * Scelta del periodo condivisa tra le schermate: tipo di periodo, frecce e
- * etichetta (tap = pannello con intervallo personalizzato).
+ * Period picker shared between screens: period type, arrows and
+ * label (tap = sheet with a custom range).
  */
 export function PeriodHeader() {
   const { t } = useTranslation();

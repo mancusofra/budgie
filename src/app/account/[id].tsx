@@ -31,7 +31,7 @@ export default function AccountScreen() {
   const account = useAccount(isNew ? undefined : id);
   const { settings, loaded } = useSettingsState();
 
-  // Aspetta conto e impostazioni: il form si inizializza una volta sola
+  // Wait for the account and settings: the form is initialized only once
   if ((!isNew && !account) || !loaded) return null;
   return (
     <AccountForm
@@ -55,7 +55,7 @@ function AccountForm({ account, defaultCurrency }: { account?: Account; defaultC
   const [balanceExpr, setBalanceExpr] = useState(
     initial ? minorToExpression(Math.abs(initial), currency) : '',
   );
-  // Tastierino dell'app per il saldo (conferma integrata, niente tastiera di sistema)
+  // The app's keypad for the balance (built-in confirm, no system keyboard)
   const [padOpen, setPadOpen] = useState(false);
   const insets = useSafeAreaInsets();
   const [color, setColor] = useState<string>(account?.color ?? PICKER_COLORS[5]);

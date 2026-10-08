@@ -7,7 +7,7 @@ import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import { createRepositories } from '@/db/repositories';
 import * as schema from '@/db/schema';
 
-/** DB SQLite in memoria con le stesse migrazioni dell'app. */
+/** In-memory SQLite DB with the same migrations as the app. */
 export function createTestDb() {
   const sqlite = new Database(':memory:');
   sqlite.pragma('foreign_keys = ON');

@@ -4,14 +4,14 @@ import { customPeriod, shiftPeriod, type Period, type PeriodKind } from '@/lib/p
 
 type UIState = {
   period: Period;
-  /** id del conto o "all" */
+  /** Account id or "all" */
   accountFilter: string;
   /**
-   * Richiesta di aprire una categoria nella lista transazioni (tap su uno
-   * spicchio). `at` distingue richieste ripetute per la stessa categoria.
+   * Request to open a category in the transactions list (tap on a donut
+   * slice). `at` tells repeated requests for the same category apart.
    */
   openCategory?: { id: string; at: number };
-  /** Modifica del layout in corso (Statistiche): la tab bar è nascosta. */
+  /** Layout editing in progress (Stats): the tab bar is hidden. */
   editingLayout: boolean;
   setPeriodKind: (kind: Exclude<PeriodKind, 'custom'>) => void;
   setCustomPeriod: (from: Date, to: Date) => void;

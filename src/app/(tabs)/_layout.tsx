@@ -7,7 +7,7 @@ import { useUIStore } from '@/store/ui';
 export default function TabLayout() {
   const theme = useTheme();
   const { t } = useTranslation();
-  // Durante la modifica del layout la barra lascia il posto al pulsante "Fine"
+  // While editing the layout the bar makes room for the "Done" button
   const editingLayout = useUIStore((s) => s.editingLayout);
 
   return (

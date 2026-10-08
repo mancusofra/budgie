@@ -38,7 +38,7 @@ export default function TransactionsScreen() {
   const openCategory = useUIStore((s) => s.openCategory);
   const totals = usePeriodTotals(range, scope);
   const stats = useCategoryStats(range, scope);
-  // Anche le archiviate: i loro movimenti restano nel periodo
+  // Archived ones too: their transactions are still in the period
   const categories = useCategories(undefined, { includeArchived: true });
 
   const tabBarSpace = useTabBarSpace();
@@ -46,7 +46,7 @@ export default function TransactionsScreen() {
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
 
-  // Arrivando dal tap su uno spicchio: apri solo quella categoria (una volta per richiesta)
+  // Coming from a tap on a slice: open only that category (once per request)
   const [handledOpenAt, setHandledOpenAt] = useState(0);
   if (openCategory && openCategory.at !== handledOpenAt) {
     setHandledOpenAt(openCategory.at);
@@ -189,7 +189,7 @@ export default function TransactionsScreen() {
 
 type Row = ReturnType<typeof useTransactionList>[number];
 
-/** Trasferimenti del periodo (non contano come spese o entrate). */
+/** Transfers of the period (they don't count as expenses or income). */
 function TransfersSection({
   range,
   scope,
@@ -237,7 +237,7 @@ function TransfersSection({
 const signed = ({ transaction: tx }: Row) =>
   tx.type === 'expense' ? -tx.amount : tx.type === 'income' ? tx.amount : 0;
 
-/** Risultati di ricerca: tutte le transazioni corrispondenti, raggruppate per giorno. */
+/** Search results: all matching transactions, grouped by day. */
 function SearchResults({
   search,
   range,

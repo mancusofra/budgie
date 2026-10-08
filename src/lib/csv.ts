@@ -1,4 +1,4 @@
-/** Una cella CSV: tra virgolette se contiene separatore, virgolette o a capo. */
+/** A CSV cell: quoted if it contains the separator, quotes or a newline. */
 function cell(value: string, separator: string): string {
   return /["\r\n]/.test(value) || value.includes(separator)
     ? `"${value.replace(/"/g, '""')}"`
@@ -6,8 +6,8 @@ function cell(value: string, separator: string): string {
 }
 
 /**
- * Testo CSV con BOM UTF-8 (così Excel riconosce gli accenti) e righe CRLF.
- * `separator` ";" per le lingue con la virgola decimale (Excel italiano).
+ * CSV text with a UTF-8 BOM (so Excel recognizes accented letters) and CRLF lines.
+ * `separator` ";" for languages with a decimal comma (e.g. Excel in Italian).
  */
 export function toCsv(rows: string[][], separator = ','): string {
   const body = rows.map((r) => r.map((v) => cell(v, separator)).join(separator)).join('\r\n');

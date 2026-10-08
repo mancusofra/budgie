@@ -6,8 +6,8 @@ import { useTheme } from '@/hooks/use-theme';
 import { FloatingTabBarHeight, Spacing } from '@/theme';
 
 /**
- * Spazio occupato in basso dalla tab bar che fluttua sopra il contenuto
- * (iOS 26, Liquid Glass). 0 dove la barra non si sovrappone (Android).
+ * Space taken at the bottom by the tab bar floating over the content
+ * (iOS 26, Liquid Glass). 0 where the bar doesn't overlap (Android).
  */
 export function useTabBarSpace(): number {
   const insets = useSafeAreaInsets();
@@ -17,9 +17,9 @@ export function useTabBarSpace(): number {
 type Props = {
   children: ReactNode;
   /**
-   * La schermata scorre: il contenuto arriva fino al bordo e passa sotto la
-   * tab bar di vetro. La lista deve aggiungere `useTabBarSpace()` in fondo.
-   * Altrimenti (schermata fissa) si lascia spazio perché la barra non copra nulla.
+   * The screen scrolls: content reaches the edge and goes under the
+   * glass tab bar. The list must add `useTabBarSpace()` at the bottom.
+   * Otherwise (fixed screen) space is left so the bar doesn't cover anything.
    */
   scrolls?: boolean;
 };

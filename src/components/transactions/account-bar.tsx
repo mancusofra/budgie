@@ -10,7 +10,7 @@ import { useTheme } from '@/hooks/use-theme';
 import { useUIStore } from '@/store/ui';
 import { Spacing } from '@/theme';
 
-/** Filtro conto ("Tutti i conti ▾") e pulsante trasferimento. */
+/** Account filter ("All accounts ▾") and transfer button. */
 export function AccountBar() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -18,7 +18,7 @@ export function AccountBar() {
   const accountFilter = useUIStore((s) => s.accountFilter);
   const current = accounts.find((a) => a.id === accountFilter);
   const { partial, currency } = useAccountScope();
-  // Con conti in valute diverse "tutti" include solo quelli nella valuta principale
+  // With accounts in different currencies "all" includes only those in the main currency
   const label =
     current?.name ?? (partial ? `${t('accounts.all')} · ${currency}` : t('accounts.all'));
 

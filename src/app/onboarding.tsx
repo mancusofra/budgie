@@ -25,7 +25,7 @@ import { Radius, Spacing, type ThemeColor } from '@/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-/** Presentazione iniziale in tre pagine: come si usa, valuta, privacy. */
+/** Three-page onboarding: how it works, currency, privacy. */
 export default function OnboardingScreen() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     gap: Spacing.three,
     paddingHorizontal: Spacing.four + Spacing.two,
   },
-  // Tutta la larghezza: su Android il testo centrato "a misura" veniva troncato
+  // Full width: on Android "fit to content" centered text was getting cut off
   center: { textAlign: 'center', alignSelf: 'stretch' },
   body: { fontSize: 17, lineHeight: 24 },
   demo: {

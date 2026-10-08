@@ -10,7 +10,7 @@ type Props = {
   icon: string;
   color: string;
   size?: number;
-  /** Pieno (sfondo colorato, simbolo bianco) invece che tonale. */
+  /** Filled (colored background, white symbol) instead of tonal. */
   filled?: boolean;
 };
 

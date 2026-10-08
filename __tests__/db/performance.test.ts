@@ -8,10 +8,10 @@ import { createTestDb } from '../../test-utils/db';
 const COUNT = 12_000;
 
 /**
- * Con 10.000+ transazioni le query delle schermate principali devono restare
- * veloci e usare gli indici (niente scansione completa della tabella).
+ * With 10,000+ transactions the queries of the main screens must stay
+ * fast and use indexes (no full table scan).
  */
-describe('prestazioni con molte transazioni', () => {
+describe('performance with many transactions', () => {
   const ctx = createTestDb();
   const now = new Date(2026, 8, 15);
   const month = { from: startOfMonth(now), to: addMonths(startOfMonth(now), 1) };
@@ -33,7 +33,7 @@ describe('prestazioni con molte transazioni', () => {
     return { result, ms: performance.now() - start };
   };
 
-  it('le query della home e delle statistiche restano sotto i 50 ms', async () => {
+  it('home and stats queries stay under 50 ms', async () => {
     const queries: (() => PromiseLike<unknown>)[] = [
       () => ctx.repos.transactions.sumByCategory(month),
       () => ctx.repos.transactions.totals(month),
@@ -49,19 +49,19 @@ describe('prestazioni con molte transazioni', () => {
     }
   });
 
-  it('anche "Sempre" (tutte le transazioni) è gestibile', async () => {
+  it('"All time" (every transaction) is manageable too', async () => {
     const { result, ms } = await timed(() => ctx.repos.transactions.listDetailed());
     expect(result).toHaveLength(COUNT);
     expect(ms).toBeLessThan(500);
   });
 
-  it('limit restituisce solo le più recenti (per la lista a pagine)', async () => {
+  it('limit returns only the most recent (for the paged list)', async () => {
     const page = await ctx.repos.transactions.listDetailed({ limit: 50 });
     const all = await ctx.repos.transactions.listDetailed();
     expect(page).toEqual(all.slice(0, 50));
   });
 
-  it('le query per periodo usano un indice sulla data', () => {
+  it('queries by period use an index on the date', () => {
     const { sql, params } = ctx.repos.transactions.listDetailed(month).toSQL();
     const plan = ctx.db.$client.prepare(`explain query plan ${sql}`).all(...params) as {
       detail: string;

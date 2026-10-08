@@ -6,11 +6,11 @@ import * as schema from './schema';
 
 export const DATABASE_NAME = 'budgie.db';
 
-// In sviluppo il fast refresh può rieseguire questo modulo: riusa la connessione
-// già aperta invece di aprirne una seconda (che troverebbe il DB occupato).
+// In development fast refresh may re-run this module: reuse the connection
+// already open instead of opening a second one (which would find the DB busy).
 const globalForDb = globalThis as { __budgieDb?: SQLiteDatabase };
 
-// enableChangeListener serve alle live query per aggiornarsi da sole
+// enableChangeListener lets live queries update by themselves
 export const expoDb = (globalForDb.__budgieDb ??= (() => {
   const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
   db.execSync('PRAGMA foreign_keys = ON;');

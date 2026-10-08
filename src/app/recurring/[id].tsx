@@ -84,7 +84,7 @@ function RecurringForm({ item }: { item: Recurring }) {
         interval,
         endDate,
         paused,
-        // Nuovo calendario: la prossima data scelta diventa l'inizio
+        // New schedule: the chosen next date becomes the start
         ...(scheduleChanged ? { startDate: next } : {}),
       });
       recurringActions.materialize();

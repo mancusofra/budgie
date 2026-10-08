@@ -12,7 +12,7 @@ async function setup() {
   return { ...ctx, cash, food, home, salary };
 }
 
-describe('budgetsRepo – budget mensili con ereditarietà', () => {
+describe('budgetsRepo – monthly budgets with inheritance', () => {
   const summary = async (
     repos: Awaited<ReturnType<typeof setup>>['repos'],
     month: string,
@@ -22,17 +22,17 @@ describe('budgetsRepo – budget mensili con ereditarietà', () => {
       (b) => `${names[b.categoryId ?? 'global']}:${b.amount}`,
     );
 
-  it('segue l’esempio: eredita dal mese precedente, le modifiche valgono da quel mese in poi', async () => {
+  it('follows the example: inherits from the previous month, changes apply from that month on', async () => {
     const { repos, food, home, close } = await setup();
     const names = { global: 'generale', [food.id]: 'cibo', [home.id]: 'medicine' };
 
-    // mese 1: generale 200, cibo 100, medicine 50
+    // month 1: overall 200, food 100, medicine 50
     await repos.budgets.set({ month: '2026-01', categoryId: null, amount: 20000 });
     await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 10000 });
     await repos.budgets.set({ month: '2026-01', categoryId: home.id, amount: 5000 });
-    // mese 2: tolgo medicine
+    // month 2: remove medicine
     await repos.budgets.remove({ month: '2026-02', categoryId: home.id });
-    // mese 4: cancello tutto
+    // month 4: delete everything
     await repos.budgets.remove({ month: '2026-04', categoryId: null });
     await repos.budgets.remove({ month: '2026-04', categoryId: food.id });
 
@@ -43,16 +43,16 @@ describe('budgetsRepo – budget mensili con ereditarietà', () => {
       'medicine:5000',
     ]);
     expect(await summary(repos, '2026-02', names)).toEqual(['generale:20000', 'cibo:10000']);
-    // mese 3: nessuna modifica → eredita il mese 2
+    // month 3: no changes → inherits month 2
     expect(await summary(repos, '2026-03', names)).toEqual(['generale:20000', 'cibo:10000']);
     expect(await repos.budgets.sourceMonth('2026-03')).toBe('2026-02');
     expect(await summary(repos, '2026-04', names)).toEqual([]);
-    // mese 5: eredita il "cancello tutto" del mese 4
+    // month 5: inherits the "delete everything" of month 4
     expect(await summary(repos, '2026-05', names)).toEqual([]);
     close();
   });
 
-  it('modificare un mese non cambia i mesi precedenti', async () => {
+  it('changing a month does not change earlier months', async () => {
     const { repos, food, close } = await setup();
     await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 10000 });
     await repos.budgets.set({ month: '2026-03', categoryId: food.id, amount: 15000 });
@@ -64,7 +64,7 @@ describe('budgetsRepo – budget mensili con ereditarietà', () => {
     close();
   });
 
-  it('un solo budget per categoria nel mese; importo non valido rifiutato', async () => {
+  it('one budget per category in the month; invalid amount rejected', async () => {
     const { repos, food, close } = await setup();
     await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 100 });
     await repos.budgets.set({ month: '2026-01', categoryId: food.id, amount: 200 });
@@ -75,7 +75,7 @@ describe('budgetsRepo – budget mensili con ereditarietà', () => {
     close();
   });
 
-  it('eliminando una categoria non usata si eliminano anche i suoi budget', async () => {
+  it('deleting an unused category also deletes its budgets', async () => {
     const { repos, home, close } = await setup();
     await repos.budgets.set({ month: '2026-01', categoryId: home.id, amount: 5000 });
     await repos.categories.remove(home.id);
@@ -84,12 +84,12 @@ describe('budgetsRepo – budget mensili con ereditarietà', () => {
   });
 });
 
-describe('serie per il grafico', () => {
-  it('somma le spese per giorno e per mese in ora locale, esclude entrate e trasferimenti', async () => {
+describe('chart series', () => {
+  it('sums expenses per day and per month in local time, excluding income and transfers', async () => {
     const { repos, cash, food, home, salary, close } = await setup();
     const add = (amount: number, date: Date, categoryId = food.id) =>
       repos.transactions.create({ type: 'expense', amount, accountId: cash.id, categoryId, date });
-    await add(100, new Date(2026, 8, 1, 0, 30)); // subito dopo mezzanotte: resta il 1°
+    await add(100, new Date(2026, 8, 1, 0, 30)); // right after midnight: stays on the 1st
     await add(200, new Date(2026, 8, 1, 23, 30), home.id);
     await add(50, new Date(2026, 8, 3, 12));
     await add(999, new Date(2026, 9, 1, 12));

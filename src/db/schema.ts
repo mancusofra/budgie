@@ -24,9 +24,9 @@ export const categories = sqliteTable('categories', {
 });
 
 /**
- * Movimento che si ripete (affitto, abbonamenti, stipendio). L'occorrenza n
- * cade in startDate + n × interval × frequency: calcolata sempre dall'inizio,
- * così un "ogni mese dal 31" torna al 31 dopo febbraio.
+ * A transaction that repeats (rent, subscriptions, salary). Occurrence n
+ * falls on startDate + n × interval × frequency: always computed from the start,
+ * so "monthly from the 31st" goes back to the 31st after February.
  */
 export const recurring = sqliteTable('recurring', {
   id: text('id').primaryKey(),
@@ -42,9 +42,9 @@ export const recurring = sqliteTable('recurring', {
   frequency: text('frequency', { enum: ['day', 'week', 'month', 'year'] }).notNull(),
   interval: integer('interval').notNull().default(1),
   startDate: integer('start_date', { mode: 'timestamp_ms' }).notNull(),
-  /** Ultimo giorno utile (incluso); NULL = senza fine. */
+  /** Last valid day (inclusive); NULL = no end. */
   endDate: integer('end_date', { mode: 'timestamp_ms' }),
-  /** Occorrenze già registrate come transazioni. */
+  /** Occurrences already logged as transactions. */
   count: integer('count').notNull().default(0),
   paused: integer('paused', { mode: 'boolean' }).notNull().default(false),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
@@ -56,18 +56,18 @@ export const transactions = sqliteTable(
   {
     id: text('id').primaryKey(),
     type: text('type', { enum: ['expense', 'income', 'transfer'] }).notNull(),
-    /** Importo in unità minori (centesimi), sempre positivo. */
+    /** Amount in minor units (cents), always positive. */
     amount: integer('amount').notNull(),
     accountId: text('account_id')
       .notNull()
       .references(() => accounts.id),
     toAccountId: text('to_account_id').references(() => accounts.id),
-    /** Importo accreditato sul conto di destinazione, se in valuta diversa. */
+    /** Amount received by the destination account, if in a different currency. */
     toAmount: integer('to_amount'),
     categoryId: text('category_id').references(() => categories.id),
     date: integer('date', { mode: 'timestamp_ms' }).notNull(),
     note: text('note'),
-    /** Ricorrenza che l'ha generata (resta anche se la ricorrenza viene eliminata: NULL). */
+    /** Recurring rule that generated it (kept, as NULL, if the rule is deleted). */
     recurringId: text('recurring_id').references(() => recurring.id, { onDelete: 'set null' }),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
     updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
@@ -83,11 +83,11 @@ export const budgets = sqliteTable(
   'budgets',
   {
     id: text('id').primaryKey(),
-    /** NULL = budget globale. */
+    /** NULL = overall budget. */
     categoryId: text('category_id').references(() => categories.id),
     amount: integer('amount').notNull(),
     period: text('period', { enum: ['week', 'month', 'year'] }).notNull(),
-    /** Mese a cui appartiene ('YYYY-MM', inizio del mese contabile). */
+    /** Month it belongs to ('YYYY-MM', start of the accounting month). */
     month: text('month').notNull().default(''),
     createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   },
@@ -95,9 +95,9 @@ export const budgets = sqliteTable(
 );
 
 /**
- * Mesi in cui l'insieme dei budget è stato definito o modificato. Un mese
- * senza riga eredita i budget dell'ultimo mese precedente che ne ha una
- * (anche vuoto: "cancello tutto" vale anche per i mesi successivi).
+ * Months in which the set of budgets was defined or changed. A month
+ * without a row inherits the budgets of the latest earlier month that has one
+ * (even an empty one: "delete everything" also applies to later months).
  */
 export const budgetMonths = sqliteTable('budget_months', {
   month: text('month').primaryKey(),
@@ -106,7 +106,7 @@ export const budgetMonths = sqliteTable('budget_months', {
 
 export const settings = sqliteTable('settings', {
   key: text('key').primaryKey(),
-  /** Valore serializzato in JSON. */
+  /** Value serialized as JSON. */
   value: text('value').notNull(),
 });
 

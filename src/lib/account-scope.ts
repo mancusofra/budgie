@@ -2,17 +2,17 @@ export type AccountScope = { accountId?: string; accountIds?: string[] };
 
 export type ResolvedScope = {
   scope: AccountScope;
-  /** Valuta in cui mostrare gli importi. */
+  /** Currency the amounts are shown in. */
   currency: string;
-  /** "Tutti i conti" ma alcuni esclusi perché in un'altra valuta. */
+  /** "All accounts" but some excluded because they use another currency. */
   partial: boolean;
 };
 
 /**
- * Conti da includere nei totali. Un conto selezionato: solo quello, nella sua
- * valuta. "Tutti i conti": se hanno tutti la stessa valuta nessun filtro,
- * altrimenti solo quelli nella valuta principale (gli importi in valute
- * diverse non si sommano senza un tasso di cambio).
+ * Accounts to include in totals. A selected account: only that one, in its
+ * currency. "All accounts": no filter if they all share a currency,
+ * otherwise only those in the main currency (amounts in different
+ * currencies can't be added up without an exchange rate).
  */
 export function resolveAccountScope(
   accountFilter: string,
@@ -31,6 +31,6 @@ export function resolveAccountScope(
   return { scope: { accountIds: same.map((a) => a.id) }, currency: mainCurrency, partial: true };
 }
 
-/** Chiave stabile per le dipendenze delle query. */
+/** Stable key for query dependencies. */
 export const scopeKey = (scope: AccountScope) =>
   scope.accountId ?? (scope.accountIds ? scope.accountIds.join(',') : 'all');

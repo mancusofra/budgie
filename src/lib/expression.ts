@@ -1,8 +1,8 @@
 import { currencyDecimals } from './money';
 
 /**
- * Espressione del tastierino tipo Monefy: numeri e operatori + − × ÷,
- * es. "12,5+3×2". Il separatore decimale digitato è sempre ",".
+ * Keypad expression: numbers and the operators + − × ÷,
+ * e.g. "12,5+3×2". The typed decimal separator is always ",".
  */
 
 export type Operator = '+' | '−' | '×' | '÷';
@@ -14,7 +14,7 @@ const MAX_INTEGER_DIGITS = 9;
 const isOperator = (c: string | undefined): c is Operator =>
   !!c && OPERATORS.includes(c as Operator);
 
-/** Applica un tasto all'espressione, ignorando gli input non validi. */
+/** Applies a key to the expression, ignoring invalid input. */
 export function applyKey(expr: string, key: KeypadKey, currency = 'EUR'): string {
   const last = expr.at(-1);
   const current = expr.split(/[+−×÷]/).at(-1) ?? '';
@@ -38,7 +38,7 @@ export function applyKey(expr: string, key: KeypadKey, currency = 'EUR'): string
   if (fracPart !== undefined) {
     return fracPart.length >= currencyDecimals(currency) ? expr : expr + key;
   }
-  if (intPart === '0') return expr.slice(0, -1) + key; // niente zeri iniziali
+  if (intPart === '0') return expr.slice(0, -1) + key; // no leading zeros
   if (intPart.length >= MAX_INTEGER_DIGITS) return expr;
   return expr + key;
 }
@@ -48,8 +48,8 @@ export function hasOperator(expr: string): boolean {
 }
 
 /**
- * Valuta l'espressione in unità minori, con precedenza di × e ÷.
- * Gli operatori finali sono ignorati. Restituisce null se vuota o non valida (es. ÷ 0).
+ * Evaluates the expression in minor units, with × and ÷ taking precedence.
+ * Trailing operators are ignored. Returns null if empty or invalid (e.g. ÷ 0).
  */
 export function evaluate(expr: string, currency = 'EUR'): number | null {
   const scale = 10 ** currencyDecimals(currency);
@@ -61,7 +61,7 @@ export function evaluate(expr: string, currency = 'EUR'): number | null {
     return Number(i || '0') * scale + Number(f.padEnd(Math.log10(scale), '0') || '0');
   };
 
-  // Prima × e ÷ (valori in unità minori, arrotondati a ogni passo), poi + e −
+  // First × and ÷ (values in minor units, rounded at each step), then + and −
   const terms: number[] = [toMinor(tokens[0])];
   const signs: number[] = [1];
   for (let i = 1; i < tokens.length; i += 2) {
@@ -79,7 +79,7 @@ export function evaluate(expr: string, currency = 'EUR'): number | null {
   return terms.reduce((sum, t, i) => sum + signs[i] * t, 0);
 }
 
-/** Espressione del tastierino per un importo in unità minori: 1250 → "12,5", 1200 → "12". */
+/** Keypad expression for an amount in minor units: 1250 → "12,5", 1200 → "12". */
 export function minorToExpression(minor: number, currency = 'EUR'): string {
   const decimals = currencyDecimals(currency);
   const abs = Math.abs(Math.round(minor));

@@ -12,7 +12,7 @@ import { formatMoney } from '@/lib/money';
 import { useUIStore } from '@/store/ui';
 import { Spacing, TabularNums } from '@/theme';
 
-/** Pannello per scegliere il conto da mostrare (o tutti). */
+/** Sheet to choose the account to show (or all of them). */
 export default function AccountSelectSheet() {
   const { t } = useTranslation();
   const theme = useTheme();

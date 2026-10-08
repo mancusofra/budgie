@@ -13,7 +13,7 @@ type Props = {
   height?: number;
   selectedKey?: string;
   onSelect?: (key: string | undefined) => void;
-  /** Etichetta accessibile di una barra, es. "12 set: 45,00 €". */
+  /** Accessible label of a bar, e.g. "12 Sep: €45.00". */
   accessibilityLabelFor: (d: BarDatum) => string;
 };
 
@@ -22,15 +22,15 @@ const RADIUS = 4;
 const LABEL_HEIGHT = 18;
 const MAX_LABELS = 6;
 
-/** Rettangolo con gli angoli superiori arrotondati, poggiato sulla base. */
+/** Rectangle with rounded top corners, resting on the baseline. */
 function barPath(x: number, y: number, w: number, h: number) {
   const r = Math.min(RADIUS, w / 2, h);
   return `M${x},${y + h} V${y + r} Q${x},${y} ${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h} Z`;
 }
 
 /**
- * Barre verticali per una sola serie. Tap su una colonna = selezione
- * (il valore lo mostra il chiamante); di nuovo = deseleziona.
+ * Vertical bars for a single series. Tap a column = select it
+ * (the caller shows the value); tap again = deselect.
  */
 export function BarChart({
   data,
@@ -76,7 +76,7 @@ export function BarChart({
               />
             );
           })}
-          {/* Aree di tocco a tutta altezza, più grandi delle barre */}
+          {/* Full-height touch areas, larger than the bars */}
           {data.map((d, i) => (
             <Rect
               key={`hit-${d.key}`}

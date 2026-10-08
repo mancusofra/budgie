@@ -19,7 +19,7 @@ export default function NewTransactionScreen() {
       initial={{ categoryId: params.categoryId }}
       onSubmit={async ({ repeat, date, ...values }) => {
         if (!repeat) return addTransaction({ type, date, ...values });
-        // La prima occorrenza è la data scelta: viene registrata subito se è già passata
+        // The first occurrence is the chosen date: it is logged right away if already past
         await recurringActions.create({ type, startDate: date, ...repeat, ...values });
         recurringActions.materialize();
         showSnackbar({

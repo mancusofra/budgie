@@ -15,7 +15,7 @@ import { periodRange } from '@/lib/period';
 import { useUIStore } from '@/store/ui';
 import { Radius, Spacing } from '@/theme';
 
-/** Pannello periodo: torna a oggi o scegli un intervallo personalizzato. */
+/** Period sheet: back to today or choose a custom range. */
 export default function PeriodSheet() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -23,7 +23,7 @@ export default function PeriodSheet() {
   const setCustomPeriod = useUIStore((s) => s.setCustomPeriod);
   const resetPeriod = useUIStore((s) => s.resetPeriod);
 
-  // Parte dall'intervallo attuale (o dal mese corrente per "Sempre")
+  // Starts from the current range (or the current month for "All time")
   const current = periodRange(period);
   const [from, setFrom] = useState(current.from ?? startOfMonth(new Date()));
   const [to, setTo] = useState(current.to ? addDays(current.to, -1) : new Date());

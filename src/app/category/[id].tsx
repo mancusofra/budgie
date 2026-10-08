@@ -22,7 +22,7 @@ export default function CategoryScreen() {
   const isNew = id === 'new';
   const category = useCategory(isNew ? undefined : id);
 
-  // Aspetta la categoria prima di inizializzare il form
+  // Wait for the category before initializing the form
   if (!isNew && !category) return null;
   return (
     <CategoryForm

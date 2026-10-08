@@ -18,7 +18,7 @@ type Props = {
   maximumDate?: Date;
 };
 
-/** Riga "etichetta + data": selettore compatto su iOS, dialogo di sistema su Android. */
+/** "Label + date" row: compact picker on iOS, system dialog on Android. */
 export function DateField({ label, value, onChange, maximumDate }: Props) {
   const { i18n } = useTranslation();
   const theme = useTheme();

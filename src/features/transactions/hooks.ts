@@ -12,7 +12,7 @@ import { scopeKey, type AccountScope } from '@/lib/account-scope';
 import { formatPeriod, periodRange, type PeriodRange } from '@/lib/period';
 import { useUIStore } from '@/store/ui';
 
-/** Periodo selezionato con intervallo ed etichetta localizzata. */
+/** Selected period with its range and localized label. */
 export function useSelectedPeriod() {
   const period = useUIStore((s) => s.period);
   const settings = useSettings();
@@ -34,7 +34,7 @@ export function useSelectedPeriod() {
   }, [period, weekStartsOn, monthStartDay, t, i18n.language]);
 }
 
-/** Totale per categoria nel periodo (dal più alto), per la ciambella. */
+/** Total per category in the period (highest first), for the donut. */
 export function useCategoryTotals(
   range: PeriodRange,
   type: 'expense' | 'income' = 'expense',
@@ -49,7 +49,7 @@ export function useCategoryTotals(
   return data ?? [];
 }
 
-/** Entrate, spese e saldo del periodo. */
+/** Income, expenses and balance of the period. */
 export function usePeriodTotals(range: PeriodRange, scope: AccountScope = {}) {
   const { data } = useLiveQuery(repos.transactions.totals({ ...range, ...scope }), [
     range.from?.getTime(),
@@ -66,7 +66,7 @@ export function useAddTransaction() {
 
 export function useTransaction(id: string): Transaction | undefined | null {
   const { data, updatedAt } = useLiveQuery(repos.transactions.byId(id), [id]);
-  // undefined = in caricamento, null = non trovata
+  // undefined = loading, null = not found
   return updatedAt ? (data?.[0] ?? null) : undefined;
 }
 
@@ -77,7 +77,7 @@ export function useUpdateTransaction() {
   );
 }
 
-/** Elimina una transazione e offre "Annulla" nella snackbar. */
+/** Deletes a transaction and offers "Undo" in the snackbar. */
 export function useDeleteTransaction() {
   const { t } = useTranslation();
   const show = useSnackbar((s) => s.show);
@@ -94,7 +94,7 @@ export function useDeleteTransaction() {
   );
 }
 
-/** Lista con categoria e conti per il periodo e i filtri dati. */
+/** List with category and accounts for the period and the given filters. */
 export function useTransactionList(filter: DetailedFilter) {
   const { data } = useLiveQueryOn(
     repos.transactions.listDetailed(filter),
@@ -113,7 +113,7 @@ export function useTransactionList(filter: DetailedFilter) {
   return data ?? [];
 }
 
-/** Totale e numero di movimenti per categoria nel periodo (spese ed entrate). */
+/** Total and number of transactions per category in the period (expenses and income). */
 export function useCategoryStats(range: PeriodRange, scope: AccountScope = {}) {
   const { data } = useLiveQuery(repos.transactions.statsByCategory({ ...range, ...scope }), [
     range.from?.getTime(),

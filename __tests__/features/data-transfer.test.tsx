@@ -16,7 +16,7 @@ jest.mock('expo-sharing', () => ({
   shareAsync: jest.fn(async () => {}),
 }));
 
-/** File system finto: ricorda cosa è stato scritto e cosa restituire al selettore. */
+/** Fake file system: remembers what was written and what the picker returns. */
 const mockFiles = new Map<string, string>();
 const mockPick = { text: '' as string | null };
 jest.mock('expo-file-system', () => {
@@ -78,7 +78,7 @@ async function transfer() {
 }
 
 describe('useDataTransfer', () => {
-  it("esporta in JSON solo l'intervallo scelto", async () => {
+  it('exports only the chosen range as JSON', async () => {
     const { exportData } = await transfer();
     let count = 0;
     await act(async () => {
@@ -96,7 +96,7 @@ describe('useDataTransfer', () => {
     ]);
   });
 
-  it('esporta tutto in CSV', async () => {
+  it('exports everything as CSV', async () => {
     const { exportData } = await transfer();
     await act(async () => {
       expect(await exportData({ format: 'csv' })).toBe(2);
@@ -105,7 +105,7 @@ describe('useDataTransfer', () => {
     expect(csv.split('\r\n').filter(Boolean)).toHaveLength(3);
   });
 
-  it("senza transazioni nell'intervallo non condivide nulla", async () => {
+  it('shares nothing when the range has no transactions', async () => {
     const { exportData } = await transfer();
     (Sharing.shareAsync as jest.Mock).mockClear();
     await act(async () => {
@@ -116,7 +116,7 @@ describe('useDataTransfer', () => {
     expect(Sharing.shareAsync).not.toHaveBeenCalled();
   });
 
-  it('backup e ripristino tornano ai dati salvati', async () => {
+  it('backup and restore go back to the saved data', async () => {
     const { exportBackup, pickBackup, restore } = await transfer();
     await act(() => exportBackup());
     const backup = lastShared();
@@ -140,7 +140,7 @@ describe('useDataTransfer', () => {
     await expect(pickBackup()).rejects.toThrow();
   });
 
-  it('segnala se la condivisione non è disponibile', async () => {
+  it('reports when sharing is not available', async () => {
     (Sharing.isAvailableAsync as jest.Mock).mockResolvedValueOnce(false);
     const { exportBackup } = await transfer();
     await expect(exportBackup()).rejects.toThrow();

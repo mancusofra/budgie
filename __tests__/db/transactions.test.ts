@@ -24,7 +24,7 @@ async function setup() {
 const day = (d: number) => new Date(2026, 8, d, 12);
 
 describe('transactionsRepo', () => {
-  it('crea e rilegge una spesa', async () => {
+  it('creates and reads back an expense', async () => {
     const { repos, cash, food, close } = await setup();
     const tx = await repos.transactions.create({
       type: 'expense',
@@ -39,7 +39,7 @@ describe('transactionsRepo', () => {
     close();
   });
 
-  it('valida gli input', async () => {
+  it('validates input', async () => {
     const { repos, cash, card, food, close } = await setup();
     const base = { accountId: cash.id, categoryId: food };
     await expect(
@@ -50,10 +50,10 @@ describe('transactionsRepo', () => {
     ).rejects.toThrow(InvalidTransactionError);
     await expect(
       repos.transactions.create({ type: 'expense', amount: 100, accountId: cash.id }),
-    ).rejects.toThrow(/categoria/);
+    ).rejects.toThrow(/category/);
     await expect(
       repos.transactions.create({ type: 'transfer', amount: 100, accountId: cash.id }),
-    ).rejects.toThrow(/destinazione/);
+    ).rejects.toThrow(/destination/);
     await expect(
       repos.transactions.create({
         type: 'transfer',
@@ -62,11 +62,11 @@ describe('transactionsRepo', () => {
         toAccountId: card.id,
         categoryId: food,
       }),
-    ).rejects.toThrow(/categoria/);
+    ).rejects.toThrow(/category/);
     close();
   });
 
-  it('rifiuta riferimenti inesistenti (foreign key)', async () => {
+  it('rejects missing references (foreign keys)', async () => {
     const { repos, food, close } = await setup();
     await expect(
       repos.transactions.create({
@@ -79,7 +79,7 @@ describe('transactionsRepo', () => {
     close();
   });
 
-  it('aggiorna ed elimina', async () => {
+  it('updates and deletes', async () => {
     const { repos, cash, food, bills, close } = await setup();
     const tx = await repos.transactions.create({
       type: 'expense',
@@ -104,7 +104,7 @@ describe('transactionsRepo', () => {
     close();
   });
 
-  it('filtra per periodo [from, to), conto e categoria, dalla più recente', async () => {
+  it('filters by period [from, to), account and category, newest first', async () => {
     const { repos, cash, card, food, bills, close } = await setup();
     const a = await repos.transactions.create({
       type: 'expense',
@@ -140,14 +140,14 @@ describe('transactionsRepo', () => {
     expect(
       (await repos.transactions.list({ ...september, categoryId: food })).map((x) => x.id),
     ).toEqual([a.id]);
-    // I trasferimenti compaiono sia sul conto di origine che su quello di destinazione
+    // Transfers show up on both the source and the destination account
     expect(
       (await repos.transactions.list({ ...september, accountId: card.id })).map((x) => x.id),
     ).toEqual([t.id, b.id]);
     close();
   });
 
-  it('somma per categoria e calcola i totali del periodo, ignorando i trasferimenti', async () => {
+  it('sums by category and computes the period totals, ignoring transfers', async () => {
     const { repos, cash, card, food, bills, salary, close } = await setup();
     await repos.transactions.create({
       type: 'expense',
@@ -211,8 +211,8 @@ describe('transactionsRepo', () => {
   });
 });
 
-describe('transactionsRepo – lista dettagliata', () => {
-  it('unisce categoria e conti, cerca nella nota e nel nome categoria', async () => {
+describe('transactionsRepo – detailed list', () => {
+  it('joins category and accounts, searches the note and the category name', async () => {
     const { repos, cash, card, food, bills, close } = await setup();
     await repos.transactions.create({
       type: 'expense',
@@ -253,13 +253,13 @@ describe('transactionsRepo – lista dettagliata', () => {
       (await repos.transactions.listDetailed({ search })).map((r) => r.transaction.note);
     expect(await names('PIZZA')).toEqual(['Pizza con amici']);
     expect(await names('bollet')).toEqual(['100% luce']);
-    // % e _ sono cercati letteralmente, non come caratteri jolly
+    // % and _ are matched literally, not as wildcards
     expect(await names('100%')).toEqual(['100% luce']);
     expect(await names('_')).toEqual([]);
     close();
   });
 
-  it('restore reinserisce una transazione cancellata', async () => {
+  it('restore re-inserts a deleted transaction', async () => {
     const { repos, cash, food, close } = await setup();
     const tx = await repos.transactions.create({
       type: 'expense',
@@ -277,8 +277,8 @@ describe('transactionsRepo – lista dettagliata', () => {
   });
 });
 
-describe('transactionsRepo – statistiche per categoria', () => {
-  it('somma e conta per categoria e tipo, esclude i trasferimenti e rispetta il periodo', async () => {
+describe('transactionsRepo – stats by category', () => {
+  it('sums and counts by category and type, excludes transfers and respects the period', async () => {
     const { repos, cash, card, food, bills, salary, close } = await setup();
     await repos.transactions.create({
       type: 'expense',

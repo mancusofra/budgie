@@ -30,7 +30,7 @@ type Props = {
   money: (minor: number) => string;
 };
 
-/** Categoria con totale e numero di movimenti; tap = apre/chiude i suoi movimenti. */
+/** Category with total and number of transactions; tap = expands/collapses its transactions. */
 export function CategoryGroup({
   category,
   total,
@@ -83,7 +83,7 @@ export function CategoryGroup({
   );
 }
 
-/** Righe mostrate all'apertura e a ogni "Mostra altre": la lista non è virtualizzata. */
+/** Rows shown on opening and on each "Show more": the list is not virtualized. */
 const PAGE = 50;
 
 function CategoryTransactions({

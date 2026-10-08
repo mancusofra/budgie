@@ -14,7 +14,7 @@ import { useSettingsState } from './hooks';
 
 export type AuthResult = 'ok' | 'unavailable' | 'failed';
 
-/** Errori per cui il riconoscimento non è proprio disponibile (es. Face ID in Expo Go). */
+/** Errors meaning biometrics are not available at all (e.g. Face ID in Expo Go). */
 const UNAVAILABLE = new Set([
   'not_available',
   'not_enrolled',
@@ -22,7 +22,7 @@ const UNAVAILABLE = new Set([
   'invalid_context',
 ]);
 
-/** Riconoscimento biometrico, con ripiego sul codice del dispositivo. */
+/** Biometric authentication, falling back to the device passcode. */
 export async function authenticate(
   promptMessage: string,
   cancelLabel: string,
@@ -37,8 +37,8 @@ export async function authenticate(
 }
 
 /**
- * Schermata di blocco: all'avvio e al ritorno dal background, se il blocco è
- * attivo. Se il riconoscimento non è disponibile non chiude fuori l'utente.
+ * Lock screen: at launch and when returning from the background, if the lock is
+ * enabled. If biometrics are not available it doesn't lock the user out.
  */
 export function AppLock() {
   const { t } = useTranslation();
@@ -64,7 +64,7 @@ export function AppLock() {
     authenticate(t('lock.prompt'), t('common.cancel')).then(applyResult);
   }, [t, applyResult]);
 
-  // Blocca quando l'app va in background (e chiude eventuali pannelli aperti)
+  // Lock when the app goes to the background (and close any open sheet)
   useEffect(() => {
     if (!enabled) return;
     const sub = AppState.addEventListener('change', (state) => {
@@ -78,7 +78,7 @@ export function AppLock() {
 
   const showLock = !loaded || (enabled && locked);
 
-  // Chiede subito il riconoscimento quando compare il blocco
+  // Ask for authentication as soon as the lock appears
   useEffect(() => {
     if (!loaded || !enabled || !locked || authenticating.current) return;
     authenticating.current = true;

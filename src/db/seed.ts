@@ -17,15 +17,15 @@ import {
 import type { AppDatabase } from './types';
 
 /**
- * Incrementare quando cambiano i dati di default.
- * v2: palette categorie più sobria.
+ * Increase when the default data changes.
+ * v2: more muted category palette.
  */
 export const SEED_VERSION = 2;
 
 type Language = 'it' | 'en';
 
 type DefaultCategory = {
-  /** Colori usati dalle versioni precedenti del seed, da aggiornare se invariati. */
+  /** Colors used by previous versions of the seed, updated if unchanged. */
   legacyColors?: string[];
   key: string;
   type: CategoryType;
@@ -34,7 +34,7 @@ type DefaultCategory = {
   name: Record<Language, string>;
 };
 
-// Icone: nomi MaterialCommunityIcons (@expo/vector-icons)
+// Icons: MaterialCommunityIcons names (@expo/vector-icons)
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   {
     key: 'food',
@@ -204,12 +204,12 @@ const CASH_COLOR = '#6E9E7B';
 const LEGACY_CASH_COLORS = ['#43A047'];
 
 /**
- * Popola il DB al primo avvio con categorie, conto "Contanti" e impostazioni di base.
- * Sui DB già esistenti applica solo gli aggiornamenti delle versioni successive.
+ * Fills the DB on first launch with categories, a "Cash" account and base settings.
+ * On existing DBs it only applies the updates of later versions.
  *
- * Tutto avviene in un'unica transazione sincrona (lettura della versione compresa):
- * due chiamate ravvicinate, es. effetti eseguiti due volte in sviluppo, non possono
- * interlacciarsi e inserire i dati di default due volte.
+ * Everything happens in a single synchronous transaction (version read included):
+ * two close calls, e.g. effects run twice in development, cannot interleave
+ * and insert the default data twice.
  */
 export async function seedDatabase(db: AppDatabase, { language, currency }: SeedOptions) {
   return db.transaction((tx) => {
@@ -228,7 +228,7 @@ export async function seedDatabase(db: AppDatabase, { language, currency }: Seed
   });
 }
 
-/** Cancella tutti i dati e riapplica il seed (solo per sviluppo). */
+/** Deletes all data and applies the seed again (development only). */
 export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
   db.transaction((tx) => {
     tx.delete(transactions).run();
@@ -281,7 +281,7 @@ function insertDefaults(tx: Tx, language: string, currency: string) {
     .run();
 }
 
-/** v2: nuova palette. Aggiorna solo i colori rimasti quelli di default. */
+/** v2: new palette. Updates only colors still at their default value. */
 function recolorDefaults(tx: Tx) {
   for (const c of DEFAULT_CATEGORIES) {
     if (!c.legacyColors?.length) continue;

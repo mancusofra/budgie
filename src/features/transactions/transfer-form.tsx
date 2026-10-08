@@ -43,7 +43,7 @@ type Props = {
   onDelete?: () => void;
 };
 
-/** Trasferimento tra due conti; con valute diverse chiede l'importo accreditato. */
+/** Transfer between two accounts; with different currencies it asks for the received amount. */
 export function TransferForm({ initial, onSubmit, onDelete }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -61,7 +61,7 @@ export function TransferForm({ initial, onSubmit, onDelete }: Props) {
   const [toExpr, setToExpr] = useState(() =>
     initial?.toAmount && to ? minorToExpression(initial.toAmount, to.currency) : '',
   );
-  // Il tastierino scrive nell'importo o in quello accreditato (valute diverse)
+  // The keypad writes into the amount or the received amount (different currencies)
   const [target, setTarget] = useState<'amount' | 'received'>('amount');
   const [note, setNote] = useState(initial?.note ?? '');
   const [date, setDate] = useState(() => initial?.date ?? new Date());

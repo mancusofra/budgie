@@ -7,8 +7,8 @@ export type DonutSegment = { key: string; value: number; color: string };
 export type ArcSegment = DonutSegment & { start: number; length: number };
 
 /**
- * Converte i valori in archi (frazioni di circonferenza 0–1), con un piccolo
- * spazio tra gli spicchi quando ce n'è più di uno.
+ * Converts the values into arcs (fractions of the circle, 0–1), with a small
+ * gap between slices when there is more than one.
  */
 export function donutArcs(segments: DonutSegment[], gap = 0.006): ArcSegment[] {
   const visible = segments.filter((s) => s.value > 0);
@@ -30,7 +30,7 @@ type Props = {
   size: number;
   thickness?: number;
   trackColor: string;
-  /** Rotazione in giri (0–1), in senso orario; 0 = primo spicchio da ore 12. */
+  /** Rotation in turns (0–1), clockwise; 0 = first slice starts at 12 o'clock. */
   rotation?: number;
   children?: ReactNode;
 };

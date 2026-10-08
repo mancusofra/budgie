@@ -3,7 +3,7 @@ import { DEFAULT_CATEGORIES, resetDatabase, SEED_VERSION, seedDatabase } from '@
 import { createTestDb } from '../../test-utils/db';
 
 describe('seedDatabase', () => {
-  it('crea categorie, conto Contanti e impostazioni al primo avvio', async () => {
+  it('creates categories, the Cash account and settings on first launch', async () => {
     const { db, repos, close } = createTestDb();
 
     expect(await seedDatabase(db, { language: 'it', currency: 'EUR' })).toBe(true);
@@ -23,7 +23,7 @@ describe('seedDatabase', () => {
     close();
   });
 
-  it('è idempotente', async () => {
+  it('is idempotent', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     expect(await seedDatabase(db, { language: 'it', currency: 'EUR' })).toBe(false);
@@ -32,7 +32,7 @@ describe('seedDatabase', () => {
     close();
   });
 
-  it('usa i nomi inglesi per lingue diverse dall’italiano', async () => {
+  it('uses English names for languages other than Italian', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'de', currency: 'CHF' });
     const [first] = await repos.categories.list({ type: 'expense' });
@@ -41,9 +41,9 @@ describe('seedDatabase', () => {
     close();
   });
 
-  it('v1 → v2: ricolora solo le categorie con il colore di default originale', async () => {
+  it('v1 → v2: recolors only categories with the original default color', async () => {
     const { db, repos, close } = createTestDb();
-    // Simula un DB creato con il seed v1
+    // Simulate a DB created with seed v1
     const food = await repos.categories.create({
       name: 'Cibo',
       type: 'expense',
@@ -61,13 +61,13 @@ describe('seedDatabase', () => {
     expect(await seedDatabase(db, { language: 'it', currency: 'EUR' })).toBe(true);
     expect((await repos.categories.getById(food.id))?.color).toBe(DEFAULT_CATEGORIES[0].color);
     expect((await repos.categories.getById(custom.id))?.color).toBe('#123456');
-    // non reinserisce i dati di default
+    // does not insert the default data again
     expect(await repos.categories.list()).toHaveLength(2);
     expect(await repos.settings.get('seedVersion')).toBe(SEED_VERSION);
     close();
   });
 
-  it('due seed in parallelo non duplicano i dati', async () => {
+  it('two parallel seeds do not duplicate the data', async () => {
     const { db, repos, close } = createTestDb();
     const opts = { language: 'it', currency: 'EUR' };
     const results = await Promise.all([seedDatabase(db, opts), seedDatabase(db, opts)]);
@@ -77,7 +77,7 @@ describe('seedDatabase', () => {
     close();
   });
 
-  it('resetDatabase cancella tutto e riapplica il seed', async () => {
+  it('resetDatabase deletes everything and applies the seed again', async () => {
     const { db, repos, close } = createTestDb();
     const opts = { language: 'it', currency: 'EUR' };
     await seedDatabase(db, opts);

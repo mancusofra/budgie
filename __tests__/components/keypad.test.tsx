@@ -3,7 +3,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Keypad } from '@/components/ui/keypad';
 
 describe('Keypad', () => {
-  it('emette i tasti premuti e mostra il separatore decimale richiesto', async () => {
+  it('emits the pressed keys and shows the requested decimal separator', async () => {
     const onKey = jest.fn();
     await render(<Keypad onKey={onKey} labels={{ backspace: 'Cancella' }} decimalSeparator="." />);
 

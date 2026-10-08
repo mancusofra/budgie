@@ -9,7 +9,7 @@ import { Text } from './text';
 
 type Props<T extends string> = {
   options: { value: T; label: string }[];
-  /** Valore selezionato; se non è tra le opzioni nessuna risulta selezionata. */
+  /** Selected value; if it is not among the options none is selected. */
   value: string;
   onChange: (value: T) => void;
 };
@@ -32,7 +32,7 @@ export function SegmentedControl<T extends string>({ options, value, onChange }:
             <Text
               variant="caption"
               numberOfLines={1}
-              // Con caratteri molto grandi rimpicciolisce invece di troncare
+              // With very large text it shrinks instead of truncating
               adjustsFontSizeToFit
               minimumFontScale={0.6}
               color={selected ? 'text' : 'textSecondary'}

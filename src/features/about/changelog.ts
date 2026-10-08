@@ -5,14 +5,14 @@ export type ChangeKind = 'new' | 'fix';
 
 export type Release = {
   version: string;
-  /** Data di uscita 'YYYY-MM-DD'. */
+  /** Release date 'YYYY-MM-DD'. */
   date: string;
   changes: { kind: ChangeKind; it: string; en: string }[];
 };
 
 /**
- * Novità di ogni versione, dalla più recente. Da aggiornare a ogni beta:
- * un test verifica che la versione in app.json abbia la sua voce.
+ * What's new in each version, newest first. Update it for every beta:
+ * a test checks that the version in app.json has its entry.
  */
 export const CHANGELOG: Release[] = [
   {
@@ -48,7 +48,7 @@ export const CHANGELOG: Release[] = [
   },
 ];
 
-/** Versione installata, es. "0.2.0", e numero di build (se disponibile). */
+/** Installed version, e.g. "0.2.0", and build number (if available). */
 export function appVersion() {
   const config = Constants.expoConfig;
   const build =

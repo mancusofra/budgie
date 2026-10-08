@@ -12,7 +12,7 @@ import { deviceLocale } from '@/i18n';
 import { COMMON_CURRENCIES } from '@/lib/currencies';
 import { Spacing, TabularNums } from '@/theme';
 
-/** Simbolo della valuta nella lingua del dispositivo (es. "€", "US$"). */
+/** Currency symbol in the device language (e.g. "€", "US$"). */
 function currencySymbol(code: string): string {
   try {
     return (
@@ -25,7 +25,7 @@ function currencySymbol(code: string): string {
   }
 }
 
-/** Pannello per scegliere la valuta principale. */
+/** Sheet to choose the main currency. */
 export default function CurrencySheet() {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -50,8 +50,8 @@ export default function CurrencySheet() {
     };
     const inOld = accounts.filter((a) => a.currency === current);
     if (inOld.length === 0) return apply(false);
-    // Conti ancora vuoti (es. "Contanti" appena creato, in onboarding): nessun
-    // importo da reinterpretare, quindi seguono la nuova valuta senza chiedere
+    // Accounts still empty (e.g. "Cash" just created, during onboarding): no
+    // amounts to reinterpret, so they follow the new currency without asking
     const counts = await Promise.all(inOld.map((a) => accountActions.transactionCount(a.id)));
     const untouched = inOld.every((a, i) => counts[i] === 0 && a.initialBalance === 0);
     if (untouched) return apply(true);
@@ -93,7 +93,7 @@ export default function CurrencySheet() {
               name="check"
               size={20}
               color={theme.primary}
-              // Nascosta ma presente, per l'allineamento (color 'transparent' su Android non vale)
+              // Hidden but present, for alignment (color 'transparent' doesn't work on Android)
               style={{ opacity: selected ? 1 : 0 }}
             />
           </Pressable>

@@ -14,13 +14,13 @@ import { transactionsCsv, transactionsJson } from './csv-export';
 export type ExportFormat = 'csv' | 'json';
 export type ExportOptions = { format: ExportFormat; from?: Date; to?: Date };
 
-/** Scrive un file temporaneo e apre il foglio di condivisione di sistema. */
+/** Writes a temporary file and opens the system share sheet. */
 async function shareFile(name: string, content: string, mimeType: string, UTI: string) {
   const file = new File(Paths.cache, name);
   if (file.exists) file.delete();
   file.create();
   file.write(content);
-  if (!(await Sharing.isAvailableAsync())) throw new Error('Condivisione non disponibile');
+  if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available');
   await Sharing.shareAsync(file.uri, { mimeType, UTI, dialogTitle: name });
 }
 
@@ -29,7 +29,7 @@ const today = () => format(new Date(), 'yyyy-MM-dd');
 export function useDataTransfer() {
   const { t } = useTranslation();
 
-  /** Esporta le transazioni dell'intervallo [from, to) nel formato scelto; restituisce quante. */
+  /** Exports the transactions of the range [from, to) in the chosen format; returns how many. */
   const exportData = useCallback(
     async ({ format: kind, from, to }: ExportOptions) => {
       const rows = await repos.transactions.listDetailed({ from, to });
@@ -76,10 +76,10 @@ export function useDataTransfer() {
     );
   }, []);
 
-  /** Sceglie e legge un backup; null se annullato. Il ripristino va confermato a parte. */
+  /** Picks and reads a backup; null if cancelled. Restoring must be confirmed separately. */
   const pickBackup = useCallback(async (): Promise<Backup | null> => {
-    // Il selettore di expo-file-system restituisce un File già leggibile (con
-    // expo-document-picker la lettura della copia veniva rifiutata per permessi)
+    // The expo-file-system picker returns an already readable File (with
+    // expo-document-picker reading the copy was denied for lack of permissions)
     const picked = await File.pickFileAsync({
       mimeTypes: ['application/json', 'text/plain', '*/*'],
     });

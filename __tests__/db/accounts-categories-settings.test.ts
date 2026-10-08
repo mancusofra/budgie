@@ -4,7 +4,7 @@ import { seedDatabase } from '@/db/seed';
 import { createTestDb } from '../../test-utils/db';
 
 describe('accountsRepo', () => {
-  it('calcola il saldo con entrate, spese e trasferimenti (anche tra valute)', async () => {
+  it('computes the balance with income, expenses and transfers (across currencies too)', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const [cash] = await repos.accounts.list();
@@ -60,7 +60,7 @@ describe('accountsRepo', () => {
     close();
   });
 
-  it('elimina definitivamente un conto archiviato con transazioni, trasferimenti e ricorrenze', async () => {
+  it('permanently deletes an archived account with transactions, transfers and recurring rules', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const [cash] = await repos.accounts.list();
@@ -69,7 +69,7 @@ describe('accountsRepo', () => {
     const spend = { type: 'expense' as const, amount: 500, categoryId: food.id };
     await repos.transactions.create({ ...spend, accountId: old.id });
     await repos.transactions.create({ ...spend, accountId: cash.id });
-    // Trasferimenti in entrambe le direzioni
+    // Transfers in both directions
     await repos.transactions.create({
       type: 'transfer',
       amount: 100,
@@ -90,7 +90,7 @@ describe('accountsRepo', () => {
     });
     repos.recurring.materialize(new Date(2026, 1, 15));
 
-    // Solo se archiviato
+    // Only if archived
     expect(() => repos.accounts.purge(old.id)).toThrow();
     await repos.accounts.setArchived(old.id, true);
     expect(repos.accounts.purge(old.id)).toBe(5);
@@ -104,7 +104,7 @@ describe('accountsRepo', () => {
     close();
   });
 
-  it('nasconde i conti archiviati e mantiene l’ordine di inserimento', async () => {
+  it('hides archived accounts and keeps the insertion order', async () => {
     const { repos, close } = createTestDb();
     const a = await repos.accounts.create({ name: ' Zeta ', currency: 'EUR' });
     const b = await repos.accounts.create({ name: 'Alfa', currency: 'EUR' });
@@ -119,7 +119,7 @@ describe('accountsRepo', () => {
 });
 
 describe('categoriesRepo', () => {
-  it('crea in coda al proprio tipo, aggiorna e archivia', async () => {
+  it('creates at the end of its type, updates and archives', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const created = await repos.categories.create({
@@ -142,7 +142,7 @@ describe('categoriesRepo', () => {
 });
 
 describe('settingsRepo', () => {
-  it('salva valori JSON tipizzati e li sovrascrive', async () => {
+  it('stores typed JSON values and overwrites them', async () => {
     const { repos, close } = createTestDb();
     expect(await repos.settings.get('theme')).toBeUndefined();
     await repos.settings.set('theme', 'dark');
@@ -153,8 +153,8 @@ describe('settingsRepo', () => {
   });
 });
 
-describe('eliminazione e riordino', () => {
-  it('categoria: elimina solo se non ha transazioni, altrimenti InUseError', async () => {
+describe('deletion and reordering', () => {
+  it('category: deletes only if it has no transactions, otherwise InUseError', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const [cash] = await repos.accounts.list();
@@ -173,7 +173,7 @@ describe('eliminazione e riordino', () => {
     close();
   });
 
-  it('conto: conta anche i trasferimenti in entrata', async () => {
+  it('account: also counts incoming transfers', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const [cash] = await repos.accounts.list();
@@ -193,7 +193,7 @@ describe('eliminazione e riordino', () => {
     close();
   });
 
-  it('reorder salva il nuovo ordine', async () => {
+  it('reorder saves the new order', async () => {
     const { db, repos, close } = createTestDb();
     await seedDatabase(db, { language: 'it', currency: 'EUR' });
     const ids = (await repos.categories.list({ type: 'income' })).map((c) => c.id);
