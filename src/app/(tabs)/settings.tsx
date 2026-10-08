@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { NavRow, RowSeparator } from '@/components/ui/nav-row';
@@ -13,6 +13,7 @@ import { Text } from '@/components/ui/text';
 import type { Backup } from '@/db/backup';
 import { db } from '@/db/client';
 import { generateDemoTransactions } from '@/db/demo';
+import { appVersion } from '@/features/about/changelog';
 import { useRecurringList } from '@/features/recurring/hooks';
 import { authenticate } from '@/features/settings/app-lock';
 import { useDataTransfer } from '@/features/settings/data-transfer';
@@ -77,6 +78,7 @@ export default function SettingsScreen() {
     );
   };
   const recurringCount = useRecurringList().length;
+  const { version, build } = appVersion();
   const tabBarSpace = useTabBarSpace();
   const weekStart = settings.weekStart ?? 1;
   const languageLabel = {
@@ -291,6 +293,23 @@ export default function SettingsScreen() {
             />
           </View>
         )}
+
+        <Pressable
+          onPress={() => router.push('/whats-new')}
+          accessibilityRole="button"
+          accessibilityLabel={t('about.versionLabel', { version })}
+          hitSlop={8}
+          style={({ pressed }) => [styles.version, pressed && { opacity: 0.6 }]}>
+          <Text variant="caption" color="textSecondary">
+            Budgie {version}
+            {build ? ` (${build})` : ''}
+          </Text>
+          <MaterialCommunityIcons
+            name="information-outline"
+            size={16}
+            color={theme.textSecondary}
+          />
+        </Pressable>
       </ScrollView>
     </Screen>
   );
@@ -298,6 +317,13 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: { gap: Spacing.four },
+  version: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.one,
+    paddingVertical: Spacing.two,
+  },
   section: { gap: Spacing.two },
   listCard: { borderRadius: Radius + 4, paddingHorizontal: Spacing.three },
   // Stesse misure di NavRow, per allineare righe e blocchi nella stessa card

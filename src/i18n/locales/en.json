@@ -304,5 +304,11 @@
     "partOf": "Part of a recurring transaction",
     "manage": "Manage",
     "created": "Recurring created · {{label}}"
+  },
+  "about": {
+    "whatsNew": "What's new in {{version}}",
+    "fixes": "Bug fixes",
+    "features": "New",
+    "versionLabel": "Version {{version}}, show what's new"
   }
 }

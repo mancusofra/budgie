@@ -304,5 +304,11 @@
     "partOf": "Fa parte di una ricorrenza",
     "manage": "Gestisci",
     "created": "Ricorrenza creata · {{label}}"
+  },
+  "about": {
+    "whatsNew": "Novità della versione {{version}}",
+    "fixes": "Bug corretti",
+    "features": "Novità",
+    "versionLabel": "Versione {{version}}, mostra le novità"
   }
 }
