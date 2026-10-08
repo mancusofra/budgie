@@ -1,110 +1,91 @@
-# Budgie 🦜
+<p align="center">
+  <img src="assets/images/icon.png" width="96" alt="" />
+</p>
 
-App mobile (iOS + Android) per la gestione delle spese personali, ispirata a **Monefy**:
-inserimento di una spesa in 2 tap, grafico a ciambella per categoria al centro della home,
-tutto offline-first.
+<h1 align="center">Budgie</h1>
 
-> Stato: **Fasi 0–7 completate, più le transazioni ricorrenti** — in QA prima del merge.
-> Vedi [`docs/PLAN.md`](docs/PLAN.md) per la roadmap.
+<p align="center">
+  App per le spese personali, semplice e veloce: una spesa in due tocchi,<br />
+  tutto sul telefono, niente account.
+</p>
 
-## Funzionalità principali (MVP)
+<p align="center">
+  <img src="docs/screenshots/home.png" width="190" alt="Home con il grafico a ciambella per categoria" />
+  <img src="docs/screenshots/transactions.png" width="190" alt="Lista delle transazioni raggruppate per categoria" />
+  <img src="docs/screenshots/stats.png" width="190" alt="Statistiche con le spese per categoria" />
+  <img src="docs/screenshots/settings.png" width="190" alt="Impostazioni" />
+</p>
 
-- ➕ / ➖ Aggiunta rapida di spese ed entrate con tastierino numerico dedicato
-- 🍩 Home con grafico a ciambella per categoria e saldo del periodo
-- 📅 Filtro per periodo: giorno, settimana, mese, anno, intervallo personalizzato
-- 🏷️ Categorie personalizzabili (icona + colore)
-- 💳 Più conti (contanti, carta, banca) con trasferimenti tra conti
-- 📋 Lista transazioni raggruppate per giorno, modifica e cancellazione
-- 🌍 Multi-valuta (valuta principale + valuta per conto)
-- 🌙 Tema chiaro / scuro, lingua IT / EN
-- 💾 Backup / ripristino locale ed esportazione CSV
+> **Stato: beta (0.2.0).** L'app è in prova su iOS e Android; non è ancora negli store.
 
-## Stack tecnologico
+## Funzionalità
 
-| Ambito          | Scelta                                                                 |
-| --------------- | ---------------------------------------------------------------------- |
-| Framework       | [Expo](https://expo.dev) (React Native) + TypeScript                   |
-| Navigazione     | Expo Router (file-based)                                               |
-| Database locale | `expo-sqlite` + [Drizzle ORM](https://orm.drizzle.team)                |
-| Stato UI        | Zustand                                                                |
-| Grafici         | `react-native-svg` + `victory-native` (o `react-native-gifted-charts`) |
-| Animazioni      | `react-native-reanimated` + `react-native-gesture-handler`             |
-| i18n            | `i18next` + `react-i18next` + `expo-localization`                      |
-| Date            | `date-fns`                                                             |
-| Test            | Jest + React Native Testing Library, Maestro per E2E                   |
-| Build / release | EAS Build + EAS Submit                                                 |
+- **Inserimento rapido**: tocca una categoria attorno alla ciambella, digita l'importo, fatto. Il
+  tastierino fa anche i calcoli (`12+3×2`).
+- **Home a ciambella** con le spese per categoria e il saldo del periodo.
+- **Periodi**: giorno, settimana, mese, anno, sempre o intervallo personalizzato; primo giorno della
+  settimana e giorno di inizio del mese configurabili (per chi riceve lo stipendio il 27).
+- **Conti** multipli, anche in valute diverse, con trasferimenti.
+- **Categorie** personalizzabili (icona, colore, ordine), archiviabili.
+- **Transazioni ricorrenti**: affitto, abbonamenti, stipendio vengono registrati da soli.
+- **Statistiche** con andamento, confronto con il periodo precedente, classifica per categoria e
+  **budget** mensili con avvisi; sezioni riordinabili.
+- **Dati tuoi**: tutto resta sul dispositivo. Backup e ripristino in JSON, esportazione CSV o JSON
+  per intervallo di date, blocco con riconoscimento biometrico.
+- Tema chiaro e scuro, italiano e inglese, accessibilità (screen reader, caratteri grandi,
+  contrasto AA).
 
-Dettagli e motivazioni in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+## Tecnologie
 
-## Struttura del progetto
+[Expo](https://expo.dev) SDK 57 (React Native) con TypeScript ed Expo Router · SQLite locale con
+[Drizzle ORM](https://orm.drizzle.team) · Zustand · Reanimated e Gesture Handler · grafici su
+`react-native-svg` · i18next · Jest e React Native Testing Library.
 
-```
-budgie/
-├── src/
-│   ├── app/                    # Schermate (Expo Router, file-based routing)
-│   │   ├── _layout.tsx         # Root layout: provider, tema, DB, i18n
-│   │   ├── (tabs)/             # Tab principali
-│   │   │   ├── index.tsx       # Home: ciambella + bottoni +/-
-│   │   │   ├── transactions.tsx
-│   │   │   ├── stats.tsx
-│   │   │   └── settings.tsx
-│   │   ├── transaction/        # [id].tsx, new.tsx (modal)
-│   │   ├── category/           # gestione categorie
-│   │   └── account/            # gestione conti
-│   ├── components/
-│   │   ├── ui/                 # Button, Text, Card, Sheet, Keypad…
-│   │   ├── charts/             # DonutChart, BarChart
-│   │   └── transactions/       # TransactionRow, DayGroupHeader…
-│   ├── features/               # Logica di dominio per feature (hooks, servizi)
-│   │   ├── transactions/
-│   │   ├── categories/
-│   │   ├── accounts/
-│   │   ├── budgets/
-│   │   ├── stats/
-│   │   └── settings/
-│   ├── db/
-│   │   ├── schema.ts           # Schema Drizzle
-│   │   ├── client.ts           # Connessione SQLite
-│   │   ├── seed.ts             # Categorie/conti di default
-│   │   ├── migrations/         # Generate da drizzle-kit
-│   │   └── repositories/       # Query tipizzate per entità
-│   ├── store/                  # Zustand (periodo selezionato, filtri, preferenze)
-│   ├── hooks/                  # Hook generici (useTheme, useCurrency…)
-│   ├── lib/                    # Utility pure: money, date, csv, id
-│   ├── i18n/                   # Setup i18next + locales/it.json, en.json
-│   ├── theme/                  # Colori, spaziature, tipografia
-│   └── types/                  # Tipi condivisi
-├── assets/                     # Icone app, splash, font
-├── __tests__/                  # Unit test
-├── e2e/                        # Flussi Maestro
-├── docs/                       # Piano, architettura, modello dati
-└── .github/workflows/          # CI
-```
+Approfondimenti: [architettura](docs/ARCHITECTURE.md), [modello dati](docs/DATA_MODEL.md),
+[interfaccia](docs/UI_SPEC.md), [roadmap](docs/PLAN.md).
 
-## Avvio
+## Provarla in sviluppo
 
-Requisiti: Node.js 22 (es. `nvm install 22`) e l'app **Expo Go** sul telefono.
+Servono [Node.js 22](https://nodejs.org) e l'app **Expo Go** sul telefono (oppure un emulatore
+Android / simulatore iOS).
 
 ```bash
+git clone https://github.com/mancusofra/budgie.git
+cd budgie
 npm install
-npx expo start      # scansiona il QR code con Expo Go
+npx expo start        # poi scansiona il QR code con Expo Go
 ```
 
-Comandi utili:
+Controlli usati anche dalla CI:
 
 ```bash
-npm run lint        # ESLint
-npm run typecheck   # TypeScript
-npm test            # Jest
-npx expo-doctor     # verifica dipendenze/config Expo
+npm run lint
+npm run typecheck
+npm test              # oppure npm run test:coverage
+npx expo-doctor
 ```
 
-## Documentazione
+## Struttura
 
-- [`docs/PLAN.md`](docs/PLAN.md) — roadmap per fasi con checklist
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — scelte tecniche e flusso dei dati
-- [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) — schema del database
-- [`docs/UI_SPEC.md`](docs/UI_SPEC.md) — schermate e interazioni
+```
+src/
+├── app/          schermate e navigazione (Expo Router)
+├── components/   componenti UI, grafici, righe delle transazioni
+├── features/     logica per area: transazioni, conti, categorie, statistiche, ricorrenti…
+├── db/           schema Drizzle, migrazioni, repository, backup
+├── lib/          funzioni pure: denaro, periodi, ricorrenze, CSV, colori
+├── i18n/         traduzioni (it, en)
+├── store/        stato dell'interfaccia (Zustand)
+└── theme/        colori e misure
+__tests__/        test (Jest)
+docs/             documentazione e screenshot
+```
+
+## Contribuire
+
+Segnalazioni e proposte sono benvenute: leggi [CONTRIBUTING.md](CONTRIBUTING.md). Le modifiche
+arrivano solo tramite Pull Request e vengono riviste dal maintainer prima di essere unite. Per le
+vulnerabilità di sicurezza vedi [SECURITY.md](SECURITY.md).
 
 ## Licenza
 

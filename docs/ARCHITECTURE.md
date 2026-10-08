@@ -16,7 +16,7 @@
 | **expo-sqlite + Drizzle**          | SQL vero per aggregazioni (somme per categoria/periodo), migrazioni, `useLiveQuery` reattivo | WatermelonDB (più complesso), AsyncStorage/MMKV (non adatti ad aggregazioni) |
 | **Zustand**                        | Stato UI leggero (periodo selezionato, filtri); i dati veri stanno nel DB                    | Redux Toolkit (troppo per questo caso)                                       |
 | **Importi in centesimi (INTEGER)** | Evita errori di arrotondamento dei float                                                     | `REAL` / float                                                               |
-| **victory-native / gifted-charts** | Ciambella e barre animate, basati su Skia/SVG                                                | Recharts (solo web)                                                          |
+| **Grafici su `react-native-svg`**  | Ciambella e barre disegnate a mano: leggere, accessibili, animate con Reanimated             | victory-native, gifted-charts (più pesanti, meno controllo)                  |
 
 ## Livelli
 
@@ -76,12 +76,11 @@ all'avvio in uno store dedicato.
 | ------------ | ----------- | -------------------------------------------- |
 | Unit         | Jest        | `lib/`, calcolo periodi, parsing tastierino  |
 | Integrazione | Jest + RNTL | hook `features/` e componenti con DB di test |
-| E2E          | Maestro     | flussi utente su simulatore/emulatore        |
+| E2E          | Maestro     | flussi utente su emulatore (previsto)        |
 
 ## Build e ambienti
 
-Profili EAS in `eas.json`:
-
-- `development` — development client, per debug su dispositivo
-- `preview` — APK/IPA interni per tester
-- `production` — build per gli store
+- **Sviluppo**: Expo Go o development build, con `npx expo start`.
+- **Beta iOS**: il workflow `.github/workflows/ios-unsigned-ipa.yml` compila un `.ipa` non firmato
+  (avvio manuale o tag `ios-build-*`), installabile con un Apple ID gratuito tramite sideload.
+- **Store**: EAS Build / EAS Submit (Fase 8, profili `eas.json` ancora da creare).

@@ -1,0 +1,19 @@
+name: Proponi un'idea
+description: Una funzionalità nuova o un miglioramento
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Che problema risolve
+      description: Racconta la situazione in cui ti servirebbe.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Come la immagini
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative considerate

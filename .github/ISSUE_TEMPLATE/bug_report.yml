@@ -1,0 +1,40 @@
+name: Segnala un bug
+description: Qualcosa non funziona come dovrebbe
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Cosa succede
+      description: Descrivi il problema e cosa ti aspettavi invece.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Come riprodurlo
+      placeholder: |
+        1. Apri …
+        2. Tocca …
+        3. Vedi …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versione di Budgie
+      description: In fondo alle Impostazioni (es. 0.2.0 (2)).
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Dispositivo e sistema
+      placeholder: es. iPhone 15, iOS 26.1 · Pixel 8, Android 16
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Screenshot o altro
+      description: Non allegare backup o esportazioni con dati personali.
