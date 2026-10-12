@@ -93,7 +93,8 @@
     "restoreConfirmMessage_one": "Backup del {{date}}: 1 transazione. Tutti i dati attuali verranno sostituiti.",
     "restoreConfirmMessage_other": "Backup del {{date}}: {{count}} transazioni. Tutti i dati attuali verranno sostituiti.",
     "appLock": "Blocco biometrico",
-    "appLockUnavailable": "Riconoscimento biometrico non disponibile o non configurato su questo dispositivo. In Expo Go su iPhone Face ID non è supportato: provalo con la build dell'app."
+    "appLockUnavailable": "Riconoscimento biometrico non disponibile o non configurato su questo dispositivo. In Expo Go su iPhone Face ID non è supportato: provalo con la build dell'app.",
+    "pdfReport": "Report PDF"
   },
   "language": {
     "systemHint": "Come il dispositivo"
@@ -310,5 +311,24 @@
     "fixes": "Bug corretti",
     "features": "Novità",
     "versionLabel": "Versione {{version}}, mostra le novità"
+  },
+  "report": {
+    "title": "Report PDF",
+    "hint": "Un documento da stampare o condividere: rendiconto del periodo, spese per categoria e tutte le transazioni mese per mese.",
+    "accounts": "Conti",
+    "someAccounts": "Scegli",
+    "archived": "archiviato",
+    "currencyHint": "Con conti in valute diverse i totali sono separati per valuta.",
+    "submit": "Condividi PDF",
+    "generating": "Generazione…",
+    "noTransactions": "Nessuna transazione nel periodo e nei conti scelti",
+    "error": "Impossibile generare il report",
+    "pdfTitle": "Report spese",
+    "generatedOn": "Generato il",
+    "summary": "Rendiconto",
+    "monthDetail": "Dettaglio per mese",
+    "monthTotal": "Totale del mese",
+    "empty": "Nessuna transazione",
+    "preview": "Anteprima e stampa"
   }
 }
