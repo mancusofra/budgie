@@ -41,6 +41,14 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="report"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.7, 0.95],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
               name="whats-new"
               options={{
                 presentation: 'formSheet',
