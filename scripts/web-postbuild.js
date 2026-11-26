@@ -61,6 +61,14 @@ for (const f of files.filter((f) => f.endsWith('.html'))) {
   pages++;
 }
 
+// GitHub Pages serves 404.html for unknown paths: Expo's not-found page
+if (files.includes('+not-found.html') && !files.includes('404.html')) {
+  fs.copyFileSync(path.join(dist, '+not-found.html'), path.join(dist, '404.html'));
+  files.push('404.html');
+}
+// No Jekyll on GitHub Pages: it would skip the "_expo" folder
+fs.writeFileSync(path.join(dist, '.nojekyll'), '');
+
 const precache = files.filter((f) => f !== 'precache.json' && f !== 'sw.js').sort();
 const hash = crypto.createHash('sha256');
 for (const f of precache) hash.update(f).update(fs.readFileSync(path.join(dist, f)));
