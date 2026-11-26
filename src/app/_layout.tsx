@@ -73,6 +73,14 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="group-shares"
+              options={{
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.75, 0.95],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen
               name="reference-income"
               options={{
                 presentation: 'formSheet',
