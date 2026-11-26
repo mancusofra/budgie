@@ -37,10 +37,27 @@ export const expoDb = new Proxy({} as SQLiteDatabase, {
  * web it waits for the SQLite worker (WebAssembly) to load.
  */
 export async function prepareDatabase(): Promise<void> {
+  if (Platform.OS === 'web' && !globalForDb.__budgieDb && waitingForIsolation()) {
+    // The page is about to reload with the headers SQLite needs (see +html.tsx)
+    await new Promise(() => {});
+  }
   if (Platform.OS === 'web' && !globalForDb.__budgieDb) {
     await openDatabaseAsync(DATABASE_NAME);
   }
   connection();
+}
+
+/**
+ * Web: SQLite needs cross-origin isolation. Without it, the service worker
+ * is about to reload the page once (only if it hasn't already tried).
+ */
+function waitingForIsolation(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    !window.crossOriginIsolated &&
+    'serviceWorker' in navigator &&
+    !sessionStorage.getItem('budgie-coi-reload')
+  );
 }
 
 export const db = drizzle(expoDb, { schema });

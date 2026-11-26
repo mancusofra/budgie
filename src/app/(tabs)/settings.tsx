@@ -18,6 +18,7 @@ import { categoryActions } from '@/features/categories/hooks';
 import { useRecurringList } from '@/features/recurring/hooks';
 import { authenticate } from '@/features/settings/app-lock';
 import { useDataTransfer } from '@/features/settings/data-transfer';
+import { useInstall } from '@/features/web/pwa';
 import {
   useCurrency,
   useResetDatabase,
@@ -49,6 +50,7 @@ export default function SettingsScreen() {
   };
 
   const currency = useCurrency();
+  const install = useInstall();
   const groupsEnabled = settings.groupsEnabled === true;
 
   // The first time groups are turned on: savings category and setup sheet
@@ -309,6 +311,27 @@ export default function SettingsScreen() {
           </Text>
         </View>
 
+        {Platform.OS === 'web' && !install.installed && (
+          <View style={styles.section}>
+            <Text variant="overline" color="textSecondary">
+              {t('web.app')}
+            </Text>
+            <Surface style={styles.listCard}>
+              <NavRow
+                title={t('web.installApp')}
+                onPress={() => (install.canPrompt ? install.prompt() : router.push('/install'))}
+                leading={
+                  <MaterialCommunityIcons
+                    name="cellphone-arrow-down"
+                    size={22}
+                    color={theme.primary}
+                  />
+                }
+              />
+            </Surface>
+          </View>
+        )}
+
         <View style={styles.section}>
           <Text variant="overline" color="textSecondary">
             {t('settings.data')}
@@ -360,6 +383,7 @@ export default function SettingsScreen() {
           </Surface>
           <Text variant="caption" color="textSecondary">
             {t('settings.dataHint')}
+            {Platform.OS === 'web' ? ` ${t('web.dataNote')}` : ''}
           </Text>
         </View>
 

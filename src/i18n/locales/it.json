@@ -375,5 +375,20 @@
     "shareOfSpending": "{{share}}% delle spese",
     "homeTitle": "Speso / obiettivo",
     "homeTitleNoBase": "Quote delle spese"
+  },
+  "web": {
+    "app": "App",
+    "installApp": "Installa l'app",
+    "installTitle": "Installa Budgie",
+    "installIosIntro": "Su iPhone e iPad l'app si aggiunge alla schermata Home da Safari:",
+    "installIosStep1": "Tocca Condividi nella barra di Safari",
+    "installIosStep2": "Scegli «Aggiungi alla schermata Home»",
+    "installOther": "Su Android e computer: menu del browser → «Installa app» (o l'icona di installazione nella barra degli indirizzi).",
+    "installOffline": "Si apre a schermo intero e funziona anche senza rete.",
+    "gotIt": "Ho capito",
+    "updateAvailable": "Nuova versione disponibile",
+    "update": "Aggiorna",
+    "later": "Più tardi",
+    "dataNote": "I dati della versione web sono separati da quelli dell'app: per spostarli usa backup e ripristino."
   }
 }

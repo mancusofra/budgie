@@ -375,5 +375,20 @@
     "shareOfSpending": "{{share}}% of spending",
     "homeTitle": "Spent / target",
     "homeTitleNoBase": "Share of spending"
+  },
+  "web": {
+    "app": "App",
+    "installApp": "Install the app",
+    "installTitle": "Install Budgie",
+    "installIosIntro": "On iPhone and iPad the app is added to the Home Screen from Safari:",
+    "installIosStep1": "Tap Share in Safari's toolbar",
+    "installIosStep2": "Choose “Add to Home Screen”",
+    "installOther": "On Android and computers: browser menu → “Install app” (or the install icon in the address bar).",
+    "installOffline": "It opens full screen and works offline too.",
+    "gotIt": "Got it",
+    "updateAvailable": "New version available",
+    "update": "Update",
+    "later": "Later",
+    "dataNote": "The web version's data is separate from the app's: use backup and restore to move it."
   }
 }
