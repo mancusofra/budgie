@@ -239,6 +239,14 @@ export default function SettingsScreen() {
             />
             <RowSeparator />
             <NavRow
+              title={t('settings.pdfReport')}
+              onPress={() => router.push('/report')}
+              leading={
+                <MaterialCommunityIcons name="file-pdf-box" size={22} color={theme.primary} />
+              }
+            />
+            <RowSeparator />
+            <NavRow
               title={t('settings.exportBackup')}
               onPress={() => run(exportBackup, t('settings.exportError'))}
               leading={

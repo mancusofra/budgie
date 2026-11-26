@@ -93,7 +93,8 @@
     "restoreConfirmMessage_one": "Backup from {{date}}: 1 transaction. All current data will be replaced.",
     "restoreConfirmMessage_other": "Backup from {{date}}: {{count}} transactions. All current data will be replaced.",
     "appLock": "Biometric lock",
-    "appLockUnavailable": "Biometric authentication isn't available or set up on this device. Face ID isn't supported in Expo Go on iPhone: try it with the app build."
+    "appLockUnavailable": "Biometric authentication isn't available or set up on this device. Face ID isn't supported in Expo Go on iPhone: try it with the app build.",
+    "pdfReport": "PDF report"
   },
   "language": {
     "systemHint": "Same as the device"
@@ -310,5 +311,24 @@
     "fixes": "Bug fixes",
     "features": "New",
     "versionLabel": "Version {{version}}, show what's new"
+  },
+  "report": {
+    "title": "PDF report",
+    "hint": "A document to print or share: period summary, spending by category and every transaction month by month.",
+    "accounts": "Accounts",
+    "someAccounts": "Choose",
+    "archived": "archived",
+    "currencyHint": "With accounts in different currencies, totals are shown per currency.",
+    "submit": "Share PDF",
+    "generating": "Generating…",
+    "noTransactions": "No transactions in the chosen period and accounts",
+    "error": "Couldn't generate the report",
+    "pdfTitle": "Spending report",
+    "generatedOn": "Generated on",
+    "summary": "Summary",
+    "monthDetail": "Month by month",
+    "monthTotal": "Month total",
+    "empty": "No transactions",
+    "preview": "Preview and print"
   }
 }
