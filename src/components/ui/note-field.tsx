@@ -1,5 +1,5 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, TextInput, type StyleProp, type ViewStyle } from 'react-native';
 
@@ -25,7 +25,7 @@ type Props = {
 export function NoteField({ value, onChangeText, placeholder, onFocus, onBlur, style }: Props) {
   const { t } = useTranslation();
   const theme = useTheme();
-  const input = useRef<TextInput>(null);
+  const input = useRef<ComponentRef<typeof TextInput>>(null);
   const [focused, setFocused] = useState(false);
 
   return (

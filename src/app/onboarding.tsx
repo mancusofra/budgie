@@ -1,7 +1,7 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
-import { useRef, useState, type ComponentProps, type ReactNode } from 'react';
+import { useRef, useState, type ComponentProps, type ComponentRef, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
@@ -32,7 +32,7 @@ export default function OnboardingScreen() {
   const { width } = useWindowDimensions();
   const settings = useSettings();
   const setSetting = useSetSetting();
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [page, setPage] = useState(0);
 
   const pages: {
