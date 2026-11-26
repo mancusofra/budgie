@@ -55,7 +55,11 @@
         {
           "faceIDPermission": "Consenti a $(PRODUCT_NAME) di usare Face ID per sbloccare l'app."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

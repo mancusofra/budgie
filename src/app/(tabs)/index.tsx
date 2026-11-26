@@ -1,6 +1,6 @@
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Pressable,
@@ -116,7 +116,7 @@ export default function HomeScreen() {
   // Tap on the ring = list opened on that category; tap in the center = switch view.
   // Absolute coordinates (pageX/Y) compared with the chart position:
   // locationX/Y are relative to the touched element (e.g. the text in the center).
-  const donutRef = useRef<View>(null);
+  const donutRef = useRef<ComponentRef<typeof View>>(null);
   const onDonutPress = (e: GestureResponderEvent) => {
     const { pageX, pageY } = e.nativeEvent;
     donutRef.current?.measure((_x, _y, width, height, left, top) => {
