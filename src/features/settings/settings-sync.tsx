@@ -16,8 +16,10 @@ export function SettingsSync() {
   }, [groupsEnabled, setGroupsEnabled]);
 
   useEffect(() => {
-    // 'unspecified' = follow the system
-    Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
+    // 'unspecified' = follow the system. Not available on the web (follows the browser)
+    if (typeof Appearance.setColorScheme === 'function') {
+      Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
+    }
   }, [theme]);
 
   useEffect(() => {

@@ -5,18 +5,27 @@ import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 
-import { db } from './client';
+import { db, prepareDatabase } from './client';
 import migrations from './migrations/migrations';
 import { seedDatabase } from './seed';
 
+type Props = { children: ReactNode; onReady?: () => void };
+
+/** Opens the database (async on the web), then applies migrations and the seed. */
+export function DatabaseProvider(props: Props) {
+  const [prepared, setPrepared] = useState(false);
+  const [prepareError, setPrepareError] = useState<Error>();
+  useEffect(() => {
+    prepareDatabase()
+      .then(() => setPrepared(true))
+      .catch(setPrepareError);
+  }, []);
+  if (prepareError) return <DatabaseError error={prepareError} />;
+  return prepared ? <MigratedDatabase {...props} /> : null;
+}
+
 /** Applies migrations and the seed, then shows the app. `onReady` is called in both cases. */
-export function DatabaseProvider({
-  children,
-  onReady,
-}: {
-  children: ReactNode;
-  onReady?: () => void;
-}) {
+function MigratedDatabase({ children, onReady }: Props) {
   const { success, error: migrationError } = useMigrations(db, migrations);
   const [seeded, setSeeded] = useState(false);
   const [seedError, setSeedError] = useState<Error>();
@@ -38,16 +47,17 @@ export function DatabaseProvider({
     if (seeded || error) onReady?.();
   }, [seeded, error, onReady]);
 
-  if (error) {
-    return (
-      <View style={styles.center}>
-        <Text variant="subtitle">Errore del database</Text>
-        <Text color="textSecondary">{error.message}</Text>
-      </View>
-    );
-  }
-
+  if (error) return <DatabaseError error={error} />;
   return seeded ? children : null;
+}
+
+function DatabaseError({ error }: { error: Error }) {
+  return (
+    <View style={styles.center}>
+      <Text variant="subtitle">Errore del database</Text>
+      <Text color="textSecondary">{error.message}</Text>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
