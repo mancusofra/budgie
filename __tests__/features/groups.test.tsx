@@ -1,6 +1,6 @@
 /**
- * Spending groups: hooks on an in-memory SQLite DB, and the Stats card
- * rendered with a computed summary.
+ * Spending groups: hooks on an in-memory SQLite DB, and the Stats card and
+ * Home ring rendered with a computed summary.
  */
 import { act, fireEvent, render, renderHook, screen } from '@testing-library/react-native';
 import { addDays, addMonths, startOfMonth } from 'date-fns';
@@ -9,6 +9,7 @@ import { db, repos } from '@/db/client';
 import { refreshLiveQueries } from '@/db/live-query';
 import { seedDatabase } from '@/db/seed';
 import { GroupsCard } from '@/features/groups/groups-card';
+import { GroupsCenter, GroupsRing } from '@/features/groups/groups-ring';
 import { useGroupShares, useGroupsSummary, useSuggestedShares } from '@/features/groups/hooks';
 import { GROUP_META, nextGroup } from '@/features/groups/meta';
 import '@/i18n';
@@ -132,5 +133,34 @@ describe('GroupsCard', () => {
     await render(<GroupsCard summary={summary} shares={DEFAULT_SHARES} money={money} />);
     fireEvent.press(screen.getByText(/riferimento|reference/i, { exact: false }));
     expect(mockPush).toHaveBeenCalledWith('/reference-income');
+  });
+});
+
+describe('GroupsRing and GroupsCenter', () => {
+  const summary = computeGroups({
+    totals: [
+      { categoryId: 'salary', type: 'income', total: 100000 },
+      { categoryId: 'house', type: 'expense', total: 60000 },
+    ],
+    groupOf,
+    shares: DEFAULT_SHARES,
+    reference: null,
+  });
+
+  it('renders the ring, nothing when there is no data', async () => {
+    const { toJSON } = await render(
+      <GroupsRing size={200} summary={summary} shares={DEFAULT_SHARES} />,
+    );
+    expect(toJSON()).not.toBeNull();
+    const empty = computeGroups({ totals: [], groupOf, shares: DEFAULT_SHARES, reference: null });
+    const again = await render(<GroupsRing size={200} summary={empty} shares={DEFAULT_SHARES} />);
+    expect(again.toJSON()).toBeNull();
+  });
+
+  it('the center shows actual / target share per group', async () => {
+    await render(<GroupsCenter summary={summary} />);
+    expect(screen.getByText('60/50%')).toBeTruthy();
+    expect(screen.getByText('0/30%')).toBeTruthy();
+    expect(screen.getByText('40/20%')).toBeTruthy();
   });
 });
