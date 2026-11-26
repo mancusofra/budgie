@@ -20,6 +20,16 @@ export type SettingsMap = {
   onboardingDone: boolean;
   /** Order and hidden sections of the Stats screen. */
   statsLayout: StatsLayout;
+  /** Spending groups (needs / wants / savings) turned on. */
+  groupsEnabled: boolean;
+  /** Target shares of income in percent: [needs, wants, savings], sum 100. */
+  groupShares: [number, number, number];
+  /** Monthly income (minor units) used when a period has no income; null = none. */
+  referenceIncome: number | null;
+  /** Show the groups ring around the Home donut. */
+  groupsOnHome: boolean;
+  /** What the center of the Home donut shows when the groups ring is on. */
+  homeCenter: 'balance' | 'groups';
 };
 
 export type SettingKey = keyof SettingsMap;

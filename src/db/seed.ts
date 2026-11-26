@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { createId } from '@/lib/id';
 
@@ -13,14 +13,16 @@ import {
   transactions,
   type Category,
   type CategoryType,
+  type SpendingGroup,
 } from './schema';
 import type { AppDatabase } from './types';
 
 /**
  * Increase when the default data changes.
  * v2: more muted category palette.
+ * v3: spending groups assigned to expense categories.
  */
-export const SEED_VERSION = 2;
+export const SEED_VERSION = 3;
 
 type Language = 'it' | 'en';
 
@@ -29,6 +31,8 @@ type DefaultCategory = {
   legacyColors?: string[];
   key: string;
   type: CategoryType;
+  /** Spending group (expense categories only). */
+  group?: SpendingGroup;
   icon: string;
   color: string;
   name: Record<Language, string>;
@@ -38,6 +42,7 @@ type DefaultCategory = {
 export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   {
     key: 'food',
+    group: 'need',
     legacyColors: ['#43A047'],
     type: 'expense',
     icon: 'food-apple',
@@ -46,6 +51,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'home',
+    group: 'need',
     legacyColors: ['#8D6E63'],
     type: 'expense',
     icon: 'home',
@@ -54,6 +60,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'transport',
+    group: 'need',
     legacyColors: ['#1E88E5'],
     type: 'expense',
     icon: 'bus',
@@ -62,6 +69,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'car',
+    group: 'need',
     legacyColors: ['#3949AB'],
     type: 'expense',
     icon: 'car',
@@ -70,6 +78,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'bills',
+    group: 'need',
     legacyColors: ['#FDD835'],
     type: 'expense',
     icon: 'flash',
@@ -78,6 +87,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'health',
+    group: 'need',
     legacyColors: ['#E53935'],
     type: 'expense',
     icon: 'hospital-box',
@@ -86,6 +96,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'entertainment',
+    group: 'want',
     legacyColors: ['#8E24AA'],
     type: 'expense',
     icon: 'gamepad-variant',
@@ -94,6 +105,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'restaurants',
+    group: 'want',
     legacyColors: ['#FB8C00'],
     type: 'expense',
     icon: 'silverware-fork-knife',
@@ -102,6 +114,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'clothes',
+    group: 'want',
     legacyColors: ['#D81B60'],
     type: 'expense',
     icon: 'tshirt-crew',
@@ -110,6 +123,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'gifts',
+    group: 'want',
     legacyColors: ['#F4511E'],
     type: 'expense',
     icon: 'gift',
@@ -118,6 +132,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'sports',
+    group: 'want',
     legacyColors: ['#00ACC1'],
     type: 'expense',
     icon: 'basketball',
@@ -126,6 +141,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'pets',
+    group: 'need',
     legacyColors: ['#6D4C41'],
     type: 'expense',
     icon: 'paw',
@@ -134,6 +150,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'toiletry',
+    group: 'need',
     legacyColors: ['#26A69A'],
     type: 'expense',
     icon: 'toothbrush',
@@ -142,6 +159,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'communications',
+    group: 'need',
     legacyColors: ['#5E35B1'],
     type: 'expense',
     icon: 'cellphone',
@@ -150,6 +168,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'taxi',
+    group: 'want',
     legacyColors: ['#FFB300'],
     type: 'expense',
     icon: 'taxi',
@@ -158,6 +177,7 @@ export const DEFAULT_CATEGORIES: DefaultCategory[] = [
   },
   {
     key: 'other-expense',
+    group: 'want',
     legacyColors: ['#757575'],
     type: 'expense',
     icon: 'dots-horizontal',
@@ -220,8 +240,9 @@ export async function seedDatabase(db: AppDatabase, { language, currency }: Seed
     if (current === 0) {
       insertDefaults(tx, language, currency);
       setSetting(tx, 'currency', currency);
-    } else if (current < 2) {
-      recolorDefaults(tx);
+    } else {
+      if (current < 2) recolorDefaults(tx);
+      if (current < 3) assignDefaultGroups(tx);
     }
     setSetting(tx, 'seedVersion', SEED_VERSION);
     return true;
@@ -242,7 +263,7 @@ export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
   return seedDatabase(db, options);
 }
 
-type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
+export type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
 
 function setSetting(tx: Tx, key: SettingKey, value: unknown) {
   const json = JSON.stringify(value);
@@ -261,6 +282,7 @@ function insertDefaults(tx: Tx, language: string, currency: string) {
     id: createId(),
     name: c.name[lang],
     type: c.type,
+    spendingGroup: c.type === 'expense' ? (c.group ?? 'need') : null,
     icon: c.icon,
     color: c.color,
     sortOrder: sortByType[c.type]++,
@@ -294,4 +316,31 @@ function recolorDefaults(tx: Tx) {
     .set({ color: CASH_COLOR })
     .where(inArray(accounts.color, LEGACY_CASH_COLORS))
     .run();
+}
+
+/**
+ * Default group of an expense category: the seed's group for a default
+ * category (recognized by its icon, unique among default expense categories),
+ * otherwise "need".
+ */
+export function defaultGroupForIcon(icon: string): SpendingGroup {
+  return DEFAULT_CATEGORIES.find((c) => c.type === 'expense' && c.icon === icon)?.group ?? 'need';
+}
+
+/**
+ * v3: gives every expense category without a group its default one (also
+ * used after restoring a backup made before groups existed).
+ */
+export function assignDefaultGroups(tx: Tx) {
+  const rows = tx
+    .select({ id: categories.id, icon: categories.icon })
+    .from(categories)
+    .where(and(eq(categories.type, 'expense'), isNull(categories.spendingGroup)))
+    .all();
+  for (const row of rows) {
+    tx.update(categories)
+      .set({ spendingGroup: defaultGroupForIcon(row.icon) })
+      .where(eq(categories.id, row.id))
+      .run();
+  }
 }

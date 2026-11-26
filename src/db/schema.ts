@@ -16,6 +16,11 @@ export const categories = sqliteTable('categories', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   type: text('type', { enum: ['expense', 'income'] }).notNull(),
+  /**
+   * Spending group (needs / wants / savings) for expense categories;
+   * NULL for income categories.
+   */
+  spendingGroup: text('spending_group', { enum: ['need', 'want', 'save'] }),
   icon: text('icon').notNull(),
   color: text('color').notNull(),
   sortOrder: integer('sort_order').notNull().default(0),
@@ -117,4 +122,5 @@ export type Budget = typeof budgets.$inferSelect;
 export type Recurring = typeof recurring.$inferSelect;
 export type Frequency = Recurring['frequency'];
 export type CategoryType = Category['type'];
+export type SpendingGroup = NonNullable<Category['spendingGroup']>;
 export type TransactionType = Transaction['type'];

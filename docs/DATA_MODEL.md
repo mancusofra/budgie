@@ -37,16 +37,17 @@ settings (key/value)
 
 ### `categories`
 
-| Column     | Type                       | Notes                 |
-| ---------- | -------------------------- | --------------------- |
-| id         | TEXT PK                    |                       |
-| name       | TEXT NOT NULL              |                       |
-| type       | TEXT NOT NULL              | `expense` \| `income` |
-| icon       | TEXT NOT NULL              |                       |
-| color      | TEXT NOT NULL              | hex                   |
-| sort_order | INTEGER NOT NULL DEFAULT 0 |                       |
-| archived   | INTEGER NOT NULL DEFAULT 0 |                       |
-| created_at | INTEGER NOT NULL           |                       |
+| Column         | Type                       | Notes                                       |
+| -------------- | -------------------------- | ------------------------------------------- |
+| id             | TEXT PK                    |                                             |
+| name           | TEXT NOT NULL              |                                             |
+| type           | TEXT NOT NULL              | `expense` \| `income`                       |
+| spending_group | TEXT                       | `need` \| `want` \| `save`; NULL for income |
+| icon           | TEXT NOT NULL              |                                             |
+| color          | TEXT NOT NULL              | hex                                         |
+| sort_order     | INTEGER NOT NULL DEFAULT 0 |                                             |
+| archived       | INTEGER NOT NULL DEFAULT 0 |                                             |
+| created_at     | INTEGER NOT NULL           |                                             |
 
 ### `transactions`
 
@@ -104,10 +105,10 @@ past months stay as they were.
 
 ### `settings`
 
-| Column | Type          | Notes                                                                                    |
-| ------ | ------------- | ---------------------------------------------------------------------------------------- |
-| key    | TEXT PK       | `currency`, `theme`, `language`, `weekStart`, `monthStartDay`, `appLock`, `statsLayout`… |
-| value  | TEXT NOT NULL | serialized JSON                                                                          |
+| Column | Type          | Notes                                                                                              |
+| ------ | ------------- | -------------------------------------------------------------------------------------------------- |
+| key    | TEXT PK       | `currency`, `theme`, `language`, `weekStart`, `monthStartDay`, `appLock`, `statsLayout`, `groups…` |
+| value  | TEXT NOT NULL | serialized JSON                                                                                    |
 
 ## Default categories (seed)
 
@@ -117,6 +118,12 @@ Created in the device language (English or Italian).
 Sports, Pets, Toiletry, Communications, Taxi, Other.
 
 **Income:** Salary, Savings, Gifts, Other.
+
+**Spending groups:** Needs = Food, House, Transport, Car, Bills, Health, Toiletry, Communications,
+Pets; Wants = Entertainment, Eating out, Clothes, Gifts, Sports, Taxi, Other. New expense
+categories start in Needs. Turning groups on adds an "Investments" expense category in Savings
+(reusing one with the same name if it exists). Savings also include what was not spent in the
+period (income − expenses, when positive).
 
 ## Main queries
 
@@ -129,6 +136,7 @@ transfers` (incoming transfers use `to_amount` when present).
 
 ## Backup format
 
-A JSON file `{ format: "budgie-backup", version: 2, exportedAt, data: { <table>: rows[] } }` with
+A JSON file `{ format: "budgie-backup", version: 3, exportedAt, data: { <table>: rows[] } }` with
 every table; restore replaces all data in a single transaction. Version 1 backups (no recurring
-rules) and backups made when the app was called Moneta (`moneta-backup`) are still accepted.
+rules), version 2 backups (no spending groups: categories get the default group) and backups made
+when the app was called Moneta (`moneta-backup`) are still accepted.
