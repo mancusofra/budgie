@@ -119,7 +119,8 @@ The feature that defines the experience: it has to be very fast.
       to do
 - [ ] Automatic backup to Google Drive, then optional sync between devices
 - [x] PDF report by period: summary, spending by category, month-by-month detail
-- [ ] Spending groups (needs / wants / savings), per category with per-transaction override
+- [x] Spending groups (needs / wants / savings): group per category, adjustable shares, Stats
+      section, optional Home ring (per-transaction override postponed)
 - [ ] Web version / PWA
 - [ ] Home screen widgets on iOS/Android for quick entry
 - [ ] Automatic exchange rates

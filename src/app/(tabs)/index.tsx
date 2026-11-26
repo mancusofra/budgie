@@ -38,17 +38,21 @@ import {
   pointAt,
   type Point,
 } from '@/features/transactions/ring-layout';
+import { GroupsCenter, GroupsRing, GROUPS_RING_SPACE } from '@/features/groups/groups-ring';
+import { useGroupsSummary } from '@/features/groups/hooks';
+import { useSetSetting, useSettings } from '@/features/settings/hooks';
 import { useTheme } from '@/hooks/use-theme';
 import { deviceLocale } from '@/i18n';
 import { formatMoney } from '@/lib/money';
 import { useUIStore } from '@/store/ui';
 import { AnimationMs, Spacing } from '@/theme';
 
-type CenterMode = 'balance' | 'expense' | 'income';
+type CenterMode = 'balance' | 'expense' | 'income' | 'groups';
 const NEXT_MODE: Record<CenterMode, CenterMode> = {
   balance: 'expense',
   expense: 'income',
   income: 'balance',
+  groups: 'balance',
 };
 const ICON_SIZE = 44;
 const ICON_GAP = Spacing.two;
@@ -63,7 +67,25 @@ export default function HomeScreen() {
   const shift = useUIStore((s) => s.shiftPeriod);
 
   const { period, range } = useSelectedPeriod();
-  const [mode, setMode] = useState<CenterMode>('balance');
+  // Groups ring (Settings → Spending groups → Show on Home)
+  const settings = useSettings();
+  const setSetting = useSetSetting();
+  const ringOn = settings.groupsEnabled === true && settings.groupsOnHome === true;
+  const { summary: groupsSummary, shares } = useGroupsSummary(period, range, scope);
+  // The center starts from the last choice between balance and groups
+  const [chosenMode, setChosenMode] = useState<CenterMode>();
+  const savedMode: CenterMode = ringOn && settings.homeCenter === 'groups' ? 'groups' : 'balance';
+  const current = chosenMode ?? savedMode;
+  const mode: CenterMode = current === 'groups' && !ringOn ? 'balance' : current;
+  const setMode = (next: CenterMode) => {
+    setChosenMode(next);
+    if (ringOn && (next === 'groups' || mode === 'groups')) {
+      setSetting('homeCenter', next === 'groups' ? 'groups' : 'balance');
+    }
+  };
+  // With the ring the cycle is balance → expenses → income → groups
+  const nextMode = (m: CenterMode): CenterMode =>
+    ringOn && m === 'income' ? 'groups' : NEXT_MODE[m];
   const chartType = mode === 'income' ? 'income' : 'expense';
 
   // Around the donut are the categories of the type shown (expenses or income)
@@ -110,7 +132,9 @@ export default function HomeScreen() {
     ICON_SIZE / 2 + Spacing.half,
   );
 
-  const donutThickness = Math.max(14, geometry.donutSize * 0.075);
+  // With the groups ring the donut shrinks to leave room for it
+  const donutSize = ringOn ? geometry.donutSize - GROUPS_RING_SPACE * 2 : geometry.donutSize;
+  const donutThickness = Math.max(14, donutSize * 0.075);
   const setOpenCategory = useUIStore((s) => s.setOpenCategory);
 
   // Tap on the ring = list opened on that category; tap in the center = switch view.
@@ -131,7 +155,7 @@ export default function HomeScreen() {
         setOpenCategory(arc.key);
         router.navigate('/transactions');
       } else {
-        setMode(NEXT_MODE[mode]);
+        setMode(nextMode(mode));
       }
     });
   };
@@ -155,8 +179,20 @@ export default function HomeScreen() {
   const centerAmount =
     mode === 'balance' ? totals.balance : mode === 'expense' ? totals.expense : totals.income;
   const centerLabel = t(
-    mode === 'balance' ? 'home.balance' : mode === 'expense' ? 'home.expenses' : 'home.income',
+    mode === 'groups'
+      ? 'groups.title'
+      : mode === 'balance'
+        ? 'home.balance'
+        : mode === 'expense'
+          ? 'home.expenses'
+          : 'home.income',
   );
+  const centerA11y =
+    mode === 'groups'
+      ? `${centerLabel}: ${groupsSummary.groups
+          .map((g) => `${t(`groups.${g.group}`)} ${money(g.amount)}`)
+          .join(', ')}`
+      : `${centerLabel} ${money(centerAmount)}`;
 
   // On opening, positions change several times in a few moments (measuring the
   // space, totals arriving): icons are put in place without animation,
@@ -229,55 +265,75 @@ export default function HomeScreen() {
             ))}
           </Svg>
 
+          {ringOn && (
+            <View
+              pointerEvents="none"
+              style={{
+                position: 'absolute',
+                left: geometry.center.x - geometry.donutSize / 2,
+                top: geometry.center.y - geometry.donutSize / 2,
+                width: geometry.donutSize,
+                height: geometry.donutSize,
+              }}>
+              <GroupsRing size={geometry.donutSize} summary={groupsSummary} shares={shares} />
+            </View>
+          )}
+
           <Pressable
             ref={donutRef}
             onPress={onDonutPress}
             accessibilityRole="button"
-            accessibilityLabel={`${centerLabel} ${money(centerAmount)}`}
+            accessibilityLabel={centerA11y}
             style={{
               position: 'absolute',
-              left: geometry.center.x - geometry.donutSize / 2,
-              top: geometry.center.y - geometry.donutSize / 2,
+              left: geometry.center.x - donutSize / 2,
+              top: geometry.center.y - donutSize / 2,
             }}>
             <DonutChart
               segments={segments}
-              size={geometry.donutSize}
+              size={donutSize}
               thickness={donutThickness}
               trackColor={theme.surface}>
-              <Text variant="overline" color="textSecondary">
-                {centerLabel}
-              </Text>
-              <Text
-                numberOfLines={1}
-                adjustsFontSizeToFit
-                style={[
-                  styles.centerAmount,
-                  {
-                    color:
-                      mode === 'expense'
-                        ? theme.expense
-                        : mode === 'income'
-                          ? theme.income
-                          : theme.text,
-                  },
-                ]}>
-                {money(centerAmount)}
-              </Text>
-              {mode === 'balance' && (
-                <View style={styles.centerTotals}>
-                  <Text variant="caption" color="textSecondary" numberOfLines={1}>
-                    <Text variant="caption" style={{ color: theme.expense }}>
-                      ↓{' '}
-                    </Text>
-                    {money(totals.expense)}
+              {mode === 'groups' ? (
+                <GroupsCenter summary={groupsSummary} />
+              ) : (
+                <>
+                  <Text variant="overline" color="textSecondary">
+                    {centerLabel}
                   </Text>
-                  <Text variant="caption" color="textSecondary" numberOfLines={1}>
-                    <Text variant="caption" style={{ color: theme.income }}>
-                      ↑{' '}
-                    </Text>
-                    {money(totals.income)}
+                  <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    style={[
+                      styles.centerAmount,
+                      {
+                        color:
+                          mode === 'expense'
+                            ? theme.expense
+                            : mode === 'income'
+                              ? theme.income
+                              : theme.text,
+                      },
+                    ]}>
+                    {money(centerAmount)}
                   </Text>
-                </View>
+                  {mode === 'balance' && (
+                    <View style={styles.centerTotals}>
+                      <Text variant="caption" color="textSecondary" numberOfLines={1}>
+                        <Text variant="caption" style={{ color: theme.expense }}>
+                          ↓{' '}
+                        </Text>
+                        {money(totals.expense)}
+                      </Text>
+                      <Text variant="caption" color="textSecondary" numberOfLines={1}>
+                        <Text variant="caption" style={{ color: theme.income }}>
+                          ↑{' '}
+                        </Text>
+                        {money(totals.income)}
+                      </Text>
+                    </View>
+                  )}
+                </>
               )}
             </DonutChart>
           </Pressable>

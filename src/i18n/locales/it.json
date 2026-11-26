@@ -370,6 +370,8 @@
     "short": "mancano {{amount}}",
     "left": "restano {{amount}}",
     "shareOfTarget": "{{share}}% · obiettivo {{target}}%",
-    "shareOfSpending": "{{share}}% delle spese"
+    "shareOfSpending": "{{share}}% delle spese",
+    "homeTitle": "Speso / obiettivo",
+    "homeTitleNoBase": "Quote delle spese"
   }
 }

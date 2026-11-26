@@ -370,6 +370,8 @@
     "short": "{{amount}} to go",
     "left": "{{amount}} left",
     "shareOfTarget": "{{share}}% · target {{target}}%",
-    "shareOfSpending": "{{share}}% of spending"
+    "shareOfSpending": "{{share}}% of spending",
+    "homeTitle": "Spent / target",
+    "homeTitleNoBase": "Share of spending"
   }
 }
