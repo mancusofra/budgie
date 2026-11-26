@@ -217,7 +217,8 @@
       "summary": "Summary",
       "chart": "Spending over time",
       "categories": "Spending by category",
-      "budgets": "Budgets"
+      "budgets": "Budgets",
+      "groups": "Spending groups"
     },
     "allHidden": "All sections are hidden.",
     "chooseSections": "Choose sections",
@@ -349,6 +350,26 @@
     "referenceIncomeHint": "Monthly income used for the targets when a period has no income (for example when looking at a single week).",
     "referenceIncomeNone": "None",
     "referenceIncomeRemove": "Remove",
-    "showOnHome": "Show on Home"
+    "showOnHome": "Show on Home",
+    "edit": "Edit",
+    "split": "Split",
+    "splitHint": "Drag the handles: the total always stays at 100%.",
+    "presets": "Presets",
+    "suggested": "Suggested",
+    "suggestedHint": "Suggested: how you split your income over the last 3 months.",
+    "barLabel": "Groups: {{parts}}. Tap to change the split",
+    "incomeMark": "income",
+    "baseIncome": "of {{amount}} income",
+    "baseReference": "of {{amount}} reference income",
+    "noBase": "No income in this period.",
+    "setReference": "Set a reference income",
+    "overIncome": "You spent {{amount}} more than your income",
+    "over": "+{{amount}} over",
+    "warning": "{{percent}}%",
+    "reached": "reached",
+    "short": "{{amount}} to go",
+    "left": "{{amount}} left",
+    "shareOfTarget": "{{share}}% · target {{target}}%",
+    "shareOfSpending": "{{share}}% of spending"
   }
 }

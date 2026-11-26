@@ -217,7 +217,8 @@
       "summary": "Riepilogo",
       "chart": "Andamento spese",
       "categories": "Spese per categoria",
-      "budgets": "Budget"
+      "budgets": "Budget",
+      "groups": "Gruppi di spesa"
     },
     "allHidden": "Tutte le sezioni sono nascoste.",
     "chooseSections": "Scegli le sezioni",
@@ -349,6 +350,26 @@
     "referenceIncomeHint": "Entrate mensili usate per gli obiettivi quando nel periodo non ci sono entrate (per esempio guardando una sola settimana).",
     "referenceIncomeNone": "Nessuno",
     "referenceIncomeRemove": "Rimuovi",
-    "showOnHome": "Mostra in Home"
+    "showOnHome": "Mostra in Home",
+    "edit": "Modifica",
+    "split": "Ripartizione",
+    "splitHint": "Trascina le maniglie: la somma resta sempre 100%.",
+    "presets": "Preset",
+    "suggested": "Suggerito",
+    "suggestedHint": "Suggerito: come hai diviso le entrate negli ultimi 3 mesi.",
+    "barLabel": "Gruppi: {{parts}}. Tocca per cambiare la ripartizione",
+    "incomeMark": "entrate",
+    "baseIncome": "su {{amount}} di entrate",
+    "baseReference": "su {{amount}} di reddito di riferimento",
+    "noBase": "Nessuna entrata nel periodo.",
+    "setReference": "Imposta un reddito di riferimento",
+    "overIncome": "Hai speso {{amount}} più delle entrate",
+    "over": "+{{amount}} oltre",
+    "warning": "{{percent}}%",
+    "reached": "raggiunto",
+    "short": "mancano {{amount}}",
+    "left": "restano {{amount}}",
+    "shareOfTarget": "{{share}}% · obiettivo {{target}}%",
+    "shareOfSpending": "{{share}}% delle spese"
   }
 }

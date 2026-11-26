@@ -26,7 +26,9 @@ import {
 } from '@/features/settings/hooks';
 import { deviceLocale } from '@/i18n';
 import { useTheme } from '@/hooks/use-theme';
+import { normalizeShares } from '@/lib/groups';
 import { formatMoney } from '@/lib/money';
+import { normalizeStatsLayout, showFirst } from '@/lib/stats-layout';
 import { Radius, Spacing } from '@/theme';
 
 export default function SettingsScreen() {
@@ -55,6 +57,11 @@ export default function SettingsScreen() {
     await setSetting('groupsEnabled', value);
     if (value && firstTime) {
       await categoryActions.ensureSavingsCategory(t('groups.savingsCategory'));
+      // The groups section goes on top of Stats
+      await setSetting(
+        'statsLayout',
+        showFirst(normalizeStatsLayout(settings.statsLayout), 'groups'),
+      );
       router.push('/groups-setup');
     }
   };
@@ -226,6 +233,15 @@ export default function SettingsScreen() {
             </View>
             {groupsEnabled && (
               <>
+                <RowSeparator />
+                <NavRow
+                  title={t('groups.split')}
+                  value={normalizeShares(settings.groupShares).join(' / ')}
+                  onPress={() => router.push('/group-shares')}
+                  leading={
+                    <MaterialCommunityIcons name="tune-variant" size={22} color={theme.primary} />
+                  }
+                />
                 <RowSeparator />
                 <NavRow
                   title={t('groups.referenceIncome')}

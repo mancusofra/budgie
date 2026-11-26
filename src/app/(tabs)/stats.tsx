@@ -18,6 +18,8 @@ import { hasGlass, Surface } from '@/components/ui/surface';
 import { Text } from '@/components/ui/text';
 import { useAccountScope } from '@/features/accounts/hooks';
 import { useCategories } from '@/features/categories/hooks';
+import { GroupsCard } from '@/features/groups/groups-card';
+import { useGroupsSummary } from '@/features/groups/hooks';
 import { useCurrency, useSetSetting, useSettings } from '@/features/settings/hooks';
 import {
   useBudgetProgress,
@@ -38,6 +40,7 @@ import {
   normalizeStatsLayout,
   toggleHidden,
   visibleSections,
+  withoutSections,
   type StatsLayout,
   type StatsSection,
 } from '@/lib/stats-layout';
@@ -57,8 +60,27 @@ export default function StatsScreen() {
   // Customizable layout (order and hidden sections), saved in the settings
   const settings = useSettings();
   const setSetting = useSetSetting();
-  const layout = useMemo(() => normalizeStatsLayout(settings.statsLayout), [settings.statsLayout]);
-  const saveLayout = (next: StatsLayout) => setSetting('statsLayout', next);
+  const groupsEnabled = settings.groupsEnabled === true;
+  const savedLayout = useMemo(
+    () => normalizeStatsLayout(settings.statsLayout),
+    [settings.statsLayout],
+  );
+  // Without groups their section doesn't exist (not even among the hidden ones)
+  const layout = useMemo(
+    () => (groupsEnabled ? savedLayout : withoutSections(savedLayout, ['groups'])),
+    [groupsEnabled, savedLayout],
+  );
+  // The groups section keeps its place in the saved layout even while it's off
+  const saveLayout = (next: StatsLayout) =>
+    setSetting(
+      'statsLayout',
+      groupsEnabled
+        ? next
+        : normalizeStatsLayout({
+            order: [...next.order, ...savedLayout.order.filter((s) => s === 'groups')],
+            hidden: [...next.hidden, ...savedLayout.hidden.filter((s) => s === 'groups')],
+          }),
+    );
   const editing = useUIStore((s) => s.editingLayout);
   const setEditing = useUIStore((s) => s.setEditingLayout);
   // Leaving the screen always ends editing (the tab bar must come back)
@@ -105,6 +127,9 @@ export default function StatsScreen() {
     return rows.map((r) => ({ ...r, share: sum > 0 ? r.total / sum : 0 }));
   }, [stats, categories]);
 
+  // Spending groups
+  const { summary: groupsSummary, shares } = useGroupsSummary(period, range, scope);
+
   // Budget
   const { month, monthKey, progress } = useBudgetProgress(period, range, mainScope);
   const monthLabel = month.from ? format(month.from, 'LLLL yyyy', { locale }) : '';
@@ -122,6 +147,7 @@ export default function StatsScreen() {
   );
 
   const sections: Record<StatsSection, ReactNode> = {
+    groups: <GroupsCard summary={groupsSummary} shares={shares} money={money} />,
     summary: (
       <View style={styles.tiles}>
         {tile(
