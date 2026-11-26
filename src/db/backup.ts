@@ -7,13 +7,17 @@ import {
   settings,
   transactions,
 } from './schema';
+import { assignDefaultGroups } from './seed';
 import type { AppDatabase } from './types';
 
 export const BACKUP_FORMAT = 'budgie-backup';
 /** Backups made when the app was called Moneta: same content, still restorable. */
 const LEGACY_BACKUP_FORMATS = ['moneta-backup'];
-/** 2: recurring rules added (version 1 backups are restored without them). */
-export const BACKUP_VERSION = 2;
+/**
+ * 2: recurring rules added (version 1 backups are restored without them).
+ * 3: spending group on categories (older backups get it from the seed defaults).
+ */
+export const BACKUP_VERSION = 3;
 
 /** Tables in insertion order (respects foreign keys). */
 const TABLES = {
@@ -102,5 +106,7 @@ export function restoreBackup(db: AppDatabase, backup: Backup) {
           .run();
       }
     }
+    // Backups made before spending groups: categories without a group get the default one
+    assignDefaultGroups(tx);
   });
 }
