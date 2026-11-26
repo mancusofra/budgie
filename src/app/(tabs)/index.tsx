@@ -185,7 +185,13 @@ export default function HomeScreen() {
           onPress={() => openNew(chartType, c)}
           hitSlop={Spacing.one}
           style={({ pressed }) => pressed && { opacity: 0.6 }}>
-          <CategoryIcon icon={c.icon} color={c.color} size={ICON_SIZE} filled={spent.has(c.id)} />
+          <CategoryIcon
+            icon={c.icon}
+            color={c.color}
+            size={ICON_SIZE}
+            filled={spent.has(c.id)}
+            group={c.spendingGroup}
+          />
         </Pressable>
       </Animated.View>
     );

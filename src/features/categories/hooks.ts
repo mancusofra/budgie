@@ -28,5 +28,6 @@ export const categoryActions = {
   remove: (id: string) => repos.categories.remove(id),
   setArchived: repos.categories.setArchived,
   reorder: repos.categories.reorder,
+  ensureSavingsCategory: (name: string) => repos.categories.ensureSavingsCategory(name),
   transactionCount: (id: string) => repos.categories.transactionCount(id),
 };

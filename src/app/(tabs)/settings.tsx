@@ -14,12 +14,19 @@ import type { Backup } from '@/db/backup';
 import { db } from '@/db/client';
 import { generateDemoTransactions } from '@/db/demo';
 import { appVersion } from '@/features/about/changelog';
+import { categoryActions } from '@/features/categories/hooks';
 import { useRecurringList } from '@/features/recurring/hooks';
 import { authenticate } from '@/features/settings/app-lock';
 import { useDataTransfer } from '@/features/settings/data-transfer';
-import { useResetDatabase, useSetSetting, useSettings } from '@/features/settings/hooks';
+import {
+  useCurrency,
+  useResetDatabase,
+  useSetSetting,
+  useSettings,
+} from '@/features/settings/hooks';
 import { deviceLocale } from '@/i18n';
 import { useTheme } from '@/hooks/use-theme';
+import { formatMoney } from '@/lib/money';
 import { Radius, Spacing } from '@/theme';
 
 export default function SettingsScreen() {
@@ -36,6 +43,19 @@ export default function SettingsScreen() {
     } catch (e) {
       console.error(e);
       Alert.alert(errorMessage);
+    }
+  };
+
+  const currency = useCurrency();
+  const groupsEnabled = settings.groupsEnabled === true;
+
+  // The first time groups are turned on: savings category and setup sheet
+  const toggleGroups = async (value: boolean) => {
+    const firstTime = settings.groupsEnabled === undefined;
+    await setSetting('groupsEnabled', value);
+    if (value && firstTime) {
+      await categoryActions.ensureSavingsCategory(t('groups.savingsCategory'));
+      router.push('/groups-setup');
     }
   };
 
@@ -188,6 +208,53 @@ export default function SettingsScreen() {
               />
             </View>
           </Surface>
+        </View>
+
+        <View style={styles.section}>
+          <Text variant="overline" color="textSecondary">
+            {t('groups.title')}
+          </Text>
+          <Surface style={styles.listCard}>
+            <View style={styles.row}>
+              <MaterialCommunityIcons name="chart-donut" size={22} color={theme.primary} />
+              <Text style={[styles.label, styles.flex]}>{t('groups.title')}</Text>
+              <Switch
+                value={groupsEnabled}
+                onValueChange={toggleGroups}
+                accessibilityLabel={t('groups.title')}
+              />
+            </View>
+            {groupsEnabled && (
+              <>
+                <RowSeparator />
+                <NavRow
+                  title={t('groups.referenceIncome')}
+                  value={
+                    settings.referenceIncome
+                      ? formatMoney(settings.referenceIncome, currency, deviceLocale)
+                      : t('groups.referenceIncomeNone')
+                  }
+                  onPress={() => router.push('/reference-income')}
+                  leading={
+                    <MaterialCommunityIcons name="cash-check" size={22} color={theme.primary} />
+                  }
+                />
+                <RowSeparator />
+                <View style={styles.row}>
+                  <MaterialCommunityIcons name="home-outline" size={22} color={theme.primary} />
+                  <Text style={[styles.label, styles.flex]}>{t('groups.showOnHome')}</Text>
+                  <Switch
+                    value={settings.groupsOnHome === true}
+                    onValueChange={(v) => setSetting('groupsOnHome', v)}
+                    accessibilityLabel={t('groups.showOnHome')}
+                  />
+                </View>
+              </>
+            )}
+          </Surface>
+          <Text variant="caption" color="textSecondary">
+            {t('groups.hint')}
+          </Text>
         </View>
 
         <View style={styles.section}>

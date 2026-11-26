@@ -25,6 +25,14 @@ describe.each(Object.entries(Colors))('tema %s', (_, theme) => {
     expect(contrastRatio(color, blend(color, theme.background, 0.16))).toBeGreaterThanOrEqual(AA);
   });
 
+  it.each(['groupNeed', 'groupWant', 'groupSave'] as const)(
+    'group color %s is visible on the background and under its symbol (graphics, 3:1)',
+    (name) => {
+      expect(contrastRatio(theme[name], theme.background)).toBeGreaterThanOrEqual(3);
+      expect(contrastRatio(theme.textOnColor, theme[name])).toBeGreaterThanOrEqual(3);
+    },
+  );
+
   it.each(['primary', 'expense', 'income'] as const)(
     'textOnColor è leggibile sui pulsanti pieni %s',
     (name) => {

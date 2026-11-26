@@ -19,6 +19,10 @@ export const Colors = {
     income: '#306E4E',
     /** "Warning" state (budget above 80%): always with an icon and a label. */
     warning: '#865817',
+    /** Spending groups: graphics only (badges, bars), always with a symbol or label. */
+    groupNeed: '#4A6FA5',
+    groupWant: '#C0793A',
+    groupSave: '#2E8A6A',
   },
   dark: {
     text: '#F2F2F4',
@@ -34,6 +38,9 @@ export const Colors = {
     expense: '#E0807A',
     income: '#6CC196',
     warning: '#E0A955',
+    groupNeed: '#8FB0E0',
+    groupWant: '#E6A96E',
+    groupSave: '#6CC1A0',
   },
 } as const;
 

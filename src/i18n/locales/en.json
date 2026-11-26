@@ -330,5 +330,25 @@
     "monthTotal": "Month total",
     "empty": "No transactions",
     "preview": "Preview and print"
+  },
+  "groups": {
+    "title": "Spending groups",
+    "need": "Needs",
+    "want": "Wants",
+    "save": "Savings",
+    "group": "Group",
+    "savingsCategory": "Investments",
+    "hint": "Needs, Wants and Savings: how much of your income goes to each group. Savings also include what you don't spend.",
+    "setupTitle": "How we split your categories",
+    "setupHint": "Tap a category to move it to the next group. You can change it anytime from the category's page.",
+    "setupEmpty": "No categories",
+    "moveHint": "Move to {{group}}",
+    "setupShares": "Starting from {{shares}}: you can change the shares from Stats.",
+    "setupDone": "Looks good",
+    "referenceIncome": "Reference income",
+    "referenceIncomeHint": "Monthly income used for the targets when a period has no income (for example when looking at a single week).",
+    "referenceIncomeNone": "None",
+    "referenceIncomeRemove": "Remove",
+    "showOnHome": "Show on Home"
   }
 }

@@ -201,7 +201,12 @@ export default function StatsScreen() {
               router.navigate('/transactions');
             }}
             style={({ pressed }) => [styles.rankRow, pressed && { opacity: 0.6 }]}>
-            <CategoryIcon icon={category.icon} color={category.color} size={32} />
+            <CategoryIcon
+              icon={category.icon}
+              color={category.color}
+              size={32}
+              group={category.spendingGroup}
+            />
             <View style={styles.flex}>
               <View style={styles.rankTop}>
                 <Text numberOfLines={1} style={[styles.flex, styles.rankName]}>

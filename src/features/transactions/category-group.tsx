@@ -56,7 +56,12 @@ export function CategoryGroup({
           size={20}
           color={theme.textSecondary}
         />
-        <CategoryIcon icon={category.icon} color={category.color} size={38} />
+        <CategoryIcon
+          icon={category.icon}
+          color={category.color}
+          size={38}
+          group={category.spendingGroup}
+        />
         <View style={styles.name}>
           <Text numberOfLines={1} style={styles.nameText}>
             {category.name}

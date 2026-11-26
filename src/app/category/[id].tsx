@@ -6,6 +6,7 @@ import { Alert, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
+import { GroupPicker } from '@/components/ui/group-picker';
 import { ColorPicker, IconPicker } from '@/components/ui/pickers';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { Surface } from '@/components/ui/surface';
@@ -14,6 +15,8 @@ import type { Category, CategoryType } from '@/db/schema';
 import { categoryActions, useCategory } from '@/features/categories/hooks';
 import { useStackHeader } from '@/hooks/use-stack-header';
 import { useTheme } from '@/hooks/use-theme';
+import type { Group } from '@/lib/groups';
+import { useUIStore } from '@/store/ui';
 import { CATEGORY_ICONS, PICKER_COLORS } from '@/theme/palette';
 import { Radius, Spacing } from '@/theme';
 
@@ -47,6 +50,9 @@ function CategoryForm({
   const [type, setType] = useState<CategoryType>(category?.type ?? initialType);
   const [color, setColor] = useState<string>(category?.color ?? PICKER_COLORS[0]);
   const [icon, setIcon] = useState<string>(category?.icon ?? CATEGORY_ICONS[0]);
+  const [group, setGroup] = useState<Group>(category?.spendingGroup ?? 'need');
+  const groupsEnabled = useUIStore((s) => s.groupsEnabled);
+  const showGroup = groupsEnabled && type === 'expense';
   const [error, setError] = useState<string>();
 
   const save = async () => {
@@ -55,8 +61,10 @@ function CategoryForm({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       return;
     }
-    if (category) await categoryActions.update(category.id, { name, color, icon });
-    else await categoryActions.create({ name, type, color, icon });
+    // The group is saved only when visible: with groups off it stays as it is
+    const groupPatch = showGroup ? { spendingGroup: group } : {};
+    if (category) await categoryActions.update(category.id, { name, color, icon, ...groupPatch });
+    else await categoryActions.create({ name, type, color, icon, ...groupPatch });
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
@@ -99,7 +107,13 @@ function CategoryForm({
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag">
         <View style={styles.preview}>
-          <CategoryIcon icon={icon} color={color} size={72} filled />
+          <CategoryIcon
+            icon={icon}
+            color={color}
+            size={72}
+            filled
+            group={showGroup ? group : null}
+          />
           <Text variant="subtitle" numberOfLines={1}>
             {name.trim() || t('categories.namePlaceholder')}
           </Text>
@@ -136,6 +150,14 @@ function CategoryForm({
                 value={type}
                 onChange={setType}
               />
+            </>
+          )}
+          {showGroup && (
+            <>
+              <Text variant="overline" color="textSecondary">
+                {t('groups.group')}
+              </Text>
+              <GroupPicker value={group} onChange={setGroup} />
             </>
           )}
         </Surface>

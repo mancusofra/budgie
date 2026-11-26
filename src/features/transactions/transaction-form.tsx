@@ -227,7 +227,13 @@ export function TransactionForm({ type, initial, onSubmit, onDelete, recurringId
               accessibilityRole="button"
               onPress={() => pickCategory(c)}
               style={({ pressed }) => [styles.gridItem, pressed && { opacity: 0.6 }]}>
-              <CategoryIcon icon={c.icon} color={c.color} size={52} filled />
+              <CategoryIcon
+                icon={c.icon}
+                color={c.color}
+                size={52}
+                filled
+                group={c.spendingGroup}
+              />
               <Text variant="caption" numberOfLines={1}>
                 {c.name}
               </Text>
@@ -299,7 +305,13 @@ export function TransactionForm({ type, initial, onSubmit, onDelete, recurringId
                 onPress={() => setChoosingCategory(true)}
                 style={styles.selected}
                 accessibilityRole="button">
-                <CategoryIcon icon={category.icon} color={category.color} size={40} filled />
+                <CategoryIcon
+                  icon={category.icon}
+                  color={category.color}
+                  size={40}
+                  filled
+                  group={category.spendingGroup}
+                />
                 <Text numberOfLines={1} style={styles.selectedName}>
                   {category.name}
                 </Text>

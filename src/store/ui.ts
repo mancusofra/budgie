@@ -13,6 +13,8 @@ type UIState = {
   openCategory?: { id: string; at: number };
   /** Layout editing in progress (Stats): the tab bar is hidden. */
   editingLayout: boolean;
+  /** Spending groups on (mirrors the setting, read by every category icon). */
+  groupsEnabled: boolean;
   setPeriodKind: (kind: Exclude<PeriodKind, 'custom'>) => void;
   setCustomPeriod: (from: Date, to: Date) => void;
   shiftPeriod: (direction: -1 | 1) => void;
@@ -20,6 +22,7 @@ type UIState = {
   setAccountFilter: (id: string) => void;
   setOpenCategory: (id: string) => void;
   setEditingLayout: (editing: boolean) => void;
+  setGroupsEnabled: (enabled: boolean) => void;
 };
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -27,6 +30,7 @@ export const useUIStore = create<UIState>()((set) => ({
   accountFilter: 'all',
   openCategory: undefined,
   editingLayout: false,
+  groupsEnabled: false,
   setPeriodKind: (kind) => set((s) => ({ period: { kind, anchor: s.period.anchor } })),
   setCustomPeriod: (from, to) => set({ period: customPeriod(from, to) }),
   shiftPeriod: (direction) => set((s) => ({ period: shiftPeriod(s.period, direction) })),
@@ -37,4 +41,5 @@ export const useUIStore = create<UIState>()((set) => ({
   setAccountFilter: (accountFilter) => set({ accountFilter }),
   setOpenCategory: (id) => set({ openCategory: { id, at: Date.now() } }),
   setEditingLayout: (editingLayout) => set({ editingLayout }),
+  setGroupsEnabled: (groupsEnabled) => set({ groupsEnabled }),
 }));
