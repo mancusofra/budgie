@@ -27,7 +27,7 @@ export function GroupsCard({ summary, shares, money }: Props) {
   const total = groups.reduce((a, g) => a + g.amount, 0);
   // Bar scale: the base, or more when spending goes beyond it
   const scale = Math.max(base ?? 0, total, 1);
-  const pct = (v: number) => `${(v / scale) * 100}%` as const;
+  const frac = (v: number) => v / scale;
   const overIncome = baseSource === 'income' && summary.overspent > 0;
   const marks = base
     ? [
@@ -53,14 +53,14 @@ export function GroupsCard({ summary, shares, money }: Props) {
         accessibilityLabel={t('groups.barLabel', {
           parts: groups.map((g) => `${t(groupLabelKey(g.group))} ${money(g.amount)}`).join(', '),
         })}>
-        <View style={styles.barArea}>
+        <View style={[styles.barArea, overIncome && styles.barAreaTwoRows]}>
           <View style={[styles.bar, { backgroundColor: theme.backgroundSelected }]}>
             {groups.map((g) =>
               g.amount > 0 ? (
                 <View
                   key={g.group}
                   style={{
-                    width: pct(g.amount),
+                    width: `${frac(g.amount) * 100}%`,
                     backgroundColor: theme[GROUP_META[g.group].color],
                   }}
                 />
@@ -68,10 +68,16 @@ export function GroupsCard({ summary, shares, money }: Props) {
             )}
           </View>
           {marks.map((m) => (
-            <Mark key={m.label} left={pct(m.at)} label={m.label} color={theme.text} />
+            <Mark key={m.label} at={frac(m.at)} label={m.label} color={theme.text} />
           ))}
           {overIncome && base ? (
-            <Mark left={pct(base)} label={t('groups.incomeMark')} color={theme.expense} strong />
+            <Mark
+              at={frac(base)}
+              label={t('groups.incomeMark')}
+              color={theme.expense}
+              strong
+              row={1}
+            />
           ) : null}
         </View>
       </Pressable>
@@ -110,23 +116,38 @@ export function GroupsCard({ summary, shares, money }: Props) {
 }
 
 function Mark({
-  left,
+  at,
   label,
   color,
   strong,
+  row = 0,
 }: {
-  left: `${number}%`;
+  /** Position on the bar, 0–1. */
+  at: number;
   label: string;
   color: string;
   strong?: boolean;
+  /** Label on the first or second line under the bar (to avoid overlaps). */
+  row?: 0 | 1;
 }) {
+  // Near the edges the label grows inward, so it's never cut by the card
+  const align = at > 0.85 ? 'end' : at < 0.15 ? 'start' : 'center';
   return (
-    <View pointerEvents="none" style={[styles.mark, { left }]}>
-      <View style={[styles.markLine, { backgroundColor: color }]} />
+    <View pointerEvents="none" style={[styles.mark, { left: `${at * 100}%` }]}>
+      <View style={[styles.markLine, { backgroundColor: color, height: row ? 34 : 20 }]} />
       <Text
         variant="caption"
         numberOfLines={1}
-        style={[styles.markLabel, { color }, strong && styles.markStrong]}>
+        style={[
+          styles.markLabel,
+          { color, top: row ? 34 : 20 },
+          align === 'end'
+            ? styles.labelEnd
+            : align === 'start'
+              ? styles.labelStart
+              : styles.labelCenter,
+          strong && styles.markStrong,
+        ]}>
         {label}
       </Text>
     </View>
@@ -243,10 +264,15 @@ const styles = StyleSheet.create({
   link: { fontWeight: '600', fontSize: 15 },
   flex: { flex: 1 },
   barArea: { paddingTop: 4, paddingBottom: 18 },
+  barAreaTwoRows: { paddingBottom: 32 },
   bar: { height: 12, borderRadius: 6, overflow: 'hidden', flexDirection: 'row' },
-  mark: { position: 'absolute', top: 0, width: 40, marginLeft: -20, alignItems: 'center' },
-  markLine: { width: 2, height: 20, borderRadius: 1 },
-  markLabel: { fontSize: 11, lineHeight: 13 },
+  // Zero-width anchor on the mark position: line and label are placed around it
+  mark: { position: 'absolute', top: 0, bottom: 0, width: 0 },
+  markLine: { position: 'absolute', left: -1, width: 2, borderRadius: 1 },
+  markLabel: { position: 'absolute', width: 120, fontSize: 11, lineHeight: 13 },
+  labelCenter: { left: -60, textAlign: 'center' },
+  labelEnd: { right: -1, textAlign: 'right' },
+  labelStart: { left: -1, textAlign: 'left' },
   markStrong: { fontWeight: '700' },
   alert: {
     flexDirection: 'row',
