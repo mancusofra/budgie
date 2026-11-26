@@ -330,7 +330,9 @@
     "monthDetail": "Dettaglio per mese",
     "monthTotal": "Totale del mese",
     "empty": "Nessuna transazione",
-    "preview": "Anteprima e stampa"
+    "preview": "Anteprima e stampa",
+    "webHint": "Si apre la finestra di stampa del browser: scegli \"Salva come PDF\" come destinazione.",
+    "webSubmit": "Crea PDF"
   },
   "groups": {
     "title": "Gruppi di spesa",

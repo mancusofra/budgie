@@ -3,7 +3,7 @@ import { addDays, startOfDay, startOfMonth } from 'date-fns';
 import * as Haptics from 'expo-haptics';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { CategoryIcon } from '@/components/transactions/category-icon';
 import { Button } from '@/components/ui/button';
@@ -170,19 +170,41 @@ export default function ReportSheet() {
         </Text>
       </Surface>
 
-      <Button
-        title={busy ? t('report.generating') : t('report.submit')}
-        filled
-        disabled={busy || noAccounts}
-        icon={<MaterialCommunityIcons name="share-variant" size={20} color={theme.textOnColor} />}
-        onPress={() => submit('share')}
-      />
-      <Button
-        title={t('report.preview')}
-        disabled={busy || noAccounts}
-        icon={<MaterialCommunityIcons name="printer-outline" size={20} color={theme.primary} />}
-        onPress={() => submit('preview')}
-      />
+      {Platform.OS === 'web' ? (
+        <>
+          {/* Web: the browser print dialog, from which "Save as PDF" */}
+          <Button
+            title={busy ? t('report.generating') : t('report.webSubmit')}
+            filled
+            disabled={busy || noAccounts}
+            icon={
+              <MaterialCommunityIcons name="printer-outline" size={20} color={theme.textOnColor} />
+            }
+            onPress={() => submit('preview')}
+          />
+          <Text variant="caption" color="textSecondary">
+            {t('report.webHint')}
+          </Text>
+        </>
+      ) : (
+        <>
+          <Button
+            title={busy ? t('report.generating') : t('report.submit')}
+            filled
+            disabled={busy || noAccounts}
+            icon={
+              <MaterialCommunityIcons name="share-variant" size={20} color={theme.textOnColor} />
+            }
+            onPress={() => submit('share')}
+          />
+          <Button
+            title={t('report.preview')}
+            disabled={busy || noAccounts}
+            icon={<MaterialCommunityIcons name="printer-outline" size={20} color={theme.primary} />}
+            onPress={() => submit('preview')}
+          />
+        </>
+      )}
     </ScrollView>
   );
 }

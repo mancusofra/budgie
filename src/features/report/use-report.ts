@@ -2,8 +2,11 @@ import { addDays, format, isSameYear } from 'date-fns';
 import { File, Paths } from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { Platform } from 'react-native';
 import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+
+import { printHtml } from '@/features/web/files';
 
 import { repos } from '@/db/client';
 import { dateLocale, deviceLocale } from '@/i18n';
@@ -20,7 +23,8 @@ export type ReportOptions = {
   accounts?: { id: string; name: string }[];
 };
 
-export type ReportFile = { uri: string; name: string; count: number };
+/** Built report: a PDF file on iOS/Android, the HTML to print on the web. */
+export type ReportFile = { uri: string; name: string; count: number; html?: string };
 
 /** A4 at 72 dpi (expo-print defaults to US Letter). */
 const A4 = { width: 595, height: 842 };
@@ -83,6 +87,10 @@ export function useReport() {
         logo: REPORT_LOGO,
       });
 
+      const name = `budgie-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
+      // Web: no PDF file, the browser prints the page ("Save as PDF")
+      if (Platform.OS === 'web') return { uri: '', name, count: rows.length, html };
+
       const { base64 } = await Print.printToFileAsync({
         html,
         ...A4,
@@ -93,7 +101,6 @@ export function useReport() {
 
       // Written to the app's own cache with a readable name: expo-print saves to a folder
       // that, in Expo Go, the app can't move, rename or share from
-      const name = `budgie-report-${format(new Date(), 'yyyy-MM-dd')}.pdf`;
       const file = new File(Paths.cache, name);
       if (file.exists) file.delete();
       file.create();
@@ -104,7 +111,8 @@ export function useReport() {
   );
 
   /** Opens the system share sheet (save to Files, mail, messages…). */
-  const share = useCallback(async ({ uri, name }: ReportFile) => {
+  const share = useCallback(async ({ uri, name, html }: ReportFile) => {
+    if (html !== undefined) return printHtml(html, name);
     if (!(await Sharing.isAvailableAsync())) throw new Error('Sharing is not available');
     await Sharing.shareAsync(uri, {
       mimeType: 'application/pdf',
@@ -114,7 +122,11 @@ export function useReport() {
   }, []);
 
   /** Opens the system print preview (print or save as PDF). */
-  const preview = useCallback(({ uri }: ReportFile) => Print.printAsync({ uri }), []);
+  const preview = useCallback(
+    ({ uri, name, html }: ReportFile) =>
+      html !== undefined ? printHtml(html, name) : Print.printAsync({ uri }),
+    [],
+  );
 
   return { build, share, preview };
 }

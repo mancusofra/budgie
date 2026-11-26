@@ -2,11 +2,13 @@ import { format } from 'date-fns';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useCallback } from 'react';
+import { Platform } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { createBackup, parseBackup, restoreBackup, type Backup } from '@/db/backup';
 import { db, repos } from '@/db/client';
 import { refreshLiveQueries } from '@/db/live-query';
+import { downloadFile, pickTextFile } from '@/features/web/files';
 import { decimalSeparator } from '@/i18n';
 
 import { transactionsCsv, transactionsJson } from './csv-export';
@@ -14,8 +16,9 @@ import { transactionsCsv, transactionsJson } from './csv-export';
 export type ExportFormat = 'csv' | 'json';
 export type ExportOptions = { format: ExportFormat; from?: Date; to?: Date };
 
-/** Writes a temporary file and opens the system share sheet. */
+/** Writes a temporary file and opens the system share sheet; on the web, downloads it. */
 async function shareFile(name: string, content: string, mimeType: string, UTI: string) {
+  if (Platform.OS === 'web') return downloadFile(name, content, mimeType);
   const file = new File(Paths.cache, name);
   if (file.exists) file.delete();
   file.create();
@@ -78,6 +81,10 @@ export function useDataTransfer() {
 
   /** Picks and reads a backup; null if cancelled. Restoring must be confirmed separately. */
   const pickBackup = useCallback(async (): Promise<Backup | null> => {
+    if (Platform.OS === 'web') {
+      const text = await pickTextFile('application/json,.json');
+      return text === null ? null : parseBackup(text);
+    }
     // The expo-file-system picker returns an already readable File (with
     // expo-document-picker reading the copy was denied for lack of permissions)
     const picked = await File.pickFileAsync({
