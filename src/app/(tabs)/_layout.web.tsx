@@ -117,10 +117,11 @@ const TabButton = forwardRef<ComponentRef<typeof View>, TabButtonProps>(function
       accessibilityRole="tab"
       accessibilityState={{ selected: isFocused }}
       accessibilityLabel={label}
-      style={({ hovered, pressed }) => [
+      // `hovered` exists on the web only (react-native-web), not in the shared types
+      style={(state) => [
         wide ? styles.sideItem : styles.barItem,
         wide &&
-          (isFocused || hovered || pressed) && {
+          (isFocused || (state as { hovered?: boolean }).hovered || state.pressed) && {
             backgroundColor: isFocused ? theme.background : theme.backgroundSelected,
           },
       ]}>
