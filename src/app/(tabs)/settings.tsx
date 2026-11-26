@@ -2,7 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { NavRow, RowSeparator } from '@/components/ui/nav-row';
@@ -204,16 +204,21 @@ export default function SettingsScreen() {
                 onChange={(v) => setSetting('theme', v)}
               />
             </View>
-            <RowSeparator />
-            <View style={styles.row}>
-              <MaterialCommunityIcons name="fingerprint" size={22} color={theme.primary} />
-              <Text style={[styles.label, styles.flex]}>{t('settings.appLock')}</Text>
-              <Switch
-                value={settings.appLock === true}
-                onValueChange={toggleLock}
-                accessibilityLabel={t('settings.appLock')}
-              />
-            </View>
+            {/* No biometrics in the browser: the device lock protects it */}
+            {Platform.OS !== 'web' && (
+              <>
+                <RowSeparator />
+                <View style={styles.row}>
+                  <MaterialCommunityIcons name="fingerprint" size={22} color={theme.primary} />
+                  <Text style={[styles.label, styles.flex]}>{t('settings.appLock')}</Text>
+                  <Switch
+                    value={settings.appLock === true}
+                    onValueChange={toggleLock}
+                    accessibilityLabel={t('settings.appLock')}
+                  />
+                </View>
+              </>
+            )}
           </Surface>
         </View>
 

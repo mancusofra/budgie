@@ -10,17 +10,19 @@ import { useSettings } from './hooks';
 export function SettingsSync() {
   const { theme = 'system', language = 'system', groupsEnabled = false } = useSettings();
   const setGroupsEnabled = useUIStore((s) => s.setGroupsEnabled);
+  const setColorScheme = useUIStore((s) => s.setColorScheme);
 
   useEffect(() => {
     setGroupsEnabled(groupsEnabled);
   }, [groupsEnabled, setGroupsEnabled]);
 
   useEffect(() => {
-    // 'unspecified' = follow the system. Not available on the web (follows the browser)
+    setColorScheme(theme === 'system' ? null : theme);
+    // 'unspecified' = follow the system. Not available on the web: useColorScheme applies it
     if (typeof Appearance.setColorScheme === 'function') {
       Appearance.setColorScheme(theme === 'system' ? 'unspecified' : theme);
     }
-  }, [theme]);
+  }, [theme, setColorScheme]);
 
   useEffect(() => {
     applyLanguage(language);
