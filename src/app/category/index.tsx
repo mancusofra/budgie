@@ -57,7 +57,7 @@ export default function CategoriesScreen() {
                 onPress={() => open(c.id)}
                 accessibilityRole="button"
                 style={({ pressed }) => [styles.row, pressed && { opacity: 0.6 }]}>
-                <CategoryIcon icon={c.icon} color={c.color} size={36} />
+                <CategoryIcon icon={c.icon} color={c.color} size={36} group={c.spendingGroup} />
                 <Text numberOfLines={1} style={styles.name}>
                   {c.name}
                 </Text>
@@ -81,7 +81,7 @@ export default function CategoriesScreen() {
               {archived.map((c) => (
                 <View key={c.id} style={[styles.row, { height: ROW_HEIGHT }]}>
                   <View style={styles.faded}>
-                    <CategoryIcon icon={c.icon} color={c.color} size={36} />
+                    <CategoryIcon icon={c.icon} color={c.color} size={36} group={c.spendingGroup} />
                   </View>
                   <Text numberOfLines={1} color="textSecondary" style={styles.name}>
                     {c.name}

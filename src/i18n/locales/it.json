@@ -330,5 +330,25 @@
     "monthTotal": "Totale del mese",
     "empty": "Nessuna transazione",
     "preview": "Anteprima e stampa"
+  },
+  "groups": {
+    "title": "Gruppi di spesa",
+    "need": "Bisogni",
+    "want": "Desideri",
+    "save": "Risparmi",
+    "group": "Gruppo",
+    "savingsCategory": "Investimenti",
+    "hint": "Bisogni, Desideri e Risparmi: quanto delle entrate va a ciascun gruppo. Risparmi comprende anche quello che non spendi.",
+    "setupTitle": "Come dividiamo le categorie",
+    "setupHint": "Tocca una categoria per spostarla nel gruppo successivo. Puoi cambiarlo quando vuoi dalla scheda della categoria.",
+    "setupEmpty": "Nessuna categoria",
+    "moveHint": "Sposta in {{group}}",
+    "setupShares": "Si parte da {{shares}}: puoi cambiare le quote dalle Statistiche.",
+    "setupDone": "Va bene",
+    "referenceIncome": "Reddito di riferimento",
+    "referenceIncomeHint": "Entrate mensili usate per gli obiettivi quando nel periodo non ci sono entrate (per esempio guardando una sola settimana).",
+    "referenceIncomeNone": "Nessuno",
+    "referenceIncomeRemove": "Rimuovi",
+    "showOnHome": "Mostra in Home"
   }
 }

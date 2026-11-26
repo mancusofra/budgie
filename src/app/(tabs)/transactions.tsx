@@ -306,6 +306,7 @@ function SearchResults({
             kind={tx.type}
             icon={isTransfer ? 'swap-horizontal' : (item.category?.icon ?? 'help')}
             color={isTransfer ? theme.textSecondary : (item.category?.color ?? theme.textSecondary)}
+            group={isTransfer ? null : item.category?.spendingGroup}
             deleteLabel={t('common.delete')}
             onPress={() => router.push({ pathname: '/transaction/[id]', params: { id: tx.id } })}
             onDelete={() => deleteTransaction(tx)}

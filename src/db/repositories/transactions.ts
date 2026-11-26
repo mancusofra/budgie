@@ -169,7 +169,12 @@ export function createTransactionsRepo(db: AppDatabase) {
       return db
         .select({
           transaction: t,
-          category: { name: categories.name, icon: categories.icon, color: categories.color },
+          category: {
+            name: categories.name,
+            icon: categories.icon,
+            color: categories.color,
+            spendingGroup: categories.spendingGroup,
+          },
           account: { name: accounts.name, currency: accounts.currency },
           toAccount: { name: toAccount.name },
         })

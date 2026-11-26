@@ -2,6 +2,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/hooks/use-theme';
+import type { Group } from '@/lib/groups';
 import { Spacing, TabularNums } from '@/theme';
 
 import { SwipeToDelete } from '../ui/swipe-to-delete';
@@ -15,6 +16,8 @@ type Props = {
   kind: 'expense' | 'income' | 'transfer';
   icon: string;
   color: string;
+  /** Spending group of the category (badge on the icon). */
+  group?: Group | null;
   deleteLabel: string;
   onPress: () => void;
   onDelete: () => void;
@@ -30,6 +33,7 @@ export function TransactionRow({
   kind,
   icon,
   color,
+  group,
   deleteLabel,
   onPress,
   onDelete,
@@ -50,7 +54,7 @@ export function TransactionRow({
           styles.row,
           { backgroundColor: pressed ? theme.surface : theme.background },
         ]}>
-        <CategoryIcon icon={icon} color={color} size={40} />
+        <CategoryIcon icon={icon} color={color} size={40} group={group} />
         <View style={styles.texts}>
           <View style={styles.titleRow}>
             <Text numberOfLines={1} style={styles.title}>
