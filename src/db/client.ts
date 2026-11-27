@@ -38,10 +38,17 @@ export const expoDb = new Proxy({} as SQLiteDatabase, {
  */
 export async function prepareDatabase(): Promise<void> {
   if (Platform.OS === 'web' && !globalForDb.__budgieDb && waitingForIsolation()) {
-    // The page is about to reload with the headers SQLite needs (see +html.tsx)
+    // The page is about to reload with the headers SQLite needs (scripts/web-postbuild.js)
     await new Promise(() => {});
   }
   if (Platform.OS === 'web' && !globalForDb.__budgieDb) {
+    if (typeof window !== 'undefined' && !window.crossOriginIsolated) {
+      // A fixed version may be waiting in the service worker: the app can't start
+      // anyway, so activate it now instead of waiting for "Update"
+      await activateWaitingWorker();
+      // Without isolation there is no SharedArrayBuffer: say why instead of a cryptic error
+      throw new WebIsolationError();
+    }
     await openDatabaseAsync(DATABASE_NAME);
   }
   connection();
@@ -58,6 +65,25 @@ function waitingForIsolation(): boolean {
     'serviceWorker' in navigator &&
     !sessionStorage.getItem('budgie-coi-reload')
   );
+}
+
+/** Activates a waiting service worker and reloads the page; resolves if there is none. */
+async function activateWaitingWorker(): Promise<void> {
+  const registration = await navigator.serviceWorker?.getRegistration();
+  const waiting = registration?.waiting;
+  if (!waiting || sessionStorage.getItem('budgie-sw-forced')) return;
+  sessionStorage.setItem('budgie-sw-forced', '1');
+  navigator.serviceWorker.addEventListener('controllerchange', () => window.location.reload());
+  waiting.postMessage('SKIP_WAITING');
+  await new Promise(() => {}); // the page reloads
+}
+
+/** The browser didn't isolate the page (old browser, private mode…): no database. */
+export class WebIsolationError extends Error {
+  name = 'WebIsolationError';
+  constructor() {
+    super('Cross-origin isolation unavailable: SharedArrayBuffer is missing');
+  }
 }
 
 export const db = drizzle(expoDb, { schema });
