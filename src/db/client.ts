@@ -31,6 +31,13 @@ function connection(): SQLiteDatabase {
     // (the change event and the sync reply get stuck); writes notify instead (see webWrites)
     const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: Platform.OS !== 'web' });
     db.execSync('PRAGMA foreign_keys = ON;');
+    if (Platform.OS === 'web') {
+      // Safari never completes a synchronous write that flushes the file (the
+      // flush seems to need the main thread, which is blocked waiting): no flush
+      // on every write. Data is still written; only an OS crash could lose the
+      // last change
+      db.execSync('PRAGMA synchronous = OFF;');
+    }
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       // Release the file when the page goes away (reload, update, closing the tab):
       // otherwise the next page finds it locked for a while, Safari above all
@@ -155,7 +162,7 @@ async function probeWeb() {
   await db.execAsync(
     'CREATE TABLE IF NOT EXISTS __budgie_probe (x INTEGER); INSERT INTO __budgie_probe VALUES (1);',
   );
-  bootStep('probe: sync write');
+  bootStep('probe: sync write (synchronous=OFF)');
   db.execSync('DELETE FROM __budgie_probe;');
   bootStep('probe: sync transaction');
   db.withTransactionSync(() => db.execSync('INSERT INTO __budgie_probe VALUES (2);'));
