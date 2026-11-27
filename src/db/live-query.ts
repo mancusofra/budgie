@@ -34,6 +34,14 @@ function flush() {
   }
 }
 
+/**
+ * A table changed: the live queries reading it re-run. Called by SQLite's
+ * change listener on iOS/Android, by the database client on the web.
+ */
+export function notifyTableChanged(tableName: string) {
+  onChange(tableName);
+}
+
 function onChange(tableName: string) {
   if (pending.size === 0) firstPendingAt = Date.now();
   pending.add(tableName);

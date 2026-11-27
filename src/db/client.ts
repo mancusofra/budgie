@@ -2,6 +2,7 @@ import { drizzle } from 'drizzle-orm/expo-sqlite';
 import { openDatabaseAsync, openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 import { Platform } from 'react-native';
 
+import { notifyTableChanged, refreshLiveQueries } from './live-query';
 import { createRepositories } from './repositories';
 import * as schema from './schema';
 
@@ -26,7 +27,9 @@ export function bootStep(step: string) {
 function connection(): SQLiteDatabase {
   // enableChangeListener lets live queries update by themselves
   return (globalForDb.__budgieDb ??= (() => {
-    const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
+    // Web: no change listener. With it, Safari hangs on the first synchronous write
+    // (the change event and the sync reply get stuck); writes notify instead (see webWrites)
+    const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: Platform.OS !== 'web' });
     db.execSync('PRAGMA foreign_keys = ON;');
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       // Release the file when the page goes away (reload, update, closing the tab):
@@ -55,10 +58,55 @@ function connection(): SQLiteDatabase {
 export const expoDb = new Proxy({} as SQLiteDatabase, {
   get(_, prop) {
     const db = connection();
+    if (Platform.OS === 'web' && prop in WEB_WRITE_WRAPPERS) {
+      return WEB_WRITE_WRAPPERS[prop as keyof typeof WEB_WRITE_WRAPPERS](db);
+    }
     const value = Reflect.get(db, prop, db);
     return typeof value === 'function' ? value.bind(db) : value;
   },
 });
+
+/** Table written by an INSERT / UPDATE / DELETE / REPLACE statement, if any. */
+export function writtenTable(sql: string): string | null {
+  const match =
+    /^\s*(?:insert(?:\s+or\s+\w+)?\s+into|replace\s+into|update(?:\s+or\s+\w+)?|delete\s+from)\s+["`[]?(\w+)/i.exec(
+      sql,
+    );
+  return match ? match[1] : null;
+}
+
+/**
+ * Web: the change listener is off (see connection), so the writes that go
+ * through the app notify the live queries themselves. Drizzle prepares every
+ * statement; multi-statement exec (migrations, restore) refreshes everything.
+ */
+const WEB_WRITE_WRAPPERS = {
+  prepareSync: (db: SQLiteDatabase) => (source: string) => {
+    const statement = db.prepareSync(source);
+    const table = writtenTable(source);
+    if (!table) return statement;
+    return new Proxy(statement, {
+      get(target, prop) {
+        const value = Reflect.get(target, prop, target);
+        if (typeof value !== 'function') return value;
+        if (!String(prop).startsWith('execute')) return value.bind(target);
+        return (...args: unknown[]) => {
+          const result = value.apply(target, args);
+          notifyTableChanged(table);
+          return result;
+        };
+      },
+    });
+  },
+  execSync: (db: SQLiteDatabase) => (source: string) => {
+    db.execSync(source);
+    if (/\b(insert|update|delete|replace|create|drop|alter)\b/i.test(source)) refreshLiveQueries();
+  },
+  execAsync: (db: SQLiteDatabase) => async (source: string) => {
+    await db.execAsync(source);
+    if (/\b(insert|update|delete|replace|create|drop|alter)\b/i.test(source)) refreshLiveQueries();
+  },
+};
 
 /**
  * Resolves when the database can be used. Immediate on iOS/Android; on the
