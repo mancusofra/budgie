@@ -1,7 +1,7 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback } from 'react';
+import { useCallback, type ComponentProps } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SnackbarHost } from '@/components/ui/snackbar-host';
@@ -9,117 +9,153 @@ import { DatabaseProvider } from '@/db/provider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
 import { RecurringSync } from '@/features/recurring/recurring-sync';
+import { useWideWeb, WebDialog, WebPage } from '@/features/web/web-frames';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
+
+/** Screens shown as sheets or modals: windows in the middle of the page on a wide web screen. */
+const DIALOGS = new Set<string>();
+
+type ScreenOptions = Exclude<
+  NonNullable<ComponentProps<typeof Stack.Screen>['options']>,
+  (...args: never[]) => unknown
+>;
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const hideSplash = useCallback(() => SplashScreen.hideAsync(), []);
+  const wideWeb = useWideWeb();
+  // Native presentation, or a centered dialog on a wide web screen
+  const sheet = (name: string, options: ScreenOptions): ScreenOptions => {
+    DIALOGS.add(name);
+    return wideWeb
+      ? { presentation: 'transparentModal' as const, animation: 'fade' as const }
+      : options;
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <DatabaseProvider onReady={hideSplash}>
-          <Stack screenOptions={{ headerShown: false }}>
+          <Stack
+            screenOptions={{ headerShown: false }}
+            screenLayout={({ children, route }) =>
+              !wideWeb || route.name === '(tabs)' || route.name === 'onboarding' ? (
+                children
+              ) : DIALOGS.has(route.name) ? (
+                <WebDialog>{children}</WebDialog>
+              ) : (
+                <WebPage>{children}</WebPage>
+              )
+            }>
             <Stack.Screen name="(tabs)" />
-            <Stack.Screen name="transaction/new" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="transaction/[id]" options={{ presentation: 'modal' }} />
-            <Stack.Screen name="transfer/new" options={{ presentation: 'modal' }} />
+            <Stack.Screen
+              name="transaction/new"
+              options={sheet('transaction/new', { presentation: 'modal' })}
+            />
+            <Stack.Screen
+              name="transaction/[id]"
+              options={sheet('transaction/[id]', { presentation: 'modal' })}
+            />
+            <Stack.Screen
+              name="transfer/new"
+              options={sheet('transfer/new', { presentation: 'modal' })}
+            />
             <Stack.Screen
               name="onboarding"
               options={{ presentation: 'fullScreenModal', gestureEnabled: false }}
             />
             <Stack.Screen
               name="currency"
-              options={{
+              options={sheet('currency', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.6, 0.95],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="report"
-              options={{
+              options={sheet('report', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.7, 0.95],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="whats-new"
-              options={{
+              options={sheet('whats-new', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.5, 0.9],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="language"
-              options={{
+              options={sheet('language', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.4],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="groups-setup"
-              options={{
+              options={sheet('groups-setup', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.85],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="group-shares"
-              options={{
+              options={sheet('group-shares', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.75, 0.95],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="reference-income"
-              options={{
+              options={sheet('reference-income', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.75],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="month-start"
-              options={{
+              options={sheet('month-start', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.5],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="export"
-              options={{
+              options={sheet('export', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.65, 0.9],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="account/select"
-              options={{
+              options={sheet('account/select', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.5, 0.9],
                 sheetGrabberVisible: true,
-              }}
+              })}
             />
             <Stack.Screen
               name="period"
-              options={{
+              options={sheet('period', {
                 presentation: 'formSheet',
                 sheetAllowedDetents: [0.55],
                 sheetGrabberVisible: true,
                 contentStyle: { backgroundColor: 'transparent' },
-              }}
+              })}
             />
           </Stack>
           <SnackbarHost />
