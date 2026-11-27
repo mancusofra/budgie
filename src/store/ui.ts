@@ -15,6 +15,8 @@ type UIState = {
   editingLayout: boolean;
   /** Spending groups on (mirrors the setting, read by every category icon). */
   groupsEnabled: boolean;
+  /** Theme chosen in Settings; null = follow the system. */
+  colorScheme: 'light' | 'dark' | null;
   setPeriodKind: (kind: Exclude<PeriodKind, 'custom'>) => void;
   setCustomPeriod: (from: Date, to: Date) => void;
   shiftPeriod: (direction: -1 | 1) => void;
@@ -23,6 +25,7 @@ type UIState = {
   setOpenCategory: (id: string) => void;
   setEditingLayout: (editing: boolean) => void;
   setGroupsEnabled: (enabled: boolean) => void;
+  setColorScheme: (scheme: 'light' | 'dark' | null) => void;
 };
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -31,6 +34,7 @@ export const useUIStore = create<UIState>()((set) => ({
   openCategory: undefined,
   editingLayout: false,
   groupsEnabled: false,
+  colorScheme: null,
   setPeriodKind: (kind) => set((s) => ({ period: { kind, anchor: s.period.anchor } })),
   setCustomPeriod: (from, to) => set({ period: customPeriod(from, to) }),
   shiftPeriod: (direction) => set((s) => ({ period: shiftPeriod(s.period, direction) })),
@@ -42,4 +46,5 @@ export const useUIStore = create<UIState>()((set) => ({
   setOpenCategory: (id) => set({ openCategory: { id, at: Date.now() } }),
   setEditingLayout: (editingLayout) => set({ editingLayout }),
   setGroupsEnabled: (groupsEnabled) => set({ groupsEnabled }),
+  setColorScheme: (colorScheme) => set({ colorScheme }),
 }));

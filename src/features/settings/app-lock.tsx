@@ -3,7 +3,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { router } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppState, StyleSheet, View } from 'react-native';
+import { AppState, Platform, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
@@ -44,7 +44,8 @@ export function AppLock() {
   const { t } = useTranslation();
   const theme = useTheme();
   const { settings, loaded } = useSettingsState();
-  const enabled = settings.appLock === true;
+  // No biometrics in the browser: a lock restored from a phone backup is ignored
+  const enabled = settings.appLock === true && Platform.OS !== 'web';
   const [locked, setLocked] = useState(true);
   const [unavailable, setUnavailable] = useState(false);
   const authenticating = useRef(false);
