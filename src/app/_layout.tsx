@@ -2,6 +2,7 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, type ComponentProps } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { SnackbarHost } from '@/components/ui/snackbar-host';
@@ -10,6 +11,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
 import { RecurringSync } from '@/features/recurring/recurring-sync';
 import { installWebAlert } from '@/features/web/alert-polyfill';
+import { UpdateBanner } from '@/features/web/pwa';
 import { useWideWeb, WebDialog, WebPage } from '@/features/web/web-frames';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
@@ -127,6 +129,14 @@ export default function RootLayout() {
               })}
             />
             <Stack.Screen
+              name="install"
+              options={sheet('install', {
+                presentation: 'formSheet',
+                sheetAllowedDetents: [0.6],
+                sheetGrabberVisible: true,
+              })}
+            />
+            <Stack.Screen
               name="month-start"
               options={sheet('month-start', {
                 presentation: 'formSheet',
@@ -161,6 +171,7 @@ export default function RootLayout() {
             />
           </Stack>
           <SnackbarHost />
+          {Platform.OS === 'web' && <UpdateBanner />}
           <SettingsSync />
           <RecurringSync />
           <OnboardingGate />
