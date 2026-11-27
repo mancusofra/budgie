@@ -5,7 +5,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 
-import { db, prepareDatabase, WebIsolationError } from './client';
+import { bootStep, db, prepareDatabase, WebIsolationError } from './client';
 import migrations from './migrations/migrations';
 import { seedDatabase } from './seed';
 
@@ -26,6 +26,7 @@ export function DatabaseProvider(props: Props) {
 
 /** Applies migrations and the seed, then shows the app. `onReady` is called in both cases. */
 function MigratedDatabase({ children, onReady }: Props) {
+  bootStep('migrations');
   const { success, error: migrationError } = useMigrations(db, migrations);
   const [seeded, setSeeded] = useState(false);
   const [seedError, setSeedError] = useState<Error>();
@@ -33,11 +34,15 @@ function MigratedDatabase({ children, onReady }: Props) {
   useEffect(() => {
     if (!success) return;
     const locale = getLocales()[0];
+    bootStep('seed');
     seedDatabase(db, {
       language: locale?.languageCode ?? 'en',
       currency: locale?.currencyCode ?? 'EUR',
     })
-      .then(() => setSeeded(true))
+      .then(() => {
+        bootStep('ready');
+        setSeeded(true);
+      })
       .catch(setSeedError);
   }, [success]);
 

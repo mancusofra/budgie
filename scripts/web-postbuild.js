@@ -26,6 +26,43 @@ const files = [];
   }
 })(dist);
 
+// Startup diagnostics: errors from the very first script, and a report on screen
+// if the app hasn't started after 12 s (no console on iPhone without a Mac)
+const diagnostics = `(function () {
+  var errors = [];
+  window.addEventListener('error', function (e) { errors.push(String(e.message || e)); });
+  window.addEventListener('unhandledrejection', function (e) {
+    var r = e.reason; errors.push('Promise: ' + String((r && (r.stack || r.message)) || r));
+  });
+  setTimeout(function () {
+    if (window.__budgieBoot === 'ready') return;
+    var sw = navigator.serviceWorker;
+    var info = [
+      'Budgie non si è avviato / did not start',
+      'step: ' + (window.__budgieBoot || 'app code not started'),
+      'crossOriginIsolated: ' + window.crossOriginIsolated,
+      'SharedArrayBuffer: ' + (typeof SharedArrayBuffer),
+      'service worker: ' + (sw ? (sw.controller ? 'controlling' : 'not controlling') : 'unsupported'),
+      'coi reload flag: ' + sessionStorage.getItem('budgie-coi-reload'),
+      'url: ' + location.href,
+      'ua: ' + navigator.userAgent,
+      'errors: ' + (errors.length ? errors.join(' | ') : 'none')
+    ].join(String.fromCharCode(10));
+    var box = document.createElement('pre');
+    box.textContent = info;
+    box.style.cssText = 'position:fixed;inset:12px;z-index:99999;margin:0;padding:16px;overflow:auto;' +
+      'white-space:pre-wrap;word-break:break-word;font:12px/1.5 ui-monospace,monospace;' +
+      'background:#1C1C1E;color:#F2F2F4;border-radius:14px';
+    var reload = document.createElement('button');
+    reload.textContent = 'Ricarica / Reload';
+    reload.style.cssText = 'display:block;margin-top:16px;padding:10px 16px;font:600 15px system-ui;' +
+      'border:0;border-radius:10px;background:#8FA2F0;color:#0E0E10';
+    reload.onclick = function () { sessionStorage.clear(); location.reload(); };
+    box.appendChild(reload);
+    document.body.appendChild(box);
+  }, 12000);
+})();`;
+
 const bootstrap = `(function () {
   if (!('serviceWorker' in navigator)) return;
   if (window.crossOriginIsolated) sessionStorage.removeItem('budgie-coi-reload');
@@ -46,6 +83,7 @@ const tags = [
   '<meta name="apple-mobile-web-app-capable" content="yes"/>',
   '<meta name="mobile-web-app-capable" content="yes"/>',
   '<meta name="apple-mobile-web-app-title" content="Budgie"/>',
+  `<script>${diagnostics}</script>`,
   `<script>${bootstrap}</script>`,
 ].join('');
 

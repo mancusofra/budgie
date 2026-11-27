@@ -11,6 +11,18 @@ export const DATABASE_NAME = 'budgie.db';
 // already open instead of opening a second one (which would find the DB busy).
 const globalForDb = globalThis as { __budgieDb?: SQLiteDatabase };
 
+/**
+ * Web: records the startup step for the diagnostics shown when the app
+ * doesn't start (see scripts/web-postbuild.js). No-op elsewhere.
+ */
+export function bootStep(step: string) {
+  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+    const w = window as unknown as { __budgieBoot?: string };
+    // Once started, later renders don't move it back
+    if (w.__budgieBoot !== 'ready') w.__budgieBoot = step;
+  }
+}
+
 function connection(): SQLiteDatabase {
   // enableChangeListener lets live queries update by themselves
   return (globalForDb.__budgieDb ??= (() => {
@@ -53,7 +65,9 @@ export const expoDb = new Proxy({} as SQLiteDatabase, {
  * web it waits for the SQLite worker (WebAssembly) to load.
  */
 export async function prepareDatabase(): Promise<void> {
+  bootStep('prepare');
   if (Platform.OS === 'web' && !globalForDb.__budgieDb && waitingForIsolation()) {
+    bootStep('waiting for the isolation reload');
     // The page is about to reload with the headers SQLite needs (scripts/web-postbuild.js)
     await new Promise(() => {});
   }
@@ -61,14 +75,18 @@ export async function prepareDatabase(): Promise<void> {
     if (typeof window !== 'undefined' && !window.crossOriginIsolated) {
       // A fixed version may be waiting in the service worker: the app can't start
       // anyway, so activate it now instead of waiting for "Update"
+      bootStep('not isolated: activating the new service worker');
       await activateWaitingWorker();
       // Without isolation there is no SharedArrayBuffer: say why instead of a cryptic error
       throw new WebIsolationError();
     }
     // Wait for the SQLite worker with an in-memory database, closed right away:
     // opening the real file twice fails on Safari (one access handle per file)
+    bootStep('loading the SQLite worker');
     const warmUp = await openDatabaseAsync(':memory:');
-    await warmUp.closeAsync();
+    bootStep('closing the in-memory database');
+    // Never wait more than 3 s for it: it's only a warm-up
+    await Promise.race([warmUp.closeAsync(), new Promise((r) => setTimeout(r, 3000))]);
     await openWithRetry();
     return;
   }
@@ -82,6 +100,7 @@ export async function prepareDatabase(): Promise<void> {
 async function openWithRetry(attempts = 12, delayMs = 500): Promise<void> {
   for (let i = 1; ; i++) {
     try {
+      bootStep(`opening ${DATABASE_NAME} (attempt ${i})`);
       connection();
       return;
     } catch (error) {
