@@ -28,6 +28,7 @@ const files = [];
 
 // Startup diagnostics: errors from the very first script, and a report on screen
 // if the app hasn't started after 12 s (no console on iPhone without a Mac)
+const buildStamp = new Date().toISOString().slice(0, 16).replace('T', ' ');
 const diagnostics = `(function () {
   var errors = [];
   window.addEventListener('error', function (e) { errors.push(String(e.message || e)); });
@@ -39,6 +40,7 @@ const diagnostics = `(function () {
     var sw = navigator.serviceWorker;
     var info = [
       'Budgie non si è avviato / did not start',
+      'build: ${buildStamp} UTC',
       'step: ' + (window.__budgieBoot || 'app code not started'),
       'crossOriginIsolated: ' + window.crossOriginIsolated,
       'SharedArrayBuffer: ' + (typeof SharedArrayBuffer),
