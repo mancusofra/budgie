@@ -13,7 +13,7 @@ import { RecurringSync } from '@/features/recurring/recurring-sync';
 import { installWebAlert } from '@/features/web/alert-polyfill';
 import { UpdateBanner } from '@/features/web/pwa';
 import { WebStyles } from '@/features/web/web-styles';
-import { useWideWeb, WebDialog, WebPage } from '@/features/web/web-frames';
+import { useWideWeb, WebDialog, WebPage, WebTransition } from '@/features/web/web-frames';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
 import '@/i18n';
@@ -48,12 +48,18 @@ export default function RootLayout() {
           <Stack
             screenOptions={{ headerShown: false }}
             screenLayout={({ children, route }) =>
-              !wideWeb || route.name === '(tabs)' || route.name === 'onboarding' ? (
+              Platform.OS !== 'web' || route.name === '(tabs)' || route.name === 'onboarding' ? (
                 children
-              ) : DIALOGS.has(route.name) ? (
-                <WebDialog>{children}</WebDialog>
+              ) : wideWeb ? (
+                DIALOGS.has(route.name) ? (
+                  <WebDialog>{children}</WebDialog>
+                ) : (
+                  <WebPage>{children}</WebPage>
+                )
               ) : (
-                <WebPage>{children}</WebPage>
+                <WebTransition kind={DIALOGS.has(route.name) ? 'sheet' : 'page'}>
+                  {children}
+                </WebTransition>
               )
             }>
             <Stack.Screen name="(tabs)" />

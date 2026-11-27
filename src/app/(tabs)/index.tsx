@@ -3,11 +3,12 @@ import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  type GestureResponderEvent,
+  Platform,
   Pressable,
   StyleSheet,
   useWindowDimensions,
   View,
-  type GestureResponderEvent,
 } from 'react-native';
 import { Directions, Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, { LinearTransition } from 'react-native-reanimated';
@@ -161,16 +162,30 @@ export default function HomeScreen() {
   };
 
   const canShift = period.kind !== 'all';
-  const swipe = Gesture.Race(
-    Gesture.Fling()
-      .direction(Directions.LEFT)
-      .runOnJS(true)
-      .onEnd(() => canShift && shift(1)),
-    Gesture.Fling()
-      .direction(Directions.RIGHT)
-      .runOnJS(true)
-      .onEnd(() => canShift && shift(-1)),
-  );
+  // Swipe left/right to move between periods. On the web Fling doesn't fire with
+  // touch: a horizontal Pan decides at the end (long or fast enough)
+  const swipe =
+    Platform.OS === 'web'
+      ? Gesture.Pan()
+          .runOnJS(true)
+          .activeOffsetX([-20, 20])
+          .failOffsetY([-25, 25])
+          .onEnd((e) => {
+            if (!canShift) return;
+            if (Math.abs(e.translationX) > 80 || Math.abs(e.velocityX) > 500) {
+              shift(e.translationX < 0 ? 1 : -1);
+            }
+          })
+      : Gesture.Race(
+          Gesture.Fling()
+            .direction(Directions.LEFT)
+            .runOnJS(true)
+            .onEnd(() => canShift && shift(1)),
+          Gesture.Fling()
+            .direction(Directions.RIGHT)
+            .runOnJS(true)
+            .onEnd(() => canShift && shift(-1)),
+        );
 
   const openNew = (type: 'expense' | 'income', category?: Category) =>
     router.push({ pathname: '/transaction/new', params: { type, categoryId: category?.id } });

@@ -9,6 +9,23 @@ import '@/i18n';
 
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({ router: { back: () => mockBack() } }));
+// The platform is forced to "web" below: the real Reanimated would start its browser runtime
+jest.mock('react-native-reanimated', () => {
+  const { View } = require('react-native');
+  // Layout animation presets: chainable, no effect in tests
+  const preset = { duration: () => preset };
+  return {
+    __esModule: true,
+    default: { View },
+    FadeIn: preset,
+    FadeInDown: preset,
+    FadeOut: preset,
+    SlideInDown: preset,
+    SlideInRight: preset,
+    SlideOutDown: preset,
+    SlideOutRight: preset,
+  };
+});
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
