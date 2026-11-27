@@ -16,7 +16,7 @@
   <img src="docs/screenshots/settings.png" width="190" alt="Settings" />
 </p>
 
-> **Status: beta (0.2.0).** Budgie is being tested on iOS and Android and is not in the app stores
+> **Status: beta (0.3.0).** Budgie is being tested on iOS and Android and is not in the app stores
 > yet. The **web version** runs in any modern browser and can be installed as an app:
 > **[mancusofra.github.io/budgie](https://mancusofra.github.io/budgie/)**.
 
