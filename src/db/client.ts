@@ -16,6 +16,22 @@ function connection(): SQLiteDatabase {
   return (globalForDb.__budgieDb ??= (() => {
     const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
     db.execSync('PRAGMA foreign_keys = ON;');
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      // Release the file when the page goes away (reload, update, closing the tab):
+      // otherwise the next page finds it locked for a while, Safari above all
+      window.addEventListener('pagehide', () => {
+        try {
+          db.closeSync();
+        } catch {
+          // already closed
+        }
+        globalForDb.__budgieDb = undefined;
+      });
+      // A page restored from the back/forward cache has the database closed: reload it
+      window.addEventListener('pageshow', (event) => {
+        if (event.persisted) window.location.reload();
+      });
+    }
     return db;
   })());
 }
@@ -49,9 +65,31 @@ export async function prepareDatabase(): Promise<void> {
       // Without isolation there is no SharedArrayBuffer: say why instead of a cryptic error
       throw new WebIsolationError();
     }
-    await openDatabaseAsync(DATABASE_NAME);
+    // Wait for the SQLite worker with an in-memory database, closed right away:
+    // opening the real file twice fails on Safari (one access handle per file)
+    const warmUp = await openDatabaseAsync(':memory:');
+    await warmUp.closeAsync();
+    await openWithRetry();
+    return;
   }
   connection();
+}
+
+/**
+ * Web: the file may still be locked for a moment by the previous page (a
+ * reload just happened): retry a few times before giving up.
+ */
+async function openWithRetry(attempts = 12, delayMs = 500): Promise<void> {
+  for (let i = 1; ; i++) {
+    try {
+      connection();
+      return;
+    } catch (error) {
+      globalForDb.__budgieDb = undefined;
+      if (i >= attempts) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
 }
 
 /**
