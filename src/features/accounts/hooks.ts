@@ -36,9 +36,9 @@ export const accountActions = {
   create: repos.accounts.create,
   update: repos.accounts.update,
   remove: (id: string) => repos.accounts.remove(id),
-  /** Synchronous transaction: refreshes the screens explicitly (see materialize). */
-  purge: (id: string) => {
-    const removed = repos.accounts.purge(id);
+  /** One transaction: refreshes the screens explicitly (see materialize). */
+  purge: async (id: string) => {
+    const removed = await repos.accounts.purge(id);
     refreshLiveQueries();
     return removed;
   },

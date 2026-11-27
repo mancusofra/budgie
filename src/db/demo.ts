@@ -1,6 +1,7 @@
 import { createId } from '@/lib/id';
 
 import { accounts, categories, transactions } from './schema';
+import { inTransaction } from './transaction';
 import type { AppDatabase } from './types';
 
 /**
@@ -35,9 +36,10 @@ export async function generateDemoTransactions(
   });
 
   // In chunks (SQLite limits parameters per statement), in a single transaction
-  db.transaction((tx) => {
+  await inTransaction(db, async (tx) => {
     for (let i = 0; i < rows.length; i += 100) {
-      tx.insert(transactions)
+      await tx
+        .insert(transactions)
         .values(rows.slice(i, i + 100))
         .run();
     }

@@ -5,6 +5,7 @@ import { createId } from '@/lib/id';
 import { countFrom, dueOccurrences, type Frequency } from '@/lib/recurrence';
 
 import { accounts, categories, recurring, transactions, type Recurring } from '../schema';
+import { inTransaction } from '../transaction';
 import type { AppDatabase } from '../types';
 import { InvalidTransactionError, validateTransaction, type NewTransaction } from './transactions';
 
@@ -123,15 +124,16 @@ export function createRecurringRepo(db: AppDatabase) {
      * Logs the occurrences due up to `now` as transactions, in a single
      * transaction. Returns how many were created.
      */
-    materialize(now = new Date()): number {
+    async materialize(now = new Date()): Promise<number> {
       let created = 0;
-      db.transaction((tx) => {
-        const active = tx.select().from(r).where(eq(r.paused, false)).all();
+      await inTransaction(db, async (tx) => {
+        const active = await tx.select().from(r).where(eq(r.paused, false)).all();
         for (const item of active) {
           const due = dueOccurrences(item, now);
           if (due.length === 0) continue;
           for (let i = 0; i < due.length; i += 100) {
-            tx.insert(transactions)
+            await tx
+              .insert(transactions)
               .values(
                 due.slice(i, i + 100).map((date) => ({
                   id: createId(),
@@ -150,7 +152,8 @@ export function createRecurringRepo(db: AppDatabase) {
               )
               .run();
           }
-          tx.update(r)
+          await tx
+            .update(r)
             .set({ count: item.count + due.length })
             .where(eq(r.id, item.id))
             .run();

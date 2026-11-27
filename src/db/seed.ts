@@ -15,6 +15,7 @@ import {
   type CategoryType,
   type SpendingGroup,
 } from './schema';
+import { inTransaction, type Tx } from './transaction';
 import type { AppDatabase } from './types';
 
 /**
@@ -227,53 +228,52 @@ const LEGACY_CASH_COLORS = ['#43A047'];
  * Fills the DB on first launch with categories, a "Cash" account and base settings.
  * On existing DBs it only applies the updates of later versions.
  *
- * Everything happens in a single synchronous transaction (version read included):
- * two close calls, e.g. effects run twice in development, cannot interleave
- * and insert the default data twice.
+ * Everything happens in a single transaction (version read included), and
+ * transactions are queued: two close calls, e.g. effects run twice in
+ * development, cannot interleave and insert the default data twice.
  */
 export async function seedDatabase(db: AppDatabase, { language, currency }: SeedOptions) {
-  return db.transaction((tx) => {
-    const row = tx.select().from(settings).where(eq(settings.key, 'seedVersion')).get();
+  return inTransaction(db, async (tx) => {
+    const row = await tx.select().from(settings).where(eq(settings.key, 'seedVersion')).get();
     const current: number = row ? JSON.parse(row.value) : 0;
     if (current >= SEED_VERSION) return false;
 
     if (current === 0) {
-      insertDefaults(tx, language, currency);
-      setSetting(tx, 'currency', currency);
+      await insertDefaults(tx, language, currency);
+      await setSetting(tx, 'currency', currency);
     } else {
-      if (current < 2) recolorDefaults(tx);
-      if (current < 3) assignDefaultGroups(tx);
+      if (current < 2) await recolorDefaults(tx);
+      if (current < 3) await assignDefaultGroups(tx);
     }
-    setSetting(tx, 'seedVersion', SEED_VERSION);
+    await setSetting(tx, 'seedVersion', SEED_VERSION);
     return true;
   });
 }
 
 /** Deletes all data and applies the seed again (development only). */
 export async function resetDatabase(db: AppDatabase, options: SeedOptions) {
-  db.transaction((tx) => {
-    tx.delete(transactions).run();
-    tx.delete(recurring).run();
-    tx.delete(budgets).run();
-    tx.delete(budgetMonths).run();
-    tx.delete(categories).run();
-    tx.delete(accounts).run();
-    tx.delete(settings).run();
+  await inTransaction(db, async (tx) => {
+    await tx.delete(transactions).run();
+    await tx.delete(recurring).run();
+    await tx.delete(budgets).run();
+    await tx.delete(budgetMonths).run();
+    await tx.delete(categories).run();
+    await tx.delete(accounts).run();
+    await tx.delete(settings).run();
   });
   return seedDatabase(db, options);
 }
 
-export type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
-
-function setSetting(tx: Tx, key: SettingKey, value: unknown) {
+async function setSetting(tx: Tx, key: SettingKey, value: unknown) {
   const json = JSON.stringify(value);
-  tx.insert(settings)
+  await tx
+    .insert(settings)
     .values({ key, value: json })
     .onConflictDoUpdate({ target: settings.key, set: { value: json } })
     .run();
 }
 
-function insertDefaults(tx: Tx, language: string, currency: string) {
+async function insertDefaults(tx: Tx, language: string, currency: string) {
   const lang: Language = language.startsWith('it') ? 'it' : 'en';
   const now = new Date();
   const sortByType: Record<CategoryType, number> = { expense: 0, income: 0 };
@@ -290,8 +290,9 @@ function insertDefaults(tx: Tx, language: string, currency: string) {
     createdAt: now,
   }));
 
-  tx.insert(categories).values(categoryRows).run();
-  tx.insert(accounts)
+  await tx.insert(categories).values(categoryRows).run();
+  await tx
+    .insert(accounts)
     .values({
       id: createId(),
       name: lang === 'it' ? 'Contanti' : 'Cash',
@@ -304,15 +305,17 @@ function insertDefaults(tx: Tx, language: string, currency: string) {
 }
 
 /** v2: new palette. Updates only colors still at their default value. */
-function recolorDefaults(tx: Tx) {
+async function recolorDefaults(tx: Tx) {
   for (const c of DEFAULT_CATEGORIES) {
     if (!c.legacyColors?.length) continue;
-    tx.update(categories)
+    await tx
+      .update(categories)
       .set({ color: c.color })
       .where(and(eq(categories.type, c.type), inArray(categories.color, c.legacyColors)))
       .run();
   }
-  tx.update(accounts)
+  await tx
+    .update(accounts)
     .set({ color: CASH_COLOR })
     .where(inArray(accounts.color, LEGACY_CASH_COLORS))
     .run();
@@ -331,14 +334,15 @@ export function defaultGroupForIcon(icon: string): SpendingGroup {
  * v3: gives every expense category without a group its default one (also
  * used after restoring a backup made before groups existed).
  */
-export function assignDefaultGroups(tx: Tx) {
-  const rows = tx
+export async function assignDefaultGroups(tx: Tx) {
+  const rows = await tx
     .select({ id: categories.id, icon: categories.icon })
     .from(categories)
     .where(and(eq(categories.type, 'expense'), isNull(categories.spendingGroup)))
     .all();
   for (const row of rows) {
-    tx.update(categories)
+    await tx
+      .update(categories)
       .set({ spendingGroup: defaultGroupForIcon(row.icon) })
       .where(eq(categories.id, row.id))
       .run();

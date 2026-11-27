@@ -26,12 +26,12 @@ export const recurringActions = {
   update: repos.recurring.update,
   remove: (id: string) => repos.recurring.remove(id),
   /**
-   * Logs the due occurrences. Writes happen in a single synchronous
-   * transaction, which on iOS doesn't always notify live queries:
-   * if it created anything it refreshes the open screens explicitly.
+   * Logs the due occurrences. Writes happen in a single transaction, which on
+   * iOS doesn't always notify live queries: if it created anything it
+   * refreshes the open screens explicitly.
    */
-  materialize: (now?: Date) => {
-    const created = repos.recurring.materialize(now);
+  materialize: async (now?: Date) => {
+    const created = await repos.recurring.materialize(now);
     if (created > 0) refreshLiveQueries();
     return created;
   },

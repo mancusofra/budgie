@@ -304,7 +304,7 @@ describe('recurring', () => {
           startDate: new Date(2026, 0, 10),
         })
       ).id;
-      expect(recurringActions.materialize(new Date(2026, 2, 10, 12))).toBe(3);
+      expect(await recurringActions.materialize(new Date(2026, 2, 10, 12))).toBe(3);
     });
     expect(result.current.list).toHaveLength(1);
     expect(result.current.list[0].category?.name).toBe('Bollette');

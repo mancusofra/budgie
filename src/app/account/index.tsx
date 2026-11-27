@@ -37,8 +37,8 @@ export default function AccountsScreen() {
         {
           text: t('accounts.purgeAction'),
           style: 'destructive',
-          onPress: () => {
-            accountActions.purge(id);
+          onPress: async () => {
+            await accountActions.purge(id);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           },
         },

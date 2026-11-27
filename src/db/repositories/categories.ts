@@ -11,6 +11,7 @@ import {
   type SpendingGroup,
 } from '../schema';
 import { InUseError } from './errors';
+import { inTransaction } from '../transaction';
 import type { AppDatabase } from '../types';
 
 export type NewCategory = Pick<Category, 'name' | 'type' | 'icon' | 'color'> & {
@@ -122,16 +123,18 @@ export function createCategoriesRepo(db: AppDatabase) {
     async remove(id: string): Promise<void> {
       const count = await this.transactionCount(id);
       if (count > 0) throw new InUseError('The category', count);
-      db.transaction((tx) => {
-        tx.delete(budgets).where(eq(budgets.categoryId, id)).run();
-        tx.delete(c).where(eq(c.id, id)).run();
+      await inTransaction(db, async (tx) => {
+        await tx.delete(budgets).where(eq(budgets.categoryId, id)).run();
+        await tx.delete(c).where(eq(c.id, id)).run();
       });
     },
 
     /** Saves the new order: `ids` in the desired order. */
     async reorder(ids: string[]): Promise<void> {
-      db.transaction((tx) => {
-        ids.forEach((id, sortOrder) => tx.update(c).set({ sortOrder }).where(eq(c.id, id)).run());
+      await inTransaction(db, async (tx) => {
+        for (const [sortOrder, id] of ids.entries()) {
+          await tx.update(c).set({ sortOrder }).where(eq(c.id, id)).run();
+        }
       });
     },
   };

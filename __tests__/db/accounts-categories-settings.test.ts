@@ -88,19 +88,19 @@ describe('accountsRepo', () => {
       frequency: 'month',
       startDate: new Date(2026, 0, 1),
     });
-    repos.recurring.materialize(new Date(2026, 1, 15));
+    await repos.recurring.materialize(new Date(2026, 1, 15));
 
     // Only if archived
-    expect(() => repos.accounts.purge(old.id)).toThrow();
+    await expect(repos.accounts.purge(old.id)).rejects.toThrow();
     await repos.accounts.setArchived(old.id, true);
-    expect(repos.accounts.purge(old.id)).toBe(5);
+    expect(await repos.accounts.purge(old.id)).toBe(5);
 
     expect(await repos.accounts.getById(old.id)).toBeUndefined();
     const left = await repos.transactions.list();
     expect(left).toHaveLength(1);
     expect(left[0].accountId).toBe(cash.id);
     expect(await repos.recurring.listDetailed()).toEqual([]);
-    expect(repos.accounts.purge('inesistente')).toBe(0);
+    expect(await repos.accounts.purge('inesistente')).toBe(0);
     close();
   });
 

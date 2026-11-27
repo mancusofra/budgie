@@ -41,7 +41,7 @@ describe('backup', () => {
 
     const target = createTestDb();
     await seedDatabase(target.db, { language: 'en', currency: 'USD' }); // different data, to be replaced
-    restoreBackup(target.db, parseBackup(json));
+    await restoreBackup(target.db, parseBackup(json));
 
     const again = await createBackup(target.db, new Date(2026, 8, 29));
     expect(again).toEqual(backup);
