@@ -232,3 +232,13 @@ describe('install and updates', () => {
     expect(screen.queryByText(/Aggiorna|Update/)).toBeNull();
   });
 });
+
+describe('web styles', () => {
+  const { webStylesCss } = require('@/features/web/web-styles');
+
+  it('scrollbar colors follow the theme', () => {
+    expect(webStylesCss('light')).toContain('rgba(28, 28, 30, 0.22)');
+    expect(webStylesCss('dark')).toContain('rgba(242, 242, 244, 0.22)');
+    expect(webStylesCss('dark')).toContain('::-webkit-scrollbar-thumb');
+  });
+});

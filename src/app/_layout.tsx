@@ -12,6 +12,7 @@ import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
 import { RecurringSync } from '@/features/recurring/recurring-sync';
 import { installWebAlert } from '@/features/web/alert-polyfill';
 import { UpdateBanner } from '@/features/web/pwa';
+import { WebStyles } from '@/features/web/web-styles';
 import { useWideWeb, WebDialog, WebPage } from '@/features/web/web-frames';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
@@ -172,6 +173,7 @@ export default function RootLayout() {
           </Stack>
           <SnackbarHost />
           {Platform.OS === 'web' && <UpdateBanner />}
+          {Platform.OS === 'web' && <WebStyles />}
           <SettingsSync />
           <RecurringSync />
           <OnboardingGate />
