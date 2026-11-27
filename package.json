@@ -1,7 +1,7 @@
 {
   "name": "budgie",
   "main": "expo-router/entry",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "dependencies": {
     "@expo/ui": "~58.0.30",
     "@expo/vector-icons": "^15.0.2",

@@ -16,6 +16,37 @@ export type Release = {
  */
 export const CHANGELOG: Release[] = [
   {
+    version: '0.3.0',
+    date: '2026-11-27',
+    changes: [
+      {
+        kind: 'new',
+        it: 'Report PDF di un periodo e dei conti scelti: riepilogo, spese per categoria e tutte le transazioni mese per mese',
+        en: 'PDF report of any period and accounts: summary, spending by category and every transaction month by month',
+      },
+      {
+        kind: 'new',
+        it: 'Gruppi di spesa: ogni categoria è un Bisogno, un Desiderio o un Risparmio, con quote regolabili (50/30/20) confrontate con le entrate',
+        en: 'Spending groups: every category is a Need, a Want or Savings, with adjustable targets (50/30/20) compared with your income',
+      },
+      {
+        kind: 'new',
+        it: 'Sezione Gruppi nelle Statistiche e anello dei gruppi in Home, attivabile dalle Impostazioni',
+        en: 'Groups section in Stats and a groups ring on Home, which can be turned on in Settings',
+      },
+      {
+        kind: 'new',
+        it: 'Versione web installabile, anche offline: mancusofra.github.io/budgie',
+        en: 'Installable web version, offline too: mancusofra.github.io/budgie',
+      },
+      {
+        kind: 'fix',
+        it: 'Aggiornamento a Expo SDK 58',
+        en: 'Updated to Expo SDK 58',
+      },
+    ],
+  },
+  {
     version: '0.2.0',
     date: '2026-10-08',
     changes: [
