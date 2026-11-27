@@ -9,6 +9,7 @@ import { DatabaseProvider } from '@/db/provider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { OnboardingGate } from '@/features/onboarding/onboarding-gate';
 import { RecurringSync } from '@/features/recurring/recurring-sync';
+import { installWebAlert } from '@/features/web/alert-polyfill';
 import { useWideWeb, WebDialog, WebPage } from '@/features/web/web-frames';
 import { AppLock } from '@/features/settings/app-lock';
 import { SettingsSync } from '@/features/settings/settings-sync';
@@ -23,6 +24,7 @@ type ScreenOptions = Exclude<
 >;
 
 SplashScreen.preventAutoHideAsync();
+installWebAlert();
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

@@ -330,7 +330,9 @@
     "monthDetail": "Month by month",
     "monthTotal": "Month total",
     "empty": "No transactions",
-    "preview": "Preview and print"
+    "preview": "Preview and print",
+    "webHint": "The browser print dialog opens: choose \"Save as PDF\" as the destination.",
+    "webSubmit": "Create PDF"
   },
   "groups": {
     "title": "Spending groups",
