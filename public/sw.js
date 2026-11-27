@@ -50,7 +50,9 @@ self.addEventListener('message', (event) => {
 function isolate(response) {
   if (!response || response.status === 0 || response.type === 'opaque') return response;
   const headers = new Headers(response.headers);
-  headers.set('Cross-Origin-Embedder-Policy', 'credentialless');
+  // require-corp, not credentialless: Safari supports only require-corp (all our
+  // files are same-origin, so nothing is blocked)
+  headers.set('Cross-Origin-Embedder-Policy', 'require-corp');
   headers.set('Cross-Origin-Opener-Policy', 'same-origin');
   return new Response(response.body, {
     status: response.status,

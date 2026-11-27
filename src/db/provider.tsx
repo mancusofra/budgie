@@ -5,7 +5,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/text';
 
-import { db, prepareDatabase } from './client';
+import { db, prepareDatabase, WebIsolationError } from './client';
 import migrations from './migrations/migrations';
 import { seedDatabase } from './seed';
 
@@ -52,6 +52,21 @@ function MigratedDatabase({ children, onReady }: Props) {
 }
 
 function DatabaseError({ error }: { error: Error }) {
+  if (error instanceof WebIsolationError) {
+    const it = (navigator.language ?? '').startsWith('it');
+    return (
+      <View style={styles.center}>
+        <Text variant="subtitle" style={styles.text}>
+          {it ? 'Budgie non riesce ad aprire il database' : 'Budgie cannot open its database'}
+        </Text>
+        <Text color="textSecondary" style={styles.text}>
+          {it
+            ? 'Chiudi questa scheda e riaprila. Se non basta: serve una versione recente del browser e la navigazione privata va disattivata.'
+            : 'Close this tab and open it again. If that does not help: a recent browser is needed and private browsing must be off.'}
+        </Text>
+      </View>
+    );
+  }
   // On the web the database can be open in one tab only (OPFS lock)
   if (
     Platform.OS === 'web' &&
