@@ -94,8 +94,8 @@ export function useDataTransfer() {
     return parseBackup(await picked.result.text());
   }, []);
 
-  const restore = useCallback((backup: Backup) => {
-    restoreBackup(db, backup);
+  const restore = useCallback(async (backup: Backup) => {
+    await restoreBackup(db, backup);
     refreshLiveQueries();
   }, []);
 

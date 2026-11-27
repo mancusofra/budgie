@@ -7,11 +7,7 @@ import { recurringActions } from './hooks';
 export function RecurringSync() {
   useEffect(() => {
     const run = () => {
-      try {
-        recurringActions.materialize();
-      } catch (e) {
-        console.error(e);
-      }
+      recurringActions.materialize().catch(console.error);
     };
     run();
     const sub = AppState.addEventListener('change', (state) => state === 'active' && run());

@@ -133,7 +133,7 @@ describe('spending groups: data model', () => {
     };
 
     const target = createTestDb();
-    restoreBackup(target.db, parseBackup(JSON.stringify(legacy)));
+    await restoreBackup(target.db, parseBackup(JSON.stringify(legacy)));
     const expense = await target.repos.categories.list({ type: 'expense' });
     expect(expense.find((c) => c.name === 'Ristoranti')?.spendingGroup).toBe('want');
     expect(expense.every((c) => c.spendingGroup)).toBe(true);

@@ -1,12 +1,16 @@
 import { drizzle } from 'drizzle-orm/expo-sqlite';
+import { drizzle as drizzleProxy } from 'drizzle-orm/sqlite-proxy';
 import { openDatabaseAsync, openDatabaseSync, type SQLiteDatabase } from 'expo-sqlite';
 import { Platform } from 'react-native';
 
-import { notifyTableChanged, refreshLiveQueries } from './live-query';
+import { notifyTableChanged } from './live-query';
 import { createRepositories } from './repositories';
 import * as schema from './schema';
+import type { AppDatabase } from './types';
 
 export const DATABASE_NAME = 'budgie.db';
+
+const isWeb = Platform.OS === 'web';
 
 // In development fast refresh may re-run this module: reuse the connection
 // already open instead of opening a second one (which would find the DB busy).
@@ -17,61 +21,45 @@ const globalForDb = globalThis as { __budgieDb?: SQLiteDatabase };
  * doesn't start (see scripts/web-postbuild.js). No-op elsewhere.
  */
 export function bootStep(step: string) {
-  if (Platform.OS === 'web' && typeof window !== 'undefined') {
+  if (isWeb && typeof window !== 'undefined') {
     const w = window as unknown as { __budgieBoot?: string };
     // Once started, later renders don't move it back
     if (w.__budgieBoot !== 'ready') w.__budgieBoot = step;
   }
 }
 
-function connection(): SQLiteDatabase {
+// --- iOS / Android: synchronous connection --------------------------------
+
+function nativeConnection(): SQLiteDatabase {
   // enableChangeListener lets live queries update by themselves
   return (globalForDb.__budgieDb ??= (() => {
-    // Web: no change listener. With it, Safari hangs on the first synchronous write
-    // (the change event and the sync reply get stuck); writes notify instead (see webWrites)
-    const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: Platform.OS !== 'web' });
+    const db = openDatabaseSync(DATABASE_NAME, { enableChangeListener: true });
     db.execSync('PRAGMA foreign_keys = ON;');
-    if (Platform.OS === 'web') {
-      // Safari never completes a synchronous write that flushes the file (the
-      // flush seems to need the main thread, which is blocked waiting): no flush
-      // on every write. Data is still written; only an OS crash could lose the
-      // last change
-      db.execSync('PRAGMA synchronous = OFF;');
-    }
-    if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      // Release the file when the page goes away (reload, update, closing the tab):
-      // otherwise the next page finds it locked for a while, Safari above all
-      window.addEventListener('pagehide', () => {
-        try {
-          db.closeSync();
-        } catch {
-          // already closed
-        }
-        globalForDb.__budgieDb = undefined;
-      });
-      // A page restored from the back/forward cache has the database closed: reload it
-      window.addEventListener('pageshow', (event) => {
-        if (event.persisted) window.location.reload();
-      });
-    }
     return db;
   })());
 }
 
-/**
- * The connection is opened on first use, not on import: on the web SQLite
- * runs in a worker that must finish loading first (see prepareDatabase).
- */
+/** Native connection, opened on first use (not on import). */
 export const expoDb = new Proxy({} as SQLiteDatabase, {
   get(_, prop) {
-    const db = connection();
-    if (Platform.OS === 'web' && prop in WEB_WRITE_WRAPPERS) {
-      return WEB_WRITE_WRAPPERS[prop as keyof typeof WEB_WRITE_WRAPPERS](db);
-    }
+    const db = nativeConnection();
     const value = Reflect.get(db, prop, db);
     return typeof value === 'function' ? value.bind(db) : value;
   },
 });
+
+// --- Web: asynchronous connection ------------------------------------------
+//
+// Safari can't complete a synchronous write from the page (it waits forever),
+// so on the web every query goes through expo-sqlite's async API, with
+// Drizzle's async "sqlite-proxy" driver. The change listener is off too: the
+// writes notify the live queries themselves.
+
+function webConnection(): SQLiteDatabase {
+  const db = globalForDb.__budgieDb;
+  if (!db) throw new Error('Database not ready: prepareDatabase() must run first');
+  return db;
+}
 
 /** Table written by an INSERT / UPDATE / DELETE / REPLACE statement, if any. */
 export function writtenTable(sql: string): string | null {
@@ -82,122 +70,79 @@ export function writtenTable(sql: string): string | null {
   return match ? match[1] : null;
 }
 
-/**
- * Web: the change listener is off (see connection), so the writes that go
- * through the app notify the live queries themselves. Drizzle prepares every
- * statement; multi-statement exec (migrations, restore) refreshes everything.
- */
-const WEB_WRITE_WRAPPERS = {
-  prepareSync: (db: SQLiteDatabase) => (source: string) => {
-    const statement = db.prepareSync(source);
-    const table = writtenTable(source);
-    if (!table) return statement;
-    return new Proxy(statement, {
-      get(target, prop) {
-        const value = Reflect.get(target, prop, target);
-        if (typeof value !== 'function') return value;
-        if (!String(prop).startsWith('execute')) return value.bind(target);
-        return (...args: unknown[]) => {
-          const result = value.apply(target, args);
-          notifyTableChanged(table);
-          return result;
-        };
-      },
-    });
-  },
-  execSync: (db: SQLiteDatabase) => (source: string) => {
-    db.execSync(source);
-    if (/\b(insert|update|delete|replace|create|drop|alter)\b/i.test(source)) refreshLiveQueries();
-  },
-  execAsync: (db: SQLiteDatabase) => async (source: string) => {
-    await db.execAsync(source);
-    if (/\b(insert|update|delete|replace|create|drop|alter)\b/i.test(source)) refreshLiveQueries();
-  },
-};
+/** Runs one statement for Drizzle's async driver: rows as arrays of values. */
+async function webQuery(
+  sql: string,
+  params: unknown[],
+  method: 'run' | 'all' | 'values' | 'get',
+): Promise<{ rows: unknown[] }> {
+  const statement = await webConnection().prepareAsync(sql);
+  try {
+    const result = await statement.executeForRawResultAsync(params as never);
+    const rows = method === 'run' ? [] : await result.getAllAsync();
+    const table = writtenTable(sql);
+    if (table) notifyTableChanged(table);
+    // "get" wants the single row itself (undefined when there is none)
+    return { rows: method === 'get' ? (rows[0] as unknown[]) : rows };
+  } finally {
+    await statement.finalizeAsync();
+  }
+}
 
 /**
  * Resolves when the database can be used. Immediate on iOS/Android; on the
- * web it waits for the SQLite worker (WebAssembly) to load.
+ * web it opens the async connection (after the SQLite worker has loaded).
  */
 export async function prepareDatabase(): Promise<void> {
   bootStep('prepare');
-  if (Platform.OS === 'web' && !globalForDb.__budgieDb && waitingForIsolation()) {
+  if (!isWeb) {
+    nativeConnection();
+    return;
+  }
+  if (globalForDb.__budgieDb) return;
+  if (waitingForIsolation()) {
     bootStep('waiting for the isolation reload');
     // The page is about to reload with the headers SQLite needs (scripts/web-postbuild.js)
     await new Promise(() => {});
   }
-  if (Platform.OS === 'web' && !globalForDb.__budgieDb) {
-    if (typeof window !== 'undefined' && !window.crossOriginIsolated) {
-      // A fixed version may be waiting in the service worker: the app can't start
-      // anyway, so activate it now instead of waiting for "Update"
-      bootStep('not isolated: activating the new service worker');
-      await activateWaitingWorker();
-      // Without isolation there is no SharedArrayBuffer: say why instead of a cryptic error
-      throw new WebIsolationError();
-    }
-    // Wait for the SQLite worker with an in-memory database, closed right away:
-    // opening the real file twice fails on Safari (one access handle per file)
-    bootStep('loading the SQLite worker');
-    const warmUp = await openDatabaseAsync(':memory:');
-    bootStep('closing the in-memory database');
-    // Never wait more than 3 s for it: it's only a warm-up
-    await Promise.race([warmUp.closeAsync(), new Promise((r) => setTimeout(r, 3000))]);
-    await openWithRetry();
-    await probeWeb();
-    return;
+  if (typeof window !== 'undefined' && !window.crossOriginIsolated) {
+    // A fixed version may be waiting in the service worker: the app can't start
+    // anyway, so activate it now instead of waiting for "Update"
+    bootStep('not isolated: activating the new service worker');
+    await activateWaitingWorker();
+    // Without isolation there is no SharedArrayBuffer: say why instead of a cryptic error
+    throw new WebIsolationError();
   }
-  connection();
-}
-
-/**
- * Web: small read/write checks before the app uses the database, each one
- * recorded as a startup step: if Safari hangs, the diagnostics panel shows
- * which kind of access is stuck (sync read, async write, sync write).
- */
-async function probeWeb() {
-  const db = connection();
-  bootStep('probe: sync read');
-  db.getFirstSync('SELECT 1');
-  bootStep('probe: async write');
-  await db.execAsync(
-    'CREATE TABLE IF NOT EXISTS __budgie_probe (x INTEGER); INSERT INTO __budgie_probe VALUES (1);',
-  );
-  bootStep('probe: sync write (synchronous=OFF)');
-  db.execSync('DELETE FROM __budgie_probe;');
-  bootStep('probe: sync transaction');
-  db.withTransactionSync(() => db.execSync('INSERT INTO __budgie_probe VALUES (2);'));
-  db.execSync('DROP TABLE __budgie_probe;');
+  bootStep(`opening ${DATABASE_NAME}`);
+  const db = await openWithRetry();
+  await db.execAsync('PRAGMA foreign_keys = ON;');
+  globalForDb.__budgieDb = db;
+  // Release the file when the page goes away (reload, update, closing the tab):
+  // otherwise the next page finds it locked for a while, Safari above all
+  window.addEventListener('pagehide', () => {
+    globalForDb.__budgieDb = undefined;
+    db.closeAsync().catch(() => {});
+  });
+  // A page restored from the back/forward cache has the database closed: reload it
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) window.location.reload();
+  });
 }
 
 /**
  * Web: the file may still be locked for a moment by the previous page (a
  * reload just happened): retry a few times before giving up.
  */
-async function openWithRetry(attempts = 12, delayMs = 500): Promise<void> {
+async function openWithRetry(attempts = 12, delayMs = 500): Promise<SQLiteDatabase> {
   for (let i = 1; ; i++) {
     try {
       bootStep(`opening ${DATABASE_NAME} (attempt ${i})`);
-      connection();
-      return;
+      return await openDatabaseAsync(DATABASE_NAME);
     } catch (error) {
-      globalForDb.__budgieDb = undefined;
       if (i >= attempts) throw error;
       await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
-}
-
-/**
- * Web: SQLite needs cross-origin isolation. Without it, the service worker
- * is about to reload the page once (only if it hasn't already tried).
- */
-function waitingForIsolation(): boolean {
-  return (
-    typeof window !== 'undefined' &&
-    !window.crossOriginIsolated &&
-    'serviceWorker' in navigator &&
-    !sessionStorage.getItem('budgie-coi-reload')
-  );
 }
 
 /** Activates a waiting service worker and reloads the page; resolves if there is none. */
@@ -219,5 +164,25 @@ export class WebIsolationError extends Error {
   }
 }
 
-export const db = drizzle(expoDb, { schema });
+/**
+ * Web: SQLite needs cross-origin isolation. Without it, the service worker
+ * is about to reload the page once (only if it hasn't already tried).
+ */
+function waitingForIsolation(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    !window.crossOriginIsolated &&
+    'serviceWorker' in navigator &&
+    !sessionStorage.getItem('budgie-coi-reload')
+  );
+}
+
+/**
+ * The app's Drizzle database. The code is written for the synchronous driver
+ * type; on the web the async driver is used instead, which works because
+ * every query is awaited and transactions go through inTransaction().
+ */
+export const db: AppDatabase = isWeb
+  ? (drizzleProxy(webQuery, { schema }) as unknown as AppDatabase)
+  : drizzle(expoDb, { schema });
 export const repos = createRepositories(db);

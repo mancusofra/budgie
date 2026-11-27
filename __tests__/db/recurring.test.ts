@@ -29,10 +29,10 @@ describe('recurringRepo', () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
 
-    expect(repos.recurring.materialize(new Date(2026, 2, 15))).toBe(3);
+    expect(await repos.recurring.materialize(new Date(2026, 2, 15))).toBe(3);
     // Already logged: a second run doesn't duplicate
-    expect(repos.recurring.materialize(new Date(2026, 2, 15))).toBe(0);
-    expect(repos.recurring.materialize(new Date(2026, 3, 1, 10))).toBe(1);
+    expect(await repos.recurring.materialize(new Date(2026, 2, 15))).toBe(0);
+    expect(await repos.recurring.materialize(new Date(2026, 3, 1, 10))).toBe(1);
 
     const txs = await repos.transactions.list();
     expect(txs).toHaveLength(4);
@@ -60,7 +60,7 @@ describe('recurringRepo', () => {
   it('changes only the future and restarts if the schedule changes', async () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
-    repos.recurring.materialize(new Date(2026, 1, 15));
+    await repos.recurring.materialize(new Date(2026, 1, 15));
 
     // As the edit screen does: all fields, schedule unchanged
     await repos.recurring.update(r.id, {
@@ -69,13 +69,13 @@ describe('recurringRepo', () => {
       interval: 1,
       startDate: new Date(2026, 0, 1, 9),
     });
-    expect(repos.recurring.materialize(new Date(2026, 1, 15))).toBe(0);
+    expect(await repos.recurring.materialize(new Date(2026, 1, 15))).toBe(0);
     expect((await repos.recurring.getById(r.id))!.count).toBe(2);
 
     // New next date: the count restarts from there
     await repos.recurring.update(r.id, { startDate: new Date(2026, 2, 5, 9) });
     expect((await repos.recurring.getById(r.id))!.count).toBe(0);
-    repos.recurring.materialize(new Date(2026, 2, 10));
+    await repos.recurring.materialize(new Date(2026, 2, 10));
 
     const amounts = (await repos.transactions.list()).map((t) => t.amount).sort();
     expect(amounts).toEqual([70000, 70000, 75000]);
@@ -92,19 +92,19 @@ describe('recurringRepo', () => {
       frequency: 'month',
       startDate: new Date(2026, 0, 27),
     });
-    repos.recurring.materialize(new Date(2026, 0, 28));
+    await repos.recurring.materialize(new Date(2026, 0, 28));
     await repos.recurring.update(r.id, { paused: true });
-    expect(repos.recurring.materialize(new Date(2026, 4, 1))).toBe(0);
+    expect(await repos.recurring.materialize(new Date(2026, 4, 1))).toBe(0);
 
     await repos.recurring.update(r.id, { paused: false }, new Date(2026, 4, 1));
-    expect(repos.recurring.materialize(new Date(2026, 4, 28))).toBe(1); // only May 27
+    expect(await repos.recurring.materialize(new Date(2026, 4, 28))).toBe(1); // only May 27
     close();
   });
 
   it('deleting it keeps the transactions', async () => {
     const { repos, cash, rent, close } = await setup();
     const r = await repos.recurring.create(rentInput(cash.id, rent));
-    repos.recurring.materialize(new Date(2026, 1, 1, 12));
+    await repos.recurring.materialize(new Date(2026, 1, 1, 12));
     await repos.recurring.remove(r.id);
     const txs = await repos.transactions.list();
     expect(txs).toHaveLength(2);
@@ -125,12 +125,12 @@ describe('recurringRepo', () => {
   it('backup, restore (version 1 backups too) and reset', async () => {
     const { db, repos, cash, rent, close } = await setup();
     await repos.recurring.create({ ...rentInput(cash.id, rent), endDate: new Date(2026, 11, 31) });
-    repos.recurring.materialize(new Date(2026, 1, 1, 12));
+    await repos.recurring.materialize(new Date(2026, 1, 1, 12));
 
     const backup = parseBackup(JSON.stringify(await createBackup(db)));
     expect(backup.data.recurring).toHaveLength(1);
     await repos.recurring.remove((await repos.recurring.listDetailed())[0].recurring.id);
-    restoreBackup(db, backup);
+    await restoreBackup(db, backup);
     const [restored] = await repos.recurring.listDetailed();
     expect(restored.recurring.endDate).toEqual(new Date(2026, 11, 31));
     expect(restored.recurring.startDate).toBeInstanceOf(Date);

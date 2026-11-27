@@ -87,7 +87,7 @@ function RecurringForm({ item }: { item: Recurring }) {
         // New schedule: the chosen next date becomes the start
         ...(scheduleChanged ? { startDate: next } : {}),
       });
-      recurringActions.materialize();
+      await recurringActions.materialize();
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (e) {

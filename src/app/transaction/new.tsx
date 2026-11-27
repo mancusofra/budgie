@@ -21,7 +21,7 @@ export default function NewTransactionScreen() {
         if (!repeat) return addTransaction({ type, date, ...values });
         // The first occurrence is the chosen date: it is logged right away if already past
         await recurringActions.create({ type, startDate: date, ...repeat, ...values });
-        recurringActions.materialize();
+        await recurringActions.materialize();
         showSnackbar({
           message: t('recurring.created', {
             label: repeatLabel(t, repeat.frequency, repeat.interval),

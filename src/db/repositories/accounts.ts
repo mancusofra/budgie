@@ -4,6 +4,7 @@ import { createId } from '@/lib/id';
 
 import { accounts, recurring, transactions, type Account } from '../schema';
 import { InUseError } from './errors';
+import { inTransaction } from '../transaction';
 import type { AppDatabase } from '../types';
 
 export type NewAccount = Pick<Account, 'name' | 'currency'> &
@@ -110,29 +111,31 @@ export function createAccountsRepo(db: AppDatabase) {
      * (including transfers from and to the account) and its recurring rules.
      * Returns how many transactions were deleted.
      */
-    purge(id: string): number {
-      return db.transaction((tx) => {
-        const account = tx.select().from(a).where(eq(a.id, id)).get();
+    async purge(id: string): Promise<number> {
+      return inTransaction(db, async (tx) => {
+        const account = await tx.select().from(a).where(eq(a.id, id)).get();
         if (!account) return 0;
         if (!account.archived)
           throw new Error('Only an archived account can be permanently deleted');
         const involves = (t: typeof transactions | typeof recurring) =>
           or(eq(t.accountId, id), eq(t.toAccountId, id));
         // Transactions first: they may reference the account's recurring rules
-        const removed = tx
+        const removed = await tx
           .delete(transactions)
           .where(involves(transactions))
           .returning({ id: transactions.id })
           .all();
-        tx.delete(recurring).where(involves(recurring)).run();
-        tx.delete(a).where(eq(a.id, id)).run();
+        await tx.delete(recurring).where(involves(recurring)).run();
+        await tx.delete(a).where(eq(a.id, id)).run();
         return removed.length;
       });
     },
 
     async reorder(ids: string[]): Promise<void> {
-      db.transaction((tx) => {
-        ids.forEach((id, sortOrder) => tx.update(a).set({ sortOrder }).where(eq(a.id, id)).run());
+      await inTransaction(db, async (tx) => {
+        for (const [sortOrder, id] of ids.entries()) {
+          await tx.update(a).set({ sortOrder }).where(eq(a.id, id)).run();
+        }
       });
     },
   };

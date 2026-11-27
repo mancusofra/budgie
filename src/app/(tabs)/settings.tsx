@@ -97,8 +97,8 @@ export default function SettingsScreen() {
         {
           text: t('settings.restore'),
           style: 'destructive',
-          onPress: () => {
-            restore(chosen);
+          onPress: async () => {
+            await restore(chosen);
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             Alert.alert(t('settings.restoreDone'));
           },

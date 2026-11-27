@@ -8,6 +8,7 @@ import {
   transactions,
 } from './schema';
 import { assignDefaultGroups } from './seed';
+import { inTransaction } from './transaction';
 import type { AppDatabase } from './types';
 
 export const BACKUP_FORMAT = 'budgie-backup';
@@ -93,20 +94,21 @@ export function parseBackup(json: string): Backup {
 const CHUNK = 100;
 
 /** Replaces ALL data with the backup's, in a single transaction. */
-export function restoreBackup(db: AppDatabase, backup: Backup) {
+export async function restoreBackup(db: AppDatabase, backup: Backup) {
   const names = Object.keys(TABLES) as TableName[];
-  db.transaction((tx) => {
+  await inTransaction(db, async (tx) => {
     // Delete in reverse order (referencing tables first)
-    for (const name of [...names].reverse()) tx.delete(TABLES[name]).run();
+    for (const name of [...names].reverse()) await tx.delete(TABLES[name]).run();
     for (const name of names) {
       const rows = backup.data[name].map(fromPlain);
       for (let i = 0; i < rows.length; i += CHUNK) {
-        tx.insert(TABLES[name])
+        await tx
+          .insert(TABLES[name])
           .values(rows.slice(i, i + CHUNK) as any)
           .run();
       }
     }
     // Backups made before spending groups: categories without a group get the default one
-    assignDefaultGroups(tx);
+    await assignDefaultGroups(tx);
   });
 }

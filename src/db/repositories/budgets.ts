@@ -3,13 +3,12 @@ import { and, asc, desc, eq, isNull, lt, lte, sql } from 'drizzle-orm';
 import { createId } from '@/lib/id';
 
 import { budgetMonths, budgets, type Budget } from '../schema';
+import { inTransaction, type Tx } from '../transaction';
 import type { AppDatabase } from '../types';
 
 export class InvalidBudgetError extends Error {
   name = 'InvalidBudgetError';
 }
-
-type Tx = Parameters<Parameters<AppDatabase['transaction']>[0]>[0];
 
 /**
  * Monthly budgets with inheritance: a month's budgets are those of the latest
@@ -24,20 +23,21 @@ export function createBudgetsRepo(db: AppDatabase) {
     categoryId ? eq(b.categoryId, categoryId) : isNull(b.categoryId);
 
   /** Creates the month's definition by copying the inherited one, if it doesn't exist yet. */
-  const ensureMonth = (tx: Tx, month: string) => {
-    if (tx.select().from(m).where(eq(m.month, month)).get()) return;
-    const prev = tx
+  const ensureMonth = async (tx: Tx, month: string) => {
+    if (await tx.select().from(m).where(eq(m.month, month)).get()) return;
+    const prev = await tx
       .select({ month: m.month })
       .from(m)
       .where(lt(m.month, month))
       .orderBy(desc(m.month))
       .limit(1)
       .get();
-    tx.insert(m).values({ month, createdAt: new Date() }).run();
+    await tx.insert(m).values({ month, createdAt: new Date() }).run();
     if (!prev) return;
-    const inherited = tx.select().from(b).where(eq(b.month, prev.month)).all();
+    const inherited = await tx.select().from(b).where(eq(b.month, prev.month)).all();
     if (inherited.length === 0) return;
-    tx.insert(b)
+    await tx
+      .insert(b)
       .values(inherited.map((row) => ({ ...row, id: createId(), month, createdAt: new Date() })))
       .run();
   };
@@ -77,12 +77,12 @@ export function createBudgetsRepo(db: AppDatabase) {
       if (!Number.isInteger(input.amount) || input.amount <= 0) {
         throw new InvalidBudgetError('The amount must be a positive integer in minor units');
       }
-      db.transaction((tx) => {
-        ensureMonth(tx, input.month);
+      await inTransaction(db, async (tx) => {
+        await ensureMonth(tx, input.month);
         const where = and(eq(b.month, input.month), sameCategory(input.categoryId));
-        const existing = tx.select().from(b).where(where).get();
+        const existing = await tx.select().from(b).where(where).get();
         if (existing) {
-          tx.update(b).set({ amount: input.amount }).where(eq(b.id, existing.id)).run();
+          await tx.update(b).set({ amount: input.amount }).where(eq(b.id, existing.id)).run();
         } else {
           const row: Budget = {
             id: createId(),
@@ -92,16 +92,17 @@ export function createBudgetsRepo(db: AppDatabase) {
             month: input.month,
             createdAt: new Date(),
           };
-          tx.insert(b).values(row).run();
+          await tx.insert(b).values(row).run();
         }
       });
     },
 
     /** Removes a category (or overall) budget from the month and from those inheriting it. */
     async remove(input: { month: string; categoryId: string | null }): Promise<void> {
-      db.transaction((tx) => {
-        ensureMonth(tx, input.month);
-        tx.delete(b)
+      await inTransaction(db, async (tx) => {
+        await ensureMonth(tx, input.month);
+        await tx
+          .delete(b)
           .where(and(eq(b.month, input.month), sameCategory(input.categoryId)))
           .run();
       });
