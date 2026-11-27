@@ -244,7 +244,9 @@ function Row({
   return (
     <Animated.View
       style={[{ position: 'absolute', left: 0, right: 0, overflow: 'visible' }, style]}>
-      <GestureDetector gesture={pan}>
+      {/* Web: dragging a card scrolls the page; only while editing the layout the drag
+          belongs to the gesture (otherwise touch scrolling stops on every card) */}
+      <GestureDetector gesture={pan} touchAction={dragImmediately ? 'none' : 'pan-y'}>
         <View
           collapsable={false}
           style={{ overflow: 'visible' }}

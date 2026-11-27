@@ -106,7 +106,8 @@ export function SwipeToDelete({
           <MaterialCommunityIcons name="delete-outline" size={24} color="#FFFFFF" />
         </Animated.View>
       </View>
-      <GestureDetector gesture={pan}>
+      {/* Web: the browser keeps vertical drags for scrolling, the gesture gets horizontal ones */}
+      <GestureDetector gesture={pan} touchAction="pan-y">
         <Animated.View style={rowStyle}>{children}</Animated.View>
       </GestureDetector>
     </Animated.View>

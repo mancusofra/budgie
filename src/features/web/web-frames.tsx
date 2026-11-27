@@ -1,8 +1,18 @@
 import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { Platform, Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, {
+  FadeIn,
+  FadeInDown,
+  FadeOut,
+  SlideInDown,
+  SlideInRight,
+  SlideOutDown,
+  SlideOutRight,
+} from 'react-native-reanimated';
 
 import { useTheme } from '@/hooks/use-theme';
+import { AnimationMs } from '@/theme';
 
 /** From this width the web layout uses a sidebar, dialogs and centered pages. */
 export const WIDE_BREAKPOINT = 768;
@@ -17,15 +27,38 @@ export function useWideWeb(): boolean {
 export function WebDialog({ children }: { children: ReactNode }) {
   const theme = useTheme();
   return (
-    <View style={styles.overlay}>
+    <Animated.View
+      entering={FadeIn.duration(AnimationMs)}
+      exiting={FadeOut.duration(AnimationMs)}
+      style={styles.overlay}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={() => router.back()}
         accessibilityRole="button"
         accessibilityLabel="Close"
       />
-      <View style={[styles.dialog, { backgroundColor: theme.background }]}>{children}</View>
-    </View>
+      <Animated.View
+        entering={FadeInDown.duration(AnimationMs)}
+        style={[styles.dialog, { backgroundColor: theme.background }]}>
+        {children}
+      </Animated.View>
+    </Animated.View>
+  );
+}
+
+/**
+ * Narrow web screens: the native transitions the browser doesn't have. Sheets
+ * and modals slide up from the bottom, pages come in from the right.
+ */
+export function WebTransition({ kind, children }: { kind: 'sheet' | 'page'; children: ReactNode }) {
+  const sheet = kind === 'sheet';
+  return (
+    <Animated.View
+      entering={(sheet ? SlideInDown : SlideInRight).duration(AnimationMs)}
+      exiting={(sheet ? SlideOutDown : SlideOutRight).duration(AnimationMs)}
+      style={styles.fill}>
+      {children}
+    </Animated.View>
   );
 }
 
@@ -33,9 +66,11 @@ export function WebDialog({ children }: { children: ReactNode }) {
 export function WebPage({ children }: { children: ReactNode }) {
   const theme = useTheme();
   return (
-    <View style={[styles.page, { backgroundColor: theme.background }]}>
+    <Animated.View
+      entering={FadeIn.duration(AnimationMs)}
+      style={[styles.page, { backgroundColor: theme.background }]}>
       <View style={styles.pageContent}>{children}</View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -57,5 +92,6 @@ const styles = StyleSheet.create({
     boxShadow: '0 12px 40px rgba(0,0,0,0.25)',
   },
   page: { flex: 1, alignItems: 'center' },
+  fill: { flex: 1 },
   pageContent: { flex: 1, width: '100%', maxWidth: 720 },
 });
