@@ -88,9 +88,30 @@ export async function prepareDatabase(): Promise<void> {
     // Never wait more than 3 s for it: it's only a warm-up
     await Promise.race([warmUp.closeAsync(), new Promise((r) => setTimeout(r, 3000))]);
     await openWithRetry();
+    await probeWeb();
     return;
   }
   connection();
+}
+
+/**
+ * Web: small read/write checks before the app uses the database, each one
+ * recorded as a startup step: if Safari hangs, the diagnostics panel shows
+ * which kind of access is stuck (sync read, async write, sync write).
+ */
+async function probeWeb() {
+  const db = connection();
+  bootStep('probe: sync read');
+  db.getFirstSync('SELECT 1');
+  bootStep('probe: async write');
+  await db.execAsync(
+    'CREATE TABLE IF NOT EXISTS __budgie_probe (x INTEGER); INSERT INTO __budgie_probe VALUES (1);',
+  );
+  bootStep('probe: sync write');
+  db.execSync('DELETE FROM __budgie_probe;');
+  bootStep('probe: sync transaction');
+  db.withTransactionSync(() => db.execSync('INSERT INTO __budgie_probe VALUES (2);'));
+  db.execSync('DROP TABLE __budgie_probe;');
 }
 
 /**
