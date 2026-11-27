@@ -82,4 +82,24 @@ The CI fails if coverage of `lib/`, `db/` and `features/` drops below 70% (lines
 - **Development**: Expo Go or a development build, with `npx expo start`.
 - **iOS beta**: the `.github/workflows/ios-unsigned-ipa.yml` workflow builds an unsigned `.ipa`
   (manual run or `ios-build-*` tag) that can be sideloaded with a free Apple ID.
+- **Web (PWA)**: `npm run build:web` exports the app as static pages under `/budgie` and
+  `scripts/web-postbuild.js` adds the PWA tags and the offline file list. After CI passes on
+  `main`, `.github/workflows/deploy-web.yml` publishes it to GitHub Pages
+  (https://mancusofra.github.io/budgie/).
 - **Stores**: EAS Build / EAS Submit (phase 8; `eas.json` profiles not created yet).
+
+## Web version
+
+- **Database**: expo-sqlite runs SQLite compiled to WebAssembly in a worker, stored in the
+  browser's private file system (OPFS). It needs a cross-origin isolated page
+  (`SharedArrayBuffer`): the service worker adds the COOP/COEP headers (COEP `require-corp`, the
+  only value Safari supports), since GitHub Pages can't. The connection opens on first use
+  (`src/db/client.ts`), is closed when the page goes away and only one tab can use it at a time.
+- **Service worker** (`public/sw.js`): caches the whole build for offline use; a new build waits
+  until the user taps "Update".
+- **Navigation**: `src/app/(tabs)/_layout.web.tsx` replaces the native tab bar (bottom bar on
+  narrow screens, sidebar from 768 px); on wide screens sheets open as centered dialogs.
+- **Differences**: no biometric lock; files are downloaded and picked with the browser; the PDF
+  report uses the browser's print dialog; `Alert` is mapped to the browser dialogs.
+- **Startup diagnostics**: if the app hasn't started after 12 s, a panel shows the startup step
+  and errors (useful on iPhone, where there is no console without a Mac).

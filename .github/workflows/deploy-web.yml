@@ -1,10 +1,12 @@
-# Publishes the web version (PWA) to GitHub Pages at every push to main:
+# Publishes the web version (PWA) to GitHub Pages after CI passes on main:
 # https://mancusofra.github.io/budgie/
 # Requires Settings → Pages → Source: "GitHub Actions".
 name: Deploy web
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
@@ -20,9 +22,17 @@ concurrency:
 
 jobs:
   build:
+    # Only a green CI run on a push to main (or a manual run)
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # The commit CI checked, not whatever main is now
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22

@@ -3,19 +3,18 @@ import { Image } from 'expo-image';
 import { TabList, TabSlot, TabTrigger, Tabs, type TabTriggerSlotProps } from 'expo-router/ui';
 import { forwardRef, type ComponentProps, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/text';
 import { appVersion } from '@/features/about/changelog';
+import { useWideWeb } from '@/features/web/web-frames';
 import { useTheme } from '@/hooks/use-theme';
 import { useUIStore } from '@/store/ui';
 import { Radius, Spacing } from '@/theme';
 
 type IconName = ComponentProps<typeof MaterialCommunityIcons>['name'];
 
-/** From this width the tabs become a sidebar and the content gets wider. */
-export const WIDE_BREAKPOINT = 768;
 /** Maximum width of the content next to the sidebar. */
 const CONTENT_MAX_WIDTH = 960;
 
@@ -43,9 +42,9 @@ const TABS: {
 export default function WebTabLayout() {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const wide = width >= WIDE_BREAKPOINT;
+  // From 768 px the tabs become a sidebar and the content gets wider
+  const wide = useWideWeb();
   // While editing the Stats layout the bar makes room for the "Done" button
   const editingLayout = useUIStore((s) => s.editingLayout);
 

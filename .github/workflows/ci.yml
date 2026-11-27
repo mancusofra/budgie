@@ -18,3 +18,5 @@ jobs:
       - run: npx tsc --noEmit
       - run: npx expo lint
       - run: npx jest --ci --coverage --coverageReporters=text-summary
+      # The web version must still build (it's published from main)
+      - run: npm run build:web

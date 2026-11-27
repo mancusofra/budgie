@@ -17,7 +17,8 @@
 </p>
 
 > **Status: beta (0.2.0).** Budgie is being tested on iOS and Android and is not in the app stores
-> yet.
+> yet. The **web version** runs in any modern browser and can be installed as an app:
+> **[mancusofra.github.io/budgie](https://mancusofra.github.io/budgie/)**.
 
 ## Features
 
@@ -31,16 +32,25 @@
 - **Recurring transactions**: rent, subscriptions and salary are logged automatically.
 - **Stats** with trend, comparison with the previous period, ranking by category and monthly
   **budgets** with warnings; sections can be reordered.
+- **Spending groups**: every category is a Need, a Want or Savings; adjustable targets (50/30/20
+  by default) compared with your income, in Stats and optionally around the Home donut.
+- **PDF report** of any period and accounts: summary, spending by category, every transaction
+  month by month.
 - **Your data stays yours**: everything is stored on the device. JSON backup and restore, CSV or
   JSON export by date range, biometric lock.
+- **Web version (PWA)**: the same app in the browser, installable on the home screen and usable
+  offline; a sidebar layout on wide screens. Its data stays in the browser, separate from the
+  phone app (move it with backup and restore).
 - Light and dark theme, English and Italian, accessibility (screen readers, large text, AA
   contrast).
 
 ## Tech stack
 
-[Expo](https://expo.dev) SDK 57 (React Native) with TypeScript and Expo Router · local SQLite with
-[Drizzle ORM](https://orm.drizzle.team) · Zustand · Reanimated and Gesture Handler · charts on
-`react-native-svg` · i18next · Jest and React Native Testing Library.
+[Expo](https://expo.dev) SDK 58 (React Native) with TypeScript and Expo Router · local SQLite with
+[Drizzle ORM](https://orm.drizzle.team) (SQLite compiled to WebAssembly on the web) · Zustand ·
+Reanimated and Gesture Handler · charts on `react-native-svg` · i18next · Jest and React Native
+Testing Library. The web version is a static export served by GitHub Pages, with a service worker
+for offline use.
 
 More: [architecture](docs/ARCHITECTURE.md), [data model](docs/DATA_MODEL.md),
 [UI spec](docs/UI_SPEC.md), [roadmap](docs/PLAN.md).
@@ -57,28 +67,33 @@ npm install
 npx expo start        # then scan the QR code with Expo Go
 ```
 
-The same checks run in CI:
+Web version, built and served locally like on GitHub Pages:
 
 ```bash
-npm run lint
-npm run typecheck
-npm test              # or npm run test:coverage
-npx expo-doctor
+npm run preview:web   # then open http://localhost:8090/budgie/
+```
+
+Before opening a pull request (the same checks run in CI, plus the web build):
+
+```bash
+npm run check         # lint, typecheck and tests
 ```
 
 ## Project structure
 
 ```
 src/
-├── app/          screens and navigation (Expo Router)
+├── app/          screens and navigation (Expo Router); *.web.tsx = web-only variants
 ├── components/   UI components, charts, transaction rows
-├── features/     logic by area: transactions, accounts, categories, stats, recurring…
+├── features/     logic by area: transactions, accounts, categories, stats, groups, web…
 ├── db/           Drizzle schema, migrations, repositories, backup
 ├── lib/          pure functions: money, periods, recurrence, CSV, colors
 ├── i18n/         translations (en, it)
 ├── store/        UI state (Zustand)
 └── theme/        colors and sizes
 __tests__/        tests (Jest)
+public/           web: service worker, manifest, icons
+scripts/          web build helpers (post-build, local server)
 docs/             documentation and screenshots
 ```
 
