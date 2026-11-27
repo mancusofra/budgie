@@ -63,8 +63,7 @@
     ],
     "experiments": {
       "typedRoutes": true,
-      "reactCompiler": true,
-      "baseUrl": "/budgie"
+      "reactCompiler": true
     }
   }
 }
