@@ -8,7 +8,7 @@
 
 ## Checklist
 
-- [ ] `npm run lint`, `npm run typecheck` and `npm test` pass
+- [ ] `npm run check` passes (lint, typecheck, tests); for web changes also `npm run preview:web`
 - [ ] I added or updated tests for new logic
 - [ ] New strings are translated in `src/i18n/locales/en.json` and `it.json`
 - [ ] If I changed `src/db/schema.ts`, I added a migration (without editing existing ones)

@@ -18,11 +18,10 @@ are welcome, but every change is **reviewed and approved by the maintainer** bef
 2. Install and run it: `npm install`, then `npx expo start` (see the [README](README.md)).
 3. Make your changes in small, descriptive commits following
    [Conventional Commits](https://www.conventionalcommits.org) (`feat:`, `fix:`, `docs:`…).
-4. Before opening the pull request, make sure these pass:
+4. Before opening the pull request, make sure the checks pass (lint, typecheck and tests); for
+   changes that touch the web version also try `npm run preview:web`:
    ```bash
-   npm run lint
-   npm run typecheck
-   npm test
+   npm run check
    ```
 5. Open a **pull request against `main`** and fill in the template. CI runs once the maintainer
    approves it; you may be asked for changes before the merge.
@@ -35,7 +34,11 @@ are welcome, but every change is **reviewed and approved by the maintainer** bef
 - Every user-visible string goes in `src/i18n/locales/en.json` **and** `it.json`.
 - Database: change `src/db/schema.ts` and generate a new migration with `npm run db:generate`;
   never edit existing migrations.
-- Expo changes often: check the docs for the SDK in use (57) before relying on an API.
+- Expo changes often: check the docs for the SDK in use (58) before relying on an API. Expo,
+  React and React Native packages are updated only with `npx expo install` (their versions must
+  match the SDK and the Expo Go app).
+- Platform-specific code: `*.web.tsx` files or `Platform.OS` checks; the web version must keep
+  working (CI builds it on every pull request).
 - UI: subtle animations (250 ms), AA contrast (there is a test for it), labels for screen readers.
 
 ## License of contributions

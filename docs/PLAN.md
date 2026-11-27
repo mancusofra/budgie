@@ -27,7 +27,7 @@ or a development build).
 - [x] Core dependencies (expo-sqlite, Reanimated, Gesture Handler, react-native-svg, Drizzle,
       Zustand, date-fns, i18next…)
 - [x] `app.json`: name, `slug`, `bundleIdentifier` (iOS), `package` (Android), icon, splash
-- [x] GitHub Actions CI (lint + typecheck + tests)
+- [x] GitHub Actions CI (lint + typecheck + tests + web build); web deploy after green CI
 - [ ] EAS configuration (`eas init`, `eas build:configure`)
 
 ## Phase 1 — Database and data model
@@ -121,7 +121,7 @@ The feature that defines the experience: it has to be very fast.
 - [x] PDF report by period: summary, spending by category, month-by-month detail
 - [x] Spending groups (needs / wants / savings): group per category, adjustable shares, Stats
       section, optional Home ring (per-transaction override postponed)
-- [ ] Web version / PWA
+- [x] Web version / PWA: installable, offline, sidebar on wide screens, published on GitHub Pages
 - [ ] Home screen widgets on iOS/Android for quick entry
 - [ ] Automatic exchange rates
 - [ ] Receipt photos
